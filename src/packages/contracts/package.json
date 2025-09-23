@@ -1,0 +1,18 @@
+{
+  "name": "@passmint/contracts",
+  "version": "1.0.0",
+  "description": "PassMint smart contracts for event ticketing NFTs",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vvv",
+    "test:coverage": "forge coverage",
+    "deploy:testnet": "forge script script/Deploy.s.sol --rpc-url $POLYGON_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast",
+    "deploy:mainnet": "forge script script/Deploy.s.sol --rpc-url $POLYGON_MAINNET_RPC --private-key $PRIVATE_KEY --broadcast",
+    "verify": "forge verify-contract",
+    "clean": "forge clean",
+    "fmt": "forge fmt",
+    "gas-report": "forge test --gas-report"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

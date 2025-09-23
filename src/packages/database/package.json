@@ -1,0 +1,22 @@
+{
+  "name": "@passmint/database",
+  "version": "1.0.0",
+  "description": "PassMint database schema and client",
+  "main": "index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "push": "prisma db push",
+    "studio": "prisma studio",
+    "seed": "tsx seed.ts",
+    "reset": "prisma migrate reset"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.7.0",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.10.0"
+  }
+}

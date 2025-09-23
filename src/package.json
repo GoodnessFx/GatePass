@@ -1,0 +1,36 @@
+{
+  "name": "passmint",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Decentralized event ticketing platform with NFT tickets and mobile scanning",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "contracts:test": "cd packages/contracts && forge test",
+    "contracts:deploy": "cd packages/contracts && forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast",
+    "db:generate": "cd packages/database && npx prisma generate",
+    "db:migrate": "cd packages/database && npx prisma migrate dev",
+    "db:push": "cd packages/database && npx prisma db push",
+    "mobile:ios": "cd apps/mobile && npx expo run:ios",
+    "mobile:android": "cd apps/mobile && npx expo run:android",
+    "setup": "npm install && npm run db:generate"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.10.12",
+    "turbo": "^1.10.12",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "npm@8.19.2",
+  "engines": {
+    "node": ">=18"
+  }
+}

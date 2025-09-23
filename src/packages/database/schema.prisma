@@ -1,0 +1,247 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  walletAddress String? @unique
+  avatar    String?
+  role      UserRole @default(USER)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizedEvents Event[]
+  orders         Order[]
+  checkIns       CheckIn[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  venue       String
+  address     String?
+  city        String?
+  country     String?
+  
+  // Dates
+  eventDate   DateTime
+  saleStart   DateTime
+  saleEnd     DateTime
+  
+  // Ticket info
+  totalSupply    Int
+  ticketPrice    Decimal @db.Decimal(18, 8) // Support crypto decimals
+  currency       String  @default("ETH")
+  maxPerWallet   Int     @default(5)
+  
+  // Blockchain
+  contractAddress String?
+  chainId         Int     @default(137) // Polygon
+  
+  // Metadata
+  imageUrl       String?
+  metadataUri    String?
+  category       EventCategory @default(MUSIC)
+  tags           String[]
+  
+  // Settings
+  isPublic       Boolean @default(true)
+  allowTransfers Boolean @default(true)
+  requireKYC     Boolean @default(false)
+  
+  // Status
+  status         EventStatus @default(DRAFT)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizer   User     @relation(fields: [organizerId], references: [id])
+  organizerId String
+  
+  orders      Order[]
+  tickets     Ticket[]
+  checkIns    CheckIn[]
+  analytics   EventAnalytics[]
+
+  @@map("events")
+}
+
+model Ticket {
+  id       String @id @default(cuid())
+  tokenId  Int
+  
+  // Blockchain data
+  contractAddress String
+  chainId         Int
+  txHash          String?
+  blockNumber     Int?
+  
+  // Metadata
+  metadataUri String?
+  seatNumber  String?
+  section     String?
+  tier        String?
+  
+  // Status
+  isUsed      Boolean @default(false)
+  usedAt      DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+  
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+  
+  checkIn CheckIn?
+
+  @@unique([contractAddress, tokenId])
+  @@map("tickets")
+}
+
+model Order {
+  id     String @id @default(cuid())
+  
+  // Payment info
+  totalAmount    Decimal     @db.Decimal(18, 8)
+  currency       String
+  paymentMethod  PaymentMethod
+  paymentStatus  PaymentStatus @default(PENDING)
+  
+  // Payment processor data
+  stripePaymentId    String?
+  coinbaseChargeId   String?
+  blockchainTxHash   String?
+  
+  // Customer info
+  customerEmail  String
+  customerName   String?
+  billingAddress Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+  
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+  
+  tickets Ticket[]
+
+  @@map("orders")
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  
+  checkedInAt DateTime @default(now())
+  checkedInBy String? // Staff member who checked in
+  location    String? // Check-in location/gate
+  
+  // POA NFT info
+  poaTokenId      Int?
+  poaContractAddr String?
+  poaTxHash       String?
+
+  // Relations
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  ticketId String @unique
+  
+  event    Event  @relation(fields: [eventId], references: [id])
+  eventId  String
+  
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+
+  @@map("check_ins")
+}
+
+model EventAnalytics {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  
+  // Sales metrics
+  ticketsSold    Int @default(0)
+  revenue        Decimal @db.Decimal(18, 8) @default(0)
+  uniqueBuyers   Int @default(0)
+  
+  // Check-in metrics
+  checkIns       Int @default(0)
+  checkInRate    Decimal @db.Decimal(5, 4) @default(0) // Percentage
+  noShows        Int @default(0)
+  
+  // Geographic data
+  topCountries   Json? // [{country: "US", count: 10}, ...]
+  topCities      Json? // [{city: "New York", count: 5}, ...]
+  
+  // Time-based data
+  hourlyBreakdown Json? // Check-in patterns by hour
+
+  // Relations
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  @@unique([eventId, date])
+  @@map("event_analytics")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
+enum EventCategory {
+  MUSIC
+  CONFERENCE
+  SPORTS
+  THEATER
+  FESTIVAL
+  MEETUP
+  WORKSHOP
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  SOLD_OUT
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentMethod {
+  CRYPTO
+  CREDIT_CARD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
