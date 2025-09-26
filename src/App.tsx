@@ -30,12 +30,12 @@ function AppContent() {
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Initialize dark mode from localStorage
+  // Initialize dark mode from localStorage (default to dark if no preference saved)
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldUseDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
-    
+    const shouldUseDark = savedTheme ? savedTheme === 'dark' : true;
+
     setIsDarkMode(shouldUseDark);
     document.documentElement.classList.toggle('dark', shouldUseDark);
   }, []);
@@ -117,6 +117,14 @@ function AppContent() {
             <Badge variant="secondary">
               {user?.role === 'organizer' ? 'Organizer' : 'Attendee'}
             </Badge>
+            {/* Home Navigation */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentView('landing')}
+            >
+              Home
+            </Button>
           </div>
 
           <div className="flex items-center space-x-4">
