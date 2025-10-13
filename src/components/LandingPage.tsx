@@ -30,7 +30,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
           <div className="text-center">
             <div className="flex justify-center items-center space-x-2 mb-6">
               <Ticket className="h-12 w-12 text-primary" />
-              <h1 className="text-4xl md:text-6xl font-bold text-primary">PassMint</h1>
+              <h1 className="text-4xl md:text-6xl font-bold text-primary">Gatepass</h1>
             </div>
             
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">

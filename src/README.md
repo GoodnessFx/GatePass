@@ -1,4 +1,4 @@
-# 🎫 PassMint
+# 🎫 GatePass
 
 **Production-ready decentralized event ticketing platform with NFT tickets and mobile scanning**
 
@@ -46,112 +46,6 @@ PassMint Monorepo
 - Docker (for local database)
 - Git
 
-### 1. Clone & Install
-```bash
-git clone https://github.com/your-org/passmint.git
-cd passmint
-npm run setup
-```
-
-### 2. Environment Setup
-```bash
-# Copy environment templates
-cp apps/web/.env.example apps/web/.env.local
-cp packages/server/.env.example packages/server/.env
-cp packages/contracts/.env.example packages/contracts/.env
-
-# Configure your environment variables (see .env.example files)
-```
-
-### 3. Start Local Database
-```bash
-docker-compose up -d postgres redis
-npm run db:migrate
-```
-
-### 4. Deploy Smart Contracts (Polygon Testnet)
-```bash
-cd packages/contracts
-forge test  # Run tests first
-npm run deploy:testnet
-```
-
-### 5. Start Development Servers
-```bash
-# Terminal 1: Backend API
-cd packages/server && npm run dev
-
-# Terminal 2: Web Dashboard  
-cd apps/web && npm run dev
-
-# Terminal 3: Mobile App (optional)
-cd apps/mobile && npm run dev
-```
-
-### 6. Open Applications
-- **Web Dashboard**: http://localhost:3000
-- **API Documentation**: http://localhost:8000/docs
-- **Mobile App**: Use Expo Go app and scan QR code
-
-## 🎬 30-Second Demo Script
-
-```bash
-# 1. Create a demo event (2 mins)
-curl -X POST localhost:8000/api/events \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Web3 Conference 2024",
-    "date": "2024-02-15T18:00:00Z",
-    "venue": "Convention Center",
-    "ticketPrice": 50,
-    "totalSupply": 100
-  }'
-
-# 2. Purchase ticket via API (30 secs)
-curl -X POST localhost:8000/api/tickets/purchase \
-  -H "Content-Type: application/json" \
-  -d '{
-    "eventId": "1",
-    "paymentMethod": "crypto",
-    "walletAddress": "0x..."
-  }'
-
-# 3. Scan ticket with mobile app
-# Open mobile app → Scanner → Point at QR code → Verify ownership
-
-# 4. Check-in attendee & mint POA
-# Ticket marked as "used" + POA NFT airdropped automatically
-```
-
-## 🧪 Testing
-
-### Smart Contracts
-```bash
-cd packages/contracts
-forge test -vvv
-forge coverage
-```
-
-### Backend API
-```bash
-cd packages/server
-npm test
-npm run test:e2e
-```
-
-### Frontend
-```bash
-cd apps/web
-npm test
-npm run test:e2e
-```
-
-### Mobile
-```bash
-cd apps/mobile
-npm test
-```
-
 ## 🚢 Deployment
 
 ### Production Checklist
@@ -163,18 +57,6 @@ npm test
 - [ ] Rate limiting enabled
 - [ ] HTTPS/SSL certificates
 - [ ] Error tracking (Sentry)
-
-### Deploy Commands
-```bash
-# Web App (Vercel)
-vercel --prod
-
-# Backend API (Railway/Render)
-railway up
-
-# Mobile App (EAS Build)
-cd apps/mobile && eas build --platform all
-```
 
 ## 💰 Cost Estimates (Monthly)
 
@@ -233,10 +115,3 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 🆘 Support
 
-- **Documentation**: [docs.passmint.com](https://docs.passmint.com)
-- **Discord**: [Join our community](https://discord.gg/passmint)
-- **Email**: support@passmint.com
-
----
-
-Built with ❤️ by the PassMint team
