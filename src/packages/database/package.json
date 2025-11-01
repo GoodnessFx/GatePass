@@ -1,7 +1,7 @@
 {
   "name": "@passmint/database",
   "version": "1.0.0",
-  "description": "PassMint database schema and client",
+  "description": "GatePass database schema and client",
   "main": "index.ts",
   "scripts": {
     "generate": "prisma generate",

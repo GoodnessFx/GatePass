@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title PassMintPOA (Proof of Attendance)
- * @dev NFT contract for Proof of Attendance badges
+ * @dev GatePass NFT contract for Proof of Attendance badges
  * Features:
  * - Non-transferable badges (soulbound)
  * - Automatic minting upon event attendance

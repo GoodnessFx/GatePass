@@ -1,7 +1,7 @@
 {
   "name": "@passmint/contracts",
   "version": "1.0.0",
-  "description": "PassMint smart contracts for event ticketing NFTs",
+  "description": "GatePass smart contracts for event ticketing NFTs",
   "scripts": {
     "build": "forge build",
     "test": "forge test -vvv",

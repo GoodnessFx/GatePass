@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   Wallet, 
   Copy, 
@@ -96,7 +96,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
         <DialogHeader>
           <DialogTitle>Connect Your Wallet</DialogTitle>
           <DialogDescription>
-            Choose a wallet to connect to PassMint. You'll need a wallet to purchase tickets and manage your NFTs.
+            Choose a wallet to connect to GatePass. You'll need a wallet to purchase tickets and manage your NFTs.
           </DialogDescription>
         </DialogHeader>
         
@@ -136,7 +136,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
             <div className="text-sm">
               <p className="font-medium mb-1">New to crypto wallets?</p>
               <p className="text-muted-foreground">
-                We recommend starting with MetaMask. It's beginner-friendly and works great with PassMint.
+                We recommend starting with MetaMask. It's beginner-friendly and works great with GatePass.
               </p>
             </div>
           </div>

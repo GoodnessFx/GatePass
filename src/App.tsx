@@ -6,9 +6,11 @@ import { AttendeeDashboard } from './components/AttendeeDashboard';
 import { TicketPurchase } from './components/TicketPurchase';
 import { MobileScanner } from './components/MobileScanner';
 import { Analytics } from './components/Analytics';
+import { AuthModal } from './components/AuthModal';
 import { Toaster } from './components/ui/sonner';
 import { WalletConnection } from './components/WalletConnection';
 import { AuthProvider, useAuth } from './components/AuthProvider';
+import Footer from './components/Footer';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
@@ -19,7 +21,8 @@ import {
   Settings,
   Bell,
   Moon,
-  Sun
+  Sun,
+  ArrowLeft
 } from 'lucide-react';
 
 type AppView = 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
@@ -29,6 +32,8 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   // Initialize dark mode from localStorage (default to dark if no preference saved)
   useEffect(() => {
@@ -47,43 +52,15 @@ function AppContent() {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
   };
 
-  // Update view based on user role when user changes
+  // Keep Home (Landing) as the default after auth changes to ensure
+  // the application always loads Home first and remains consistent across devices.
   useEffect(() => {
-    if (user) {
-      if (user.role === 'organizer') {
-        setCurrentView('organizer-dashboard');
-      } else {
-        setCurrentView('attendee-dashboard');
-      }
-    } else {
-      setCurrentView('landing');
-    }
+    setCurrentView('landing');
   }, [user]);
 
-  const handleRoleSelect = async (role: 'organizer' | 'attendee') => {
-    // Demo mode - create mock user without Supabase
-    const mockUser = {
-      id: 'demo-' + Date.now(),
-      email: `${role}@passmint.demo`,
-      role,
-      createdAt: new Date().toISOString(),
-      isConnected: false
-    };
-    
-    // Update the auth context with mock user
-    // In production, this would be handled by proper authentication
-    try {
-      // Simulate loading
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (role === 'organizer') {
-        setCurrentView('organizer-dashboard');
-      } else {
-        setCurrentView('attendee-dashboard');
-      }
-    } catch (error) {
-      console.error('Role selection error:', error);
-    }
+  const handleAuthAction = (action: 'login' | 'signup') => {
+    setAuthMode(action);
+    setShowAuthModal(true);
   };
 
   const handleWalletConnect = () => {
@@ -112,7 +89,7 @@ function AppContent() {
               className="font-bold text-xl cursor-pointer"
               onClick={() => setCurrentView(user?.role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard')}
             >
-              PassMint
+              GatePass
             </h1>
             <Badge variant="secondary">
               {user?.role === 'organizer' ? 'Organizer' : 'Attendee'}
@@ -174,7 +151,7 @@ function AppContent() {
       case 'landing':
         return (
           <LandingPage
-            onRoleSelect={handleRoleSelect}
+            onAuthAction={handleAuthAction}
             onConnect={handleWalletConnect}
             isConnected={user?.isConnected || false}
           />
@@ -254,19 +231,39 @@ function AppContent() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          <span>Loading PassMint...</span>
+          <span>Loading GatePass...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       {user && <AuthenticatedHeader />}
       
-      <main>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        {currentView !== 'landing' && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mb-4 flex items-center" 
+            onClick={() => setCurrentView('landing')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+        )}
         {renderCurrentView()}
       </main>
+
+      <Footer />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultMode={authMode}
+      />
 
       {/* Toast Notifications */}
       <Toaster position="top-right" />

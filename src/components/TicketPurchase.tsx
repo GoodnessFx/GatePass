@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -27,6 +27,9 @@ import {
   Minus,
   Info
 } from 'lucide-react';
+import { useAuth } from './AuthProvider';
+import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
+import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
 
 interface TicketPurchaseProps {
   eventId: string;
@@ -103,9 +106,14 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [selectedTier, setSelectedTier] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'fiat'>('crypto');
+  const [paymentGateway, setPaymentGateway] = useState<'paystack' | 'flutterwave' | 'mpesa' | 'none'>('none');
+  const [fiatCurrency, setFiatCurrency] = useState<'NGN' | 'GHS' | 'KES' | 'ZAR'>('NGN');
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const { user } = useAuth();
 
   const filteredEvents = mockEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,21 +124,123 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
   const handlePurchase = async () => {
     if (!selectedEvent || !selectedTier) return;
-    
     setIsPurchasing(true);
-    
-    // Simulate purchase process
-    setTimeout(() => {
+
+    const selectedTierData = selectedEvent.ticketTiers.find(tier => tier.id.toString() === selectedTier);
+    const amountWithFees = totalPrice + totalPrice * 0.025;
+
+    try {
+      if (paymentMethod === 'fiat') {
+        if (paymentGateway === 'paystack') {
+          const res = await paystackCheckout({
+            email: customerEmail || user?.email || 'buyer@example.com',
+            amount: Number(amountWithFees.toFixed(2)),
+            currency: fiatCurrency,
+            reference: `GP-${selectedEvent.id}-${Date.now()}`,
+            metadata: { eventId: selectedEvent.id, tierId: selectedTier },
+            onSuccess: async () => {
+              await finalizeTicket(selectedEvent, selectedTierData);
+            },
+            onCancel: () => {
+              toast.info('Payment canceled.');
+              setIsPurchasing(false);
+            },
+          });
+          if (!res.ok) {
+            toast.error(res.error || 'Unable to start Paystack checkout.');
+            setIsPurchasing(false);
+          }
+          return;
+        }
+        if (paymentGateway === 'flutterwave') {
+          const res = await flutterwaveCheckout({
+            email: customerEmail || user?.email || 'buyer@example.com',
+            amount: Number(amountWithFees.toFixed(2)),
+            currency: fiatCurrency,
+            phone: customerPhone || undefined,
+            name: user?.email?.split('@')[0],
+            reference: `GP-${selectedEvent.id}-${Date.now()}`,
+            onSuccess: async () => {
+              await finalizeTicket(selectedEvent, selectedTierData);
+            },
+            onCancel: () => {
+              toast.info('Payment canceled.');
+              setIsPurchasing(false);
+            },
+          });
+          if (!res.ok) {
+            toast.error(res.error || 'Unable to start Flutterwave checkout.');
+            setIsPurchasing(false);
+          }
+          return;
+        }
+        if (paymentGateway === 'mpesa') {
+          const res = await mpesaStkPush();
+          toast.error(res.error || 'M-Pesa not configured.');
+          setIsPurchasing(false);
+          return;
+        }
+        toast.error('Please select a local payment gateway.');
+        setIsPurchasing(false);
+        return;
+      }
+
+      // Simulate crypto payment
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await finalizeTicket(selectedEvent, selectedTierData);
+    } catch (err) {
+      console.error('Purchase error:', err);
+      toast.error('Purchase failed. Please try again.');
       setIsPurchasing(false);
-      toast.success('Ticket purchased successfully!', {
-        description: `Your NFT ticket has been minted to your wallet.`
-      });
-      setSelectedEvent(null);
-      setSelectedTier('');
-      setQuantity(1);
-      onPurchaseComplete();
-    }, 2000);
+    }
   };
+
+  async function finalizeTicket(event: typeof mockEvents[0], selectedTierData?: { id: number; name: string; price: number }) {
+    toast.success('Ticket purchased successfully!', {
+      description: `Your NFT ticket has been minted to your wallet.`
+    });
+
+    try {
+      if (selectedTierData) {
+        const input = {
+          eventId: String(event.id),
+          attendeeId: user?.id ?? 'demo-attendee',
+          ticketType: selectedTierData.name,
+          event: {
+            name: event.title,
+            dateISO: event.date,
+            time: event.time,
+            venue: event.venue,
+            bannerUrl: undefined,
+          },
+          attendee: { name: (user?.email?.split('@')[0] ?? 'Attendee') },
+          purchaseTimestamp: Date.now(),
+          blockchain: { chain: 'polygon', txHash: '0xDEMO' },
+          secretSalt: 'demo-salt',
+        };
+
+        const { ticketId, pdfBytes } = await generateSecureTicketPDF(input);
+        const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `GatePass_Ticket_${ticketId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast.error('Ticket generated, but download failed.');
+    }
+
+    setIsPurchasing(false);
+    setSelectedEvent(null);
+    setSelectedTier('');
+    setQuantity(1);
+    onPurchaseComplete();
+  }
 
   const selectedTierData = selectedEvent?.ticketTiers.find(tier => tier.id.toString() === selectedTier);
   const totalPrice = selectedTierData ? selectedTierData.price * quantity : 0;
@@ -341,11 +451,40 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                   <div className="bg-muted/30 rounded-lg p-4">
                                     <div className="flex items-center space-x-2 mb-2">
                                       <Info className="h-4 w-4 text-blue-500" />
-                                      <span className="font-medium">Credit Card Payment</span>
+                                      <span className="font-medium">Local Currency Payment</span>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                      Pay with credit card. We'll create a custodial wallet and mint your tickets.
+                                      Pay with Paystack or Flutterwave in NGN, GHS, KES, or ZAR. If M-Pesa is selected, a server configuration is required.
                                     </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                                      <div>
+                                        <Label className="text-sm">Currency</Label>
+                                        <Select value={fiatCurrency} onValueChange={(v) => setFiatCurrency(v as any)}>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select currency" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="NGN">NGN (₦)</SelectItem>
+                                            <SelectItem value="GHS">GHS (₵)</SelectItem>
+                                            <SelectItem value="KES">KES (KSh)</SelectItem>
+                                            <SelectItem value="ZAR">ZAR (R)</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label className="text-sm">Email</Label>
+                                        <Input placeholder="you@example.com" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-sm">Phone (optional)</Label>
+                                        <Input placeholder="e.g. 0803 123 4567" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3 mt-3">
+                                      <Button type="button" variant={paymentGateway === 'paystack' ? 'default' : 'outline'} onClick={() => setPaymentGateway('paystack')}>Paystack</Button>
+                                      <Button type="button" variant={paymentGateway === 'flutterwave' ? 'default' : 'outline'} onClick={() => setPaymentGateway('flutterwave')}>Flutterwave</Button>
+                                      <Button type="button" variant={paymentGateway === 'mpesa' ? 'default' : 'outline'} onClick={() => setPaymentGateway('mpesa')}>M-Pesa</Button>
+                                    </div>
                                   </div>
                                 </TabsContent>
                               </Tabs>

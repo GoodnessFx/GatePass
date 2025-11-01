@@ -8,7 +8,7 @@ import "./PassMintTicket.sol";
 
 /**
  * @title PassMintFactory
- * @dev Factory contract for deploying PassMint event ticket contracts
+ * @dev Factory contract for deploying GatePass event ticket contracts
  * Uses minimal proxy pattern for gas-efficient deployments
  */
 contract PassMintFactory is Ownable, ReentrancyGuard {
@@ -211,7 +211,7 @@ contract PassMintFactory is Ownable, ReentrancyGuard {
     }
 
     function getEventInfo(address eventContract) external view returns (EventInfo memory) {
-        require(isPassMintEvent[eventContract], "Not a PassMint event");
+        require(isPassMintEvent[eventContract], "Not a GatePass event");
         return eventInfo[eventContract];
     }
 
@@ -229,12 +229,12 @@ contract PassMintFactory is Ownable, ReentrancyGuard {
     }
 
     function verifyEvent(address eventContract) external onlyOwner {
-        require(isPassMintEvent[eventContract], "Not a PassMint event");
+        require(isPassMintEvent[eventContract], "Not a GatePass event");
         eventInfo[eventContract].verified = true;
     }
 
     function unverifyEvent(address eventContract) external onlyOwner {
-        require(isPassMintEvent[eventContract], "Not a PassMint event");
+        require(isPassMintEvent[eventContract], "Not a GatePass event");
         eventInfo[eventContract].verified = false;
     }
 

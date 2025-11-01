@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -25,6 +26,8 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import { verifyQr } from '../utils/ticketing/security';
 
 interface MobileScannerProps {
   onBack: () => void;
@@ -86,7 +89,15 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
   const [scanResults, setScanResults] = useState<ScanResult[]>(mockScanResults);
   const [manualTicketId, setManualTicketId] = useState('');
   const [offlineQueue, setOfflineQueue] = useState<ScanResult[]>([]);
-  const [selectedEvent] = useState('Tech Conference 2024');
+  const [currentEventId, setCurrentEventId] = useState<string>('1');
+  const eventTitleMap: Record<string, string> = {
+    '1': 'Tech Conference 2024',
+    '2': 'Summer Music Festival',
+    '3': 'Startup Pitch Night',
+  };
+  const selectedEventTitle = eventTitleMap[currentEventId] ?? 'Selected Event';
+  const usedTicketsRef = useRef<Set<string>>(new Set());
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   // Simulate network status changes
   useEffect(() => {
@@ -96,75 +107,114 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const simulateScan = () => {
+  const startCameraScan = () => {
     setIsScanning(true);
-    
-    setTimeout(() => {
-      const mockTickets = [
-        { id: 'TKT-004', name: 'David Wilson', type: 'VIP', seat: 'A-5', status: 'valid' as const },
-        { id: 'TKT-005', name: 'Emma Davis', type: 'General', seat: 'C-12', status: 'valid' as const },
-        { id: 'TKT-006', name: 'Frank Miller', type: 'Student', seat: 'D-3', status: 'used' as const },
-        { id: 'TKT-007', name: 'Grace Lee', type: 'General', seat: 'B-20', status: 'expired' as const },
-      ];
-      
-      const randomTicket = mockTickets[Math.floor(Math.random() * mockTickets.length)];
-      const newScan: ScanResult = {
-        id: Date.now().toString(),
-        ticketId: randomTicket.id,
-        eventTitle: selectedEvent,
-        attendeeName: randomTicket.name,
-        ticketType: randomTicket.type,
-        seatNumber: randomTicket.seat,
-        status: randomTicket.status,
-        scanTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        walletAddress: `0x${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`
-      };
-
-      if (isOnline) {
-        setScanResults(prev => [newScan, ...prev]);
-        if (newScan.status === 'valid') {
-          toast.success('Valid ticket scanned!', {
-            description: `${newScan.attendeeName} - ${newScan.ticketType}`
-          });
-        } else if (newScan.status === 'used') {
-          toast.error('Ticket already used!', {
-            description: `${newScan.attendeeName} - ${newScan.ticketType}`
-          });
-        } else {
-          toast.error('Invalid ticket!', {
-            description: `${newScan.attendeeName} - ${newScan.ticketType}`
-          });
-        }
-      } else {
-        setOfflineQueue(prev => [newScan, ...prev]);
-        toast.warning('Offline scan queued', {
-          description: 'Will sync when connection is restored'
-        });
-      }
-      
-      setIsScanning(false);
-    }, 1500);
+    toast.info('Camera scanning started', {
+      description: 'Point camera at QR code to scan'
+    });
   };
 
-  const handleManualEntry = () => {
+  const stopCameraScan = () => {
+    setIsScanning(false);
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.clear();
+      } catch (error) {
+        console.log('Scanner cleanup error:', error);
+      }
+      scannerRef.current = null;
+    }
+    toast.info('Camera scanning stopped');
+  };
+
+  const handleManualEntry = async () => {
     if (!manualTicketId.trim()) return;
-    
+    const qrString = manualTicketId.trim();
+    const result = await verifyQr(
+      qrString,
+      'demo-salt',
+      currentEventId,
+      (tid) => usedTicketsRef.current.has(tid),
+      (tid) => usedTicketsRef.current.add(tid),
+      Date.now() - 60 * 60 * 1000
+    );
+    handleVerificationOutcome(qrString, result);
+    setManualTicketId('');
+  };
+
+  const handleVerificationOutcome = (qrString: string, result: any) => {
+    const parsed = qrString.split('|');
+    const ticketId = parsed[0] ?? qrString;
+    const attendeeName = 'Unknown';
+    const statusMap: Record<string, ScanResult['status']> = {
+      VALID: 'valid',
+      ALREADY_USED: 'used',
+      FAKE: 'invalid',
+      TOO_EARLY: 'expired',
+      EXPIRED: 'expired'
+    };
+    const status = statusMap[result.status] ?? 'invalid';
+
     const newScan: ScanResult = {
       id: Date.now().toString(),
-      ticketId: manualTicketId,
+      ticketId,
       eventTitle: selectedEvent,
-      attendeeName: 'Manual Entry',
+      attendeeName,
       ticketType: 'General',
       seatNumber: 'N/A',
-      status: 'valid',
+      status,
       scanTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       walletAddress: '0x0000...0000'
     };
 
-    setScanResults(prev => [newScan, ...prev]);
-    setManualTicketId('');
-    toast.success('Manual entry recorded');
+    if (isOnline) {
+      setScanResults(prev => [newScan, ...prev]);
+    } else {
+      setOfflineQueue(prev => [newScan, ...prev]);
+    }
+
+    if (status === 'valid') {
+      toast.success('VALID ticket');
+    } else if (status === 'used') {
+      toast.error('ALREADY USED');
+    } else if (result.status === 'TOO_EARLY') {
+      toast.warning('TOO EARLY');
+    } else {
+      toast.error('FAKE/INVALID ticket');
+    }
   };
+
+  useEffect(() => {
+    // Initialize HTML5 QR scanner when scanning starts
+    const containerId = 'qr-reader';
+    if (isScanning && !scannerRef.current) {
+      const scanner = new Html5QrcodeScanner(containerId, { fps: 10, qrbox: 250 }, false);
+      scanner.render(
+        async (decodedText) => {
+          const result = await verifyQr(
+            decodedText,
+            'demo-salt',
+            currentEventId,
+            (tid) => usedTicketsRef.current.has(tid),
+            (tid) => usedTicketsRef.current.add(tid),
+            Date.now() - 60 * 60 * 1000
+          );
+          handleVerificationOutcome(decodedText, result);
+        },
+        (error) => {
+          // Ignore scan errors (noisy)
+        }
+      );
+      scannerRef.current = scanner;
+    }
+    return () => {
+      // Cleanup scanner on unmount or stop
+      if (scannerRef.current) {
+        try { scannerRef.current.clear(); } catch {}
+        scannerRef.current = null;
+      }
+    };
+  }, [isScanning, currentEventId]);
 
   const syncOfflineData = () => {
     if (offlineQueue.length > 0) {
@@ -189,7 +239,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold">Ticket Scanner</h1>
-            <p className="text-muted-foreground">{selectedEvent}</p>
+            <p className="text-muted-foreground">{selectedEventTitle}</p>
           </div>
           <div className="flex items-center space-x-2">
             {isOnline ? (
@@ -203,6 +253,23 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
                 <span>Offline</span>
               </Badge>
             )}
+          </div>
+        </div>
+
+        {/* Event Selection */}
+        <div className="mb-6">
+          <Label className="text-sm">Select Event</Label>
+          <div className="mt-2 max-w-xs">
+            <Select onValueChange={(val) => setCurrentEventId(val)} defaultValue={currentEventId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose Event" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Tech Conference 2024</SelectItem>
+                <SelectItem value="2">Summer Music Festival</SelectItem>
+                <SelectItem value="3">Startup Pitch Night</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -260,30 +327,18 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
                 <CardDescription>Point camera at ticket QR code</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Mock Camera View */}
-                <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center relative border-2 border-dashed border-border">
-                  <div className="w-64 h-64 border-2 border-primary rounded-lg flex items-center justify-center">
-                    <QrCode className="h-16 w-16 text-primary/50" />
-                  </div>
-                  
-                  {/* Scanner overlay */}
-                  <div className="absolute inset-4 border-2 border-primary rounded-lg opacity-50"></div>
-                  
-                  {isScanning && (
-                    <div className="absolute inset-0 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                    </div>
-                  )}
+                {/* Camera Scanner */}
+                <div className="aspect-square rounded-lg relative border-2 border-dashed border-border">
+                  <div id="qr-reader" className="w-full h-full" />
                 </div>
 
                 <div className="flex space-x-2">
                   <Button 
-                    onClick={simulateScan} 
-                    disabled={isScanning}
+                    onClick={isScanning ? stopCameraScan : startCameraScan} 
                     className="flex-1 flex items-center space-x-2"
                   >
                     <Scan className="h-4 w-4" />
-                    <span>{isScanning ? 'Scanning...' : 'Scan Ticket'}</span>
+                    <span>{isScanning ? 'Stop Scanning' : 'Start Scanning'}</span>
                   </Button>
                   <Button
                     variant="outline"

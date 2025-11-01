@@ -1,7 +1,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
+  /* Responsive type scaling to fit all screens */
+  --font-size: clamp(14px, 1.2vw + 12px, 16px);
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: #ffffff;
@@ -126,6 +127,8 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Smoother touch scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -186,4 +189,51 @@
 
 html {
   font-size: var(--font-size);
+}
+
+/* Global responsive fixes */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure media scales within containers on small screens */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Smooth scrolling for designated containers */
+.scroll-container {
+  scroll-behavior: smooth;
+}
+
+/* Global scrolling enhancements for smoother UX across devices */
+html, body {
+  scroll-behavior: smooth;
+}
+
+/* Thin, subtle scrollbars to keep UI professional */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* WebKit */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
+
+/* Utility for scrollable containers to avoid rubber-banding and jank */
+.scroll-container {
+  overscroll-behavior: contain;
 }

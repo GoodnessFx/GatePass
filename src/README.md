@@ -2,7 +2,7 @@
 
 **Production-ready decentralized event ticketing platform with NFT tickets and mobile scanning**
 
-PassMint empowers event organizers to create, sell, and manage tickets as NFTs while providing attendees with a seamless mobile experience for tickets and proof of attendance.
+GatePass empowers event organizers to create, sell, and manage tickets as NFTs while providing attendees with a seamless mobile experience for tickets and proof of attendance.
 
 ## ✨ Features
 
@@ -27,7 +27,7 @@ PassMint empowers event organizers to create, sell, and manage tickets as NFTs w
 ## 🏗️ Architecture
 
 ```
-PassMint Monorepo
+GatePass Monorepo
 ├── apps/
 │   ├── web/           # Next.js organizer & attendee dashboard
 │   └── mobile/        # React Native scanner + wallet app

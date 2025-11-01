@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from './AuthProvider';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -50,6 +51,7 @@ interface TicketTier {
 export function EventCreation({ onBack }: EventCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
+  const { user } = useAuth();
   
   // Form state
   const [eventData, setEventData] = useState({
@@ -120,12 +122,41 @@ export function EventCreation({ onBack }: EventCreationProps) {
     
     // Simulate contract deployment
     setTimeout(() => {
+      // Persist event locally for organizer dashboard listing
+      const newEvent = {
+        id: `event-${Date.now()}`,
+        organizerId: user?.id ?? 'demo-organizer',
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        venue: eventData.venue,
+        address: eventData.address,
+        date: eventData.startDate ? format(eventData.startDate, 'yyyy-MM-dd') : '',
+        time: `${eventData.startTime}${eventData.endTime ? ` - ${eventData.endTime}` : ''}`,
+        image: eventData.image,
+        maxCapacity: eventData.maxCapacity,
+        ticketTiers,
+        settings,
+        status: 'live',
+        ticketsSold: 0,
+        revenue: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
+        existing.push(newEvent);
+        localStorage.setItem('gatepass_events', JSON.stringify(existing));
+      } catch (e) {
+        console.warn('Failed saving event locally', e);
+      }
+
       setIsDeploying(false);
       toast.success('Event deployed successfully!', {
-        description: 'Your smart contract has been deployed to Polygon testnet.'
+        description: 'Your event is live and visible in your dashboard.'
       });
       onBack();
-    }, 3000);
+    }, 2000);
   };
 
   const renderStepContent = () => {
@@ -223,14 +254,40 @@ export function EventCreation({ onBack }: EventCreationProps) {
 
                 <div>
                   <Label>Event Image</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                    {eventData.image ? (
+                      <img
+                        src={eventData.image}
+                        alt="Event banner"
+                        className="h-28 w-full object-cover rounded-md mb-3"
+                      />
+                    ) : (
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    )}
                     <p className="text-sm text-muted-foreground">
-                      Drag and drop an image, or click to browse
+                      Upload a square or wide image for best results
                     </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      Choose File
-                    </Button>
+                    <input
+                      id="event-image"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setEventData({ ...eventData, image: String(reader.result) });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <label htmlFor="event-image">
+                      <Button asChild variant="outline" size="sm" className="mt-2">
+                        <span>Choose File</span>
+                      </Button>
+                    </label>
                   </div>
                 </div>
               </div>

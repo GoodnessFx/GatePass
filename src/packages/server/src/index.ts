@@ -49,14 +49,14 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'PassMint API',
+      title: 'GatePass API',
       version: '1.0.0',
       description: 'Decentralized event ticketing platform API',
     },
     servers: [
       {
         url: process.env.NODE_ENV === 'production' 
-          ? 'https://api.passmint.com'
+          ? 'https://api.gatepass.com'
           : `http://localhost:${PORT}`,
         description: process.env.NODE_ENV === 'production' ? 'Production' : 'Development',
       },
@@ -109,7 +109,7 @@ process.on('SIGINT', () => {
 })
 
 app.listen(PORT, () => {
-  logger.info(`🚀 PassMint API server running on http://localhost:${PORT}`)
+  logger.info(`🚀 GatePass API server running on http://localhost:${PORT}`)
   logger.info(`📚 API Documentation: http://localhost:${PORT}/docs`)
   logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`)
 })

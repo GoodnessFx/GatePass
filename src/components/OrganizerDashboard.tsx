@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -77,12 +77,49 @@ const recentSales = [
 ];
 
 export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScanner }: OrganizerDashboardProps) {
-  const totalRevenue = mockEvents.reduce((sum, event) => sum + event.revenue, 0);
-  const totalTicketsSold = mockEvents.reduce((sum, event) => sum + event.ticketsSold, 0);
-  const activeEvents = mockEvents.filter(e => e.status === 'live').length;
+  const [localEvents, setLocalEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
+      setLocalEvents(Array.isArray(saved) ? saved : []);
+    } catch (e) {
+      setLocalEvents([]);
+    }
+  }, []);
+
+  const combinedEvents = useMemo(() => {
+    const normalizedLocal = localEvents.map((ev) => {
+      const totalTickets = Array.isArray(ev.ticketTiers)
+        ? ev.ticketTiers.reduce((sum: number, t: any) => sum + (Number(t.quantity) || 0), 0)
+        : (Number(ev.maxCapacity) || 0);
+      const ticketPrice = Array.isArray(ev.ticketTiers) && ev.ticketTiers.length > 0
+        ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0))
+        : 0;
+      return {
+        id: ev.id,
+        title: ev.title || 'Untitled Event',
+        date: ev.date || '',
+        time: ev.time || '',
+        venue: ev.venue || '',
+        status: ev.status || 'live',
+        ticketsSold: Number(ev.ticketsSold) || 0,
+        totalTickets,
+        revenue: Number(ev.revenue) || 0,
+        ticketPrice,
+        attendees: Number(ev.ticketsSold) || 0,
+        image: ev.image || ''
+      };
+    });
+    return [...normalizedLocal.reverse(), ...mockEvents];
+  }, [localEvents]);
+
+  const totalRevenue = combinedEvents.reduce((sum, event) => sum + (Number(event.revenue) || 0), 0);
+  const totalTicketsSold = combinedEvents.reduce((sum, event) => sum + (Number(event.ticketsSold) || 0), 0);
+  const activeEvents = combinedEvents.filter(e => e.status === 'live').length;
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-6 scroll-container">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -171,7 +208,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {mockEvents.map((event) => (
+                  {combinedEvents.map((event) => (
                     <div key={event.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>

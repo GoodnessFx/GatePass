@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../utils/supabase/client';
 
 interface User {
   id: string;
   email: string;
+  name?: string;
   role: 'organizer' | 'attendee';
   walletAddress?: string;
   createdAt: string;
@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
-  signUp: (email: string, password: string, role: 'organizer' | 'attendee') => Promise<{ user: User | null; error: string | null }>;
+  signUp: (email: string, password: string, name: string, role: 'organizer' | 'attendee') => Promise<{ user: User | null; error: string | null }>;
   signOut: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   connectWallet: (walletAddress: string) => void;
@@ -39,142 +39,63 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(false); // Set to false in demo mode
 
   useEffect(() => {
-    // Demo mode - skip Supabase initialization
-    const isDemoMode = true; // Set to false for production
-    
-    if (isDemoMode) {
+    // Dummy auth: initialize user from localStorage if present
+    try {
+      const stored = localStorage.getItem('gatepass_user');
+      if (stored) {
+        const parsed: User = JSON.parse(stored);
+        setUser(parsed);
+      }
+    } catch (e) {
+      console.warn('Failed to read stored user:', e);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Check for existing session
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Fetch user profile from our backend
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f7f2fbf2/auth/profile`, {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          }
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        // Fetch user profile
-        try {
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f7f2fbf2/auth/profile`, {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Profile fetch error:', error);
-        }
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+    // Dummy sign-in: create or use existing local user
+    const existing = localStorage.getItem('gatepass_user');
+    let parsed: User | null = existing ? JSON.parse(existing) : null;
+    if (!parsed) {
+      parsed = {
+        id: 'user_' + Date.now(),
         email,
-        password
-      });
-
-      if (error) {
-        return { user: null, error: error.message };
-      }
-
-      if (data.session) {
-        // Fetch user profile
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f7f2fbf2/auth/profile`, {
-          headers: {
-            'Authorization': `Bearer ${data.session.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          return { user: userData, error: null };
-        }
-      }
-
-      return { user: null, error: 'Failed to fetch user profile' };
-    } catch (error) {
-      return { user: null, error: 'An unexpected error occurred' };
+        name: 'User',
+        role: 'attendee',
+        createdAt: new Date().toISOString(),
+      };
     }
+    localStorage.setItem('gatepass_user', JSON.stringify(parsed));
+    setUser(parsed);
+    return { user: parsed, error: null };
   };
 
-  const signUp = async (email: string, password: string, role: 'organizer' | 'attendee') => {
-    try {
-      // Create user account via our backend
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f7f2fbf2/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          role
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        return { user: null, error: result.error || 'Sign up failed' };
-      }
-
-      // Sign in after successful registration
-      const signInResult = await signIn(email, password);
-      return signInResult;
-    } catch (error) {
-      return { user: null, error: 'An unexpected error occurred' };
-    }
+  const signUp = async (email: string, password: string, name: string, role: 'organizer' | 'attendee') => {
+    // Dummy sign-up: create and store user
+    const newUser: User = {
+      id: 'user_' + Date.now(),
+      email,
+      name,
+      role,
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem('gatepass_user', JSON.stringify(newUser));
+    setUser(newUser);
+    return { user: newUser, error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Dummy sign-out: clear local storage and reset
+    localStorage.removeItem('gatepass_user');
     setUser(null);
   };
 
   const updateUser = (updates: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...updates });
+      const updated = { ...user, ...updates } as User;
+      setUser(updated);
+      localStorage.setItem('gatepass_user', JSON.stringify(updated));
     }
   };
 

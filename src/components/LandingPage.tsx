@@ -16,12 +16,12 @@ import {
 } from 'lucide-react';
 
 interface LandingPageProps {
-  onRoleSelect: (role: 'organizer' | 'attendee') => void;
+  onAuthAction: (action: 'login' | 'signup') => void;
   onConnect: () => void;
   isConnected: boolean;
 }
 
-export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPageProps) {
+export function LandingPage({ onAuthAction, onConnect, isConnected }: LandingPageProps) {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -39,14 +39,14 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Button size="lg" onClick={() => onRoleSelect('organizer')} className="flex items-center space-x-2">
+              <Button size="lg" onClick={() => onAuthAction('signup')} className="flex items-center space-x-2">
                 <Users className="h-5 w-5" />
-                <span>I'm an Organizer</span>
+                <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => onRoleSelect('attendee')} className="flex items-center space-x-2">
+              <Button size="lg" variant="outline" onClick={() => onAuthAction('login')} className="flex items-center space-x-2">
                 <Ticket className="h-5 w-5" />
-                <span>I'm an Attendee</span>
+                <span>Sign In</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -64,7 +64,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose PassMint?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose GatePass?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Built for the modern event industry with blockchain security and traditional payment options.
             </p>
@@ -247,14 +247,14 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             Ready to revolutionize your events?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of event organizers already using PassMint to create secure, 
+            Join thousands of event organizers already using GatePass to create secure, 
             fraud-proof ticketing experiences.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" onClick={() => onRoleSelect('organizer')}>
+            <Button size="lg" variant="secondary" onClick={() => onAuthAction('signup')}>
               Start Creating Events
             </Button>
-            <Button size="lg" variant="outline" onClick={() => onRoleSelect('attendee')} className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+            <Button size="lg" variant="outline" onClick={() => onAuthAction('login')} className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
               Browse Events
             </Button>
           </div>
@@ -268,7 +268,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Ticket className="h-6 w-6" />
-                <span className="font-bold">PassMint</span>
+                <span className="font-bold">GatePass</span>
               </div>
               <p className="text-muted-foreground text-sm">
                 The future of event ticketing, powered by blockchain technology.
@@ -308,7 +308,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
           
           <div className="border-t mt-12 pt-8 text-center">
             <p className="text-muted-foreground text-sm">
-              © 2024 PassMint. All rights reserved. Built on Polygon.
+              © 2024 GatePass. All rights reserved. Built on Polygon.
             </p>
           </div>
         </div>
