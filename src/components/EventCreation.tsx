@@ -123,7 +123,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
       // Persist event locally for organizer dashboard listing
       const newEvent = {
         id: `event-${Date.now()}`,
-        organizerId: user?.id ?? 'demo-organizer',
+        organizerId: 'demo-organizer',
         title: eventData.title,
         description: eventData.description,
         category: eventData.category,

@@ -38,6 +38,7 @@ interface TicketPurchaseProps {
 }
 
 // Mock event data
+// Mock event data
 const mockEvents = [
   {
     id: 1,
@@ -47,6 +48,8 @@ const mockEvents = [
     time: "09:00 AM - 06:00 PM",
     venue: "Convention Center, SF",
     category: "Technology",
+    niche: "AI",
+    location: { city: "San Francisco", lat: 37.784, lng: -122.401 },
     price: 150,
     image: "/api/placeholder/400/250",
     organizer: "TechEvents Inc",
@@ -68,6 +71,8 @@ const mockEvents = [
     time: "12:00 PM - 11:00 PM",
     venue: "Golden Gate Park",
     category: "Music",
+    niche: "Festival",
+    location: { city: "San Francisco", lat: 37.7694, lng: -122.4862 },
     price: 120,
     image: "/api/placeholder/400/250",
     organizer: "Summer Sounds",
@@ -88,6 +93,8 @@ const mockEvents = [
     time: "06:00 PM - 09:00 PM",
     venue: "WeWork Downtown",
     category: "Business",
+    niche: "Startup",
+    location: { city: "San Francisco", lat: 37.788, lng: -122.402 },
     price: 30,
     image: "/api/placeholder/400/250",
     organizer: "Startup Hub",
@@ -114,13 +121,35 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [promoCode, setPromoCode] = useState<string>(getSuggestedPromoCode() || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [nicheFilter, setNicheFilter] = useState('all');
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number>(0);
   const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const niches = Array.from(new Set(mockEvents.map(e => e.niche))).sort();
+
+  function toRad(value: number) { return (value * Math.PI) / 180; }
+  function distanceKm(a: {lat: number; lng: number}, b: {lat: number; lng: number}) {
+    const R = 6371; // Earth radius in km
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat/2);
+    const sinDLng = Math.sin(dLng/2);
+    const c = 2 * Math.asin(Math.sqrt(sinDLat*sinDLat + Math.cos(lat1)*Math.cos(lat2)*sinDLng*sinDLng));
+    return R * c;
+  }
 
   const filteredEvents = mockEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesNiche = nicheFilter === 'all' || event.niche === nicheFilter;
+    const matchesDistance = !userLocation || radiusKm === 0
+      ? true
+      : distanceKm(userLocation, { lat: event.location.lat, lng: event.location.lng }) <= radiusKm;
+    return matchesSearch && matchesCategory && matchesNiche && matchesDistance;
   });
 
   const handlePurchase = async () => {
@@ -158,11 +187,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         }
         if (paymentGateway === 'flutterwave') {
           const res = await flutterwaveCheckout({
-            email: customerEmail || user?.email || 'buyer@example.com',
+            email: customerEmail || 'buyer@example.com',
             amount: Number(amountWithFees.toFixed(2)),
             currency: fiatCurrency,
             phone: customerPhone || undefined,
-            name: user?.email?.split('@')[0],
+            name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee'),
             reference: `GP-${selectedEvent.id}-${Date.now()}`,
             onSuccess: async () => {
               await finalizeTicket(selectedEvent, selectedTierData);
@@ -208,7 +237,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       if (selectedTierData) {
         const input = {
           eventId: String(event.id),
-          attendeeId: user?.id ?? 'demo-attendee',
+          attendeeId: 'demo-attendee',
           ticketType: selectedTierData.name,
           event: {
             name: event.title,
@@ -217,7 +246,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             venue: event.venue,
             bannerUrl: undefined,
           },
-          attendee: { name: (user?.email?.split('@')[0] ?? 'Attendee') },
+          attendee: { name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee') },
           purchaseTimestamp: Date.now(),
           blockchain: { chain: 'polygon', txHash: '0xDEMO' },
           secretSalt: 'demo-salt',
@@ -269,7 +298,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         </div>
 
         {/* Search and Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -295,6 +324,63 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
               <SelectItem value="Sports">Sports</SelectItem>
             </SelectContent>
           </Select>
+          <Select onValueChange={setNicheFilter}>
+            <SelectTrigger>
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="All Niches" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Niches</SelectItem>
+              {niches.map((n) => (
+                <SelectItem key={n} value={n}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Location Sync */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!('geolocation' in navigator)) {
+                toast.error('Geolocation not supported in this browser.');
+                return;
+              }
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                  toast.success('Location synced. Showing nearby events.');
+                },
+                (err) => {
+                  console.error('Geolocation error:', err);
+                  toast.error('Unable to fetch location. Please allow access.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+              );
+            }}
+          >
+            Use My Location
+          </Button>
+          <Select onValueChange={(v) => setRadiusKm(Number(v))}>
+            <SelectTrigger>
+              <MapPin className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Any distance" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={String(0)}>Any distance</SelectItem>
+              <SelectItem value={String(5)}>Within 5 km</SelectItem>
+              <SelectItem value={String(10)}>Within 10 km</SelectItem>
+              <SelectItem value={String(25)}>Within 25 km</SelectItem>
+              <SelectItem value={String(50)}>Within 50 km</SelectItem>
+            </SelectContent>
+          </Select>
+          {userLocation && (
+            <div className="text-sm text-muted-foreground flex items-center">
+              <MapPin className="h-4 w-4 mr-2" />
+              Location set. Filtering within {radiusKm || 'any'} km.
+            </div>
+          )}
         </div>
 
         {/* Events Grid */}
@@ -332,8 +418,13 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="line-clamp-1">{event.venue}</span>
+                    <span className="line-clamp-1">{event.venue}{userLocation ? ` • ${event.location.city}` : ''}</span>
                   </div>
+                  {userLocation && (
+                    <div className="text-xs text-muted-foreground pl-6">
+                      ~{Math.round(distanceKm(userLocation, { lat: event.location.lat, lng: event.location.lng }))} km away
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -342,7 +433,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                     <span className="text-sm">{event.rating}</span>
                     <span className="text-sm text-muted-foreground">({event.attendees})</span>
                   </div>
-                  <Badge variant="secondary">{event.category}</Badge>
+                  <Badge variant="secondary">{event.category} • {event.niche}</Badge>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t">
