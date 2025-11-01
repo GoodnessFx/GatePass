@@ -1,4 +1,5 @@
 import React from 'react';
+import { getActivePromotion, getSuggestedPromoCode, formatMoney } from '../utils/promotions/seasonal';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -16,12 +17,14 @@ import {
 } from 'lucide-react';
 
 interface LandingPageProps {
-  onAuthAction: (action: 'login' | 'signup') => void;
+  onRoleSelect: (role: 'attendee' | 'organizer') => void;
   onConnect: () => void;
   isConnected: boolean;
 }
 
-export function LandingPage({ onAuthAction, onConnect, isConnected }: LandingPageProps) {
+export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPageProps) {
+  const promo = getActivePromotion();
+  const suggestedCode = getSuggestedPromoCode();
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -39,14 +42,14 @@ export function LandingPage({ onAuthAction, onConnect, isConnected }: LandingPag
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Button size="lg" onClick={() => onAuthAction('signup')} className="flex items-center space-x-2">
+              <Button size="lg" onClick={() => onRoleSelect('attendee')} className="flex items-center space-x-2">
                 <Users className="h-5 w-5" />
-                <span>Get Started</span>
+                <span>Join as Attendee</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => onAuthAction('login')} className="flex items-center space-x-2">
+              <Button size="lg" variant="outline" onClick={() => onRoleSelect('organizer')} className="flex items-center space-x-2">
                 <Ticket className="h-5 w-5" />
-                <span>Sign In</span>
+                <span>Join as Organizer</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -56,6 +59,35 @@ export function LandingPage({ onAuthAction, onConnect, isConnected }: LandingPag
                 🚀 Now live on Polygon Testnet
               </Badge>
             </div>
+
+            {promo && (
+              <div className="mt-6 max-w-3xl mx-auto">
+                <Card className="border-2 border-primary/40 bg-background/60 backdrop-blur">
+                  <CardHeader className="py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Badge variant="outline" className="text-primary">Seasonal Offer</Badge>
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    </div>
+                    <CardTitle className="text-xl md:text-2xl">{promo.name}: {promo.discountPercent}% off</CardTitle>
+                    <CardDescription className="text-base">
+                      {promo.description} — Use code <span className="font-semibold">{promo.code}</span> at checkout.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <Button size="sm" onClick={() => onRoleSelect('attendee')} className="flex items-center gap-2">
+                        <Ticket className="h-4 w-4" />
+                        <span>Grab the Deal</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      {suggestedCode && (
+                        <Badge variant="secondary" className="text-xs">Promo Code: {suggestedCode}</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </section>

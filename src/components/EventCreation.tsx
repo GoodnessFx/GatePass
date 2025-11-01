@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -51,7 +50,6 @@ interface TicketTier {
 export function EventCreation({ onBack }: EventCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
-  const { user } = useAuth();
   
   // Form state
   const [eventData, setEventData] = useState({
@@ -307,6 +305,16 @@ export function EventCreation({ onBack }: EventCreationProps) {
               <div className="space-y-4">
                 <div>
                   <Label>Start Date</Label>
+                  {/* Allow manual typing of date */}
+                  <Input
+                    type="date"
+                    value={eventData.startDate ? format(eventData.startDate, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEventData({ ...eventData, startDate: v ? new Date(v) : undefined });
+                    }}
+                    className="mb-2"
+                  />
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -361,6 +369,16 @@ export function EventCreation({ onBack }: EventCreationProps) {
               <div className="space-y-4">
                 <div>
                   <Label>End Date</Label>
+                  {/* Allow manual typing of date */}
+                  <Input
+                    type="date"
+                    value={eventData.endDate ? format(eventData.endDate, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEventData({ ...eventData, endDate: v ? new Date(v) : undefined });
+                    }}
+                    className="mb-2"
+                  />
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button

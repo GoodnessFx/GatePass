@@ -6,10 +6,8 @@ import { AttendeeDashboard } from './components/AttendeeDashboard';
 import { TicketPurchase } from './components/TicketPurchase';
 import { MobileScanner } from './components/MobileScanner';
 import { Analytics } from './components/Analytics';
-import { AuthModal } from './components/AuthModal';
 import { Toaster } from './components/ui/sonner';
 import { WalletConnection } from './components/WalletConnection';
-import { AuthProvider, useAuth } from './components/AuthProvider';
 import Footer from './components/Footer';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
@@ -26,14 +24,15 @@ import {
 } from 'lucide-react';
 
 type AppView = 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
+type UserRole = 'attendee' | 'organizer' | null;
 
-function AppContent() {
-  const { user, loading, signOut, connectWallet } = useAuth();
+function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   // Initialize dark mode from localStorage (default to dark if no preference saved)
   useEffect(() => {
@@ -52,26 +51,22 @@ function AppContent() {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
   };
 
-  // Keep Home (Landing) as the default after auth changes to ensure
-  // the application always loads Home first and remains consistent across devices.
-  useEffect(() => {
-    setCurrentView('landing');
-  }, [user]);
-
-  const handleAuthAction = (action: 'login' | 'signup') => {
-    setAuthMode(action);
-    setShowAuthModal(true);
+  const handleRoleSelection = (role: 'attendee' | 'organizer') => {
+    setUserRole(role);
+    setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
   };
 
   const handleWalletConnect = () => {
-    // Connect wallet and update user state
-    connectWallet('0x1234...5678');
+    setIsWalletConnected(true);
+    setWalletAddress('0x1234...5678');
   };
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    setUserRole(null);
     setCurrentView('landing');
     setSelectedEvent(null);
+    setIsWalletConnected(false);
+    setWalletAddress(null);
   };
 
   const handleEventPurchase = (eventId: string) => {
@@ -79,20 +74,20 @@ function AppContent() {
     setCurrentView('ticket-purchase');
   };
 
-  // Header component for authenticated users
-  const AuthenticatedHeader = () => (
+  // Header component for users who selected a role
+  const RoleHeader = () => (
     <header className="bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <h1 
               className="font-bold text-xl cursor-pointer"
-              onClick={() => setCurrentView(user?.role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard')}
+              onClick={() => setCurrentView(userRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard')}
             >
               GatePass
             </h1>
             <Badge variant="secondary">
-              {user?.role === 'organizer' ? 'Organizer' : 'Attendee'}
+              {userRole === 'organizer' ? 'Organizer' : 'Attendee'}
             </Badge>
             {/* Home Navigation */}
             <Button
@@ -122,8 +117,8 @@ function AppContent() {
 
             {/* Wallet Connection */}
             <WalletConnection 
-              isConnected={user?.isConnected || false}
-              walletAddress={user?.walletAddress}
+              isConnected={isWalletConnected}
+              walletAddress={walletAddress}
               onConnect={handleWalletConnect}
             />
 
@@ -135,7 +130,7 @@ function AppContent() {
             {/* User Menu */}
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4" />
-              <span className="text-sm">{user?.email}</span>
+              <span className="text-sm">{userRole === 'organizer' ? 'Event Organizer' : 'Event Attendee'}</span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -151,9 +146,9 @@ function AppContent() {
       case 'landing':
         return (
           <LandingPage
-            onAuthAction={handleAuthAction}
+            onRoleSelect={handleRoleSelection}
             onConnect={handleWalletConnect}
-            isConnected={user?.isConnected || false}
+            isConnected={isWalletConnected}
           />
         );
 
@@ -225,21 +220,9 @@ function AppContent() {
     }
   };
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          <span>Loading GatePass...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {user && <AuthenticatedHeader />}
+      {userRole && <RoleHeader />}
       
       <main className="flex-1 container mx-auto px-4 py-8">
         {currentView !== 'landing' && (
@@ -258,23 +241,10 @@ function AppContent() {
 
       <Footer />
 
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        defaultMode={authMode}
-      />
-
       {/* Toast Notifications */}
       <Toaster position="top-right" />
     </div>
   );
 }
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
+export default App;

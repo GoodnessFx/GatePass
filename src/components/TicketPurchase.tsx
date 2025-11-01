@@ -27,9 +27,9 @@ import {
   Minus,
   Info
 } from 'lucide-react';
-import { useAuth } from './AuthProvider';
 import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
 import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
+import { getActivePromotion, getSuggestedPromoCode, calculateDiscount } from '../utils/promotions/seasonal';
 
 interface TicketPurchaseProps {
   eventId: string;
@@ -110,10 +110,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [fiatCurrency, setFiatCurrency] = useState<'NGN' | 'GHS' | 'KES' | 'ZAR'>('NGN');
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [customerPhone, setCustomerPhone] = useState<string>('');
+  const activePromo = getActivePromotion();
+  const [promoCode, setPromoCode] = useState<string>(getSuggestedPromoCode() || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const { user } = useAuth();
 
   const filteredEvents = mockEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -127,13 +128,16 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     setIsPurchasing(true);
 
     const selectedTierData = selectedEvent.ticketTiers.find(tier => tier.id.toString() === selectedTier);
-    const amountWithFees = totalPrice + totalPrice * 0.025;
+    const subtotal = totalPrice;
+    const fee = subtotal * 0.025;
+    const discount = calculateDiscount(subtotal, activePromo, promoCode);
+    const amountWithFees = Math.max(0, subtotal + fee - discount);
 
     try {
       if (paymentMethod === 'fiat') {
         if (paymentGateway === 'paystack') {
           const res = await paystackCheckout({
-            email: customerEmail || user?.email || 'buyer@example.com',
+            email: customerEmail || 'buyer@example.com',
             amount: Number(amountWithFees.toFixed(2)),
             currency: fiatCurrency,
             reference: `GP-${selectedEvent.id}-${Date.now()}`,
@@ -244,6 +248,10 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
   const selectedTierData = selectedEvent?.ticketTiers.find(tier => tier.id.toString() === selectedTier);
   const totalPrice = selectedTierData ? selectedTierData.price * quantity : 0;
+  const subtotal = totalPrice;
+  const fee = subtotal * 0.025;
+  const discount = calculateDiscount(subtotal, activePromo, promoCode);
+  const grandTotal = Math.max(0, subtotal + fee - discount);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -480,6 +488,17 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                         <Input placeholder="e.g. 0803 123 4567" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                                       </div>
                                     </div>
+                                    {activePromo && (
+                                      <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="md:col-span-2">
+                                          <Label className="text-sm">Promo Code</Label>
+                                          <Input placeholder={activePromo.code} value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+                                        </div>
+                                        <div className="flex items-end">
+                                          <Badge variant="secondary" className="w-full justify-center">{activePromo.name} - {activePromo.discountPercent}% off</Badge>
+                                        </div>
+                                      </div>
+                                    )}
                                     <div className="grid grid-cols-3 gap-3 mt-3">
                                       <Button type="button" variant={paymentGateway === 'paystack' ? 'default' : 'outline'} onClick={() => setPaymentGateway('paystack')}>Paystack</Button>
                                       <Button type="button" variant={paymentGateway === 'flutterwave' ? 'default' : 'outline'} onClick={() => setPaymentGateway('flutterwave')}>Flutterwave</Button>
@@ -502,11 +521,17 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                 </div>
                                 <div className="flex justify-between text-sm text-muted-foreground">
                                   <span>Platform fee</span>
-                                  <span>${(totalPrice * 0.025).toFixed(2)}</span>
+                                  <span>${(fee).toFixed(2)}</span>
                                 </div>
+                                {discount > 0 && (
+                                  <div className="flex justify-between text-sm text-green-600">
+                                    <span>Promo discount</span>
+                                    <span>- ${discount.toFixed(2)}</span>
+                                  </div>
+                                )}
                                 <div className="border-t pt-2 flex justify-between font-medium">
                                   <span>Total</span>
-                                  <span>${(totalPrice + totalPrice * 0.025).toFixed(2)}</span>
+                                  <span>${grandTotal.toFixed(2)}</span>
                                 </div>
                               </div>
                             </div>
@@ -526,7 +551,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                             ) : (
                               <>
                                 <Ticket className="h-4 w-4" />
-                                <span>Purchase Tickets</span>
+                                <span>Purchase Tickets — ${grandTotal.toFixed(2)}</span>
                               </>
                             )}
                           </Button>
