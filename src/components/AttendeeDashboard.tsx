@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { toast } from 'sonner';
+import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
+import { generateSecurityHash } from '../utils/ticketing/security';
 import { 
   Ticket, 
   Calendar, 
@@ -99,6 +105,114 @@ const poaBadges = [
 export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) {
   const activeTickets = userTickets.filter(ticket => ticket.status === 'confirmed');
   const attendedEvents = userTickets.filter(ticket => ticket.status === 'attended');
+
+  // Personalization
+  const displayName = useMemo(() => localStorage.getItem('gatepass_display_name') || 'Attendee', []);
+
+  // QR state
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [selectedTicket, setSelectedTicket] = useState<typeof userTickets[0] | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Transfer state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferTo, setTransferTo] = useState('');
+  const [transferNote, setTransferNote] = useState('');
+
+  useEffect(() => {
+    if (!qrOpen || !selectedTicket) return;
+    const makeQr = async () => {
+      try {
+        const payload = buildQrPayload(selectedTicket);
+        const QR = await import('qrcode');
+        if (canvasRef.current) {
+          await QR.toCanvas(canvasRef.current, payload, { width: 240, margin: 1 });
+        }
+        const url = await QR.toDataURL(payload, { width: 240, margin: 1 });
+        setQrDataUrl(url);
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to generate QR');
+      }
+    };
+    makeQr();
+  }, [qrOpen, selectedTicket]);
+
+  const getEventIdFromTitle = (title: string) => {
+    const lower = title.toLowerCase();
+    if (lower.includes('tech conference')) return '1';
+    if (lower.includes('music festival')) return '2';
+    if (lower.includes('startup')) return '3';
+    return '0';
+  };
+
+  const buildQrPayload = (t: typeof userTickets[0]) => {
+    const ticketId = `TKT-${t.id.toString().padStart(3, '0')}`;
+    const eventId = getEventIdFromTitle(t.eventTitle);
+    const attendeeId = displayName;
+    const timestamp = Date.now().toString();
+    const securityHash = generateSecurityHash(`${ticketId}|${eventId}|${attendeeId}|${timestamp}`, 'gatepass-demo-salt');
+    return `${ticketId}|${eventId}|${attendeeId}|${timestamp}|${securityHash}`;
+  };
+
+  const onShowQr = (t: typeof userTickets[0]) => {
+    setSelectedTicket(t);
+    setQrOpen(true);
+  };
+
+  const onDownload = async (t: typeof userTickets[0]) => {
+    try {
+      await generateSecureTicketPDF({
+        event: {
+          title: t.eventTitle,
+          date: t.date,
+          venue: t.venue,
+        },
+        attendee: {
+          name: displayName,
+          walletAddress: '0xDEMO...',
+        },
+        ticket: {
+          id: `TKT-${t.id.toString().padStart(3, '0')}`,
+          type: t.ticketType,
+          seat: t.seatNumber,
+          price: t.price,
+        },
+        secretSalt: 'gatepass-demo-salt'
+      });
+      toast.success('Ticket PDF downloaded');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to download ticket');
+    }
+  };
+
+  const onTransfer = (t: typeof userTickets[0]) => {
+    setSelectedTicket(t);
+    setTransferOpen(true);
+  };
+
+  const confirmTransfer = () => {
+    if (!selectedTicket || !transferTo.trim()) {
+      toast.error('Enter a recipient name');
+      return;
+    }
+    const record = {
+      ticketId: `TKT-${selectedTicket.id.toString().padStart(3, '0')}`,
+      from: displayName,
+      to: transferTo.trim(),
+      note: transferNote.trim(),
+      ts: Date.now(),
+    };
+    const prev = JSON.parse(localStorage.getItem('gatepass_transfers') || '[]');
+    prev.push(record);
+    localStorage.setItem('gatepass_transfers', JSON.stringify(prev));
+    setTransferOpen(false);
+    setTransferTo('');
+    setTransferNote('');
+    toast.success('Transfer recorded');
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -224,17 +338,32 @@ export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) 
                       </div>
                     </div>
 
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1 flex items-center space-x-1">
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 min-w-[110px] flex items-center space-x-1"
+                        onClick={() => onShowQr(ticket)}
+                      >
                         <QrCode className="h-3 w-3" />
                         <span>QR Code</span>
                       </Button>
-                      <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 min-w-[110px] flex items-center space-x-1"
+                        onClick={() => onDownload(ticket)}
+                      >
                         <Download className="h-3 w-3" />
                         <span>Download</span>
                       </Button>
                       {ticket.transferable && (
-                        <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 min-w-[110px] flex items-center space-x-1"
+                          onClick={() => onTransfer(ticket)}
+                        >
                           <Share className="h-3 w-3" />
                           <span>Transfer</span>
                         </Button>
@@ -337,6 +466,51 @@ export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) 
             </div>
           </TabsContent>
         </Tabs>
+        {/* QR Modal */}
+        <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Ticket QR</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-3">
+              <canvas ref={canvasRef} className="rounded" />
+              {qrDataUrl && (
+                <a href={qrDataUrl} download={`ticket-qr.png`} className="text-xs underline">
+                  Download QR image
+                </a>
+              )}
+              <div className="text-xs text-muted-foreground text-center">
+                Show this QR at entry. It includes a cryptographic hash to prevent fraud.
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Transfer Modal */}
+        <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+          <DialogContent className="sm:max-w-[420px]">
+            <DialogHeader>
+              <DialogTitle>Transfer Ticket</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input 
+                placeholder="Recipient name or wallet alias" 
+                value={transferTo}
+                onChange={(e) => setTransferTo(e.target.value)}
+              />
+              <Textarea 
+                placeholder="Optional note"
+                value={transferNote}
+                onChange={(e) => setTransferNote(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="secondary" onClick={confirmTransfer}>
+                Confirm Transfer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

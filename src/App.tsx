@@ -8,6 +8,7 @@ import { MobileScanner } from './components/MobileScanner';
 import { Analytics } from './components/Analytics';
 import { Toaster } from './components/ui/sonner';
 import { WalletConnection } from './components/WalletConnection';
+import SettingsModal from './components/Settings';
 import Footer from './components/Footer';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
@@ -33,6 +34,8 @@ function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Initialize dark mode from localStorage (default to dark if no preference saved)
   useEffect(() => {
@@ -42,6 +45,10 @@ function App() {
 
     setIsDarkMode(shouldUseDark);
     document.documentElement.classList.toggle('dark', shouldUseDark);
+
+    // Load personalized display name
+    const savedName = localStorage.getItem('gatepass_display_name');
+    if (savedName) setDisplayName(savedName);
   }, []);
 
   const toggleTheme = () => {
@@ -78,8 +85,8 @@ function App() {
   const RoleHeader = () => (
     <header className="bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
+        <div className="flex justify-between items-center h-16 flex-wrap gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
             <h1 
               className="font-bold text-xl cursor-pointer"
               onClick={() => setCurrentView(userRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard')}
@@ -99,7 +106,7 @@ function App() {
             </Button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -123,14 +130,16 @@ function App() {
             />
 
             {/* Settings */}
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => setIsSettingsOpen(true)}>
               <Settings className="h-4 w-4" />
             </Button>
 
             {/* User Menu */}
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4" />
-              <span className="text-sm">{userRole === 'organizer' ? 'Event Organizer' : 'Event Attendee'}</span>
+              <span className="text-sm truncate max-w-[140px]">
+                {displayName || (userRole === 'organizer' ? 'Event Organizer' : 'Event Attendee')}
+              </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -240,6 +249,19 @@ function App() {
       </main>
 
       <Footer />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        initialName={displayName}
+        onSaveName={(name) => {
+          setDisplayName(name);
+          localStorage.setItem('gatepass_display_name', name);
+        }}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+      />
 
       {/* Toast Notifications */}
       <Toaster position="top-right" />

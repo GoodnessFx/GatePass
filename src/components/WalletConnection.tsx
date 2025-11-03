@@ -87,7 +87,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
   return (
     <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center space-x-2">
+        <Button variant="outline" size="sm" className="flex items-center space-x-2 shrink-0 min-w-[110px]">
           <Wallet className="h-4 w-4" />
           <span>Connect Wallet</span>
         </Button>
