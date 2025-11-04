@@ -65,7 +65,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
 
   if (isConnected && walletAddress) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge variant="secondary" className="flex items-center space-x-1">
           <CheckCircle className="h-3 w-3 text-green-500" />
           <span>Connected</span>
@@ -87,7 +87,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
   return (
     <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center space-x-2 shrink-0 min-w-[110px]">
+        <Button variant="outline" size="sm" className="flex items-center space-x-2">
           <Wallet className="h-4 w-4" />
           <span>Connect Wallet</span>
         </Button>

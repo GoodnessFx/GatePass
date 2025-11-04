@@ -251,13 +251,13 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center">
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
                             <Eye className="h-3 w-3" />
                             <span>View</span>
                           </Button>
-                          <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
                             <Edit className="h-3 w-3" />
                             <span>Edit</span>
                           </Button>
@@ -266,14 +266,14 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                               variant="outline" 
                               size="sm" 
                               onClick={onOpenScanner}
-                              className="flex items-center space-x-1"
+                              className="w-full sm:w-auto flex items-center space-x-1"
                             >
                               <Scan className="h-3 w-3" />
                               <span>Scan</span>
                             </Button>
                           )}
                         </div>
-                        <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
                           <ExternalLink className="h-3 w-3" />
                           <span>Share</span>
                         </Button>
