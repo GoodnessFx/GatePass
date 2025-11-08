@@ -53,12 +53,6 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-            
-            <div className="flex justify-center">
-              <Badge variant="secondary" className="px-4 py-2">
-                🚀 Now live on Polygon Testnet
-              </Badge>
-            </div>
 
             {promo && (
               <div className="mt-6 max-w-3xl mx-auto">

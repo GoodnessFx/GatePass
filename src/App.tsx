@@ -131,11 +131,6 @@ function App() {
               onConnect={handleWalletConnect}
             />
 
-            {/* Settings */}
-            <Button variant="ghost" size="sm" onClick={handleSetDisplayName}>
-              <Settings className="h-4 w-4" />
-            </Button>
-
             {/* User Menu */}
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4" />
@@ -181,6 +176,7 @@ function App() {
         return (
           <AttendeeDashboard
             onPurchaseTicket={handleEventPurchase}
+            onSetDisplayName={handleSetDisplayName}
           />
         );
 

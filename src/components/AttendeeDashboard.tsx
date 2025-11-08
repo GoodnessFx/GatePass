@@ -17,11 +17,17 @@ import {
   Trophy,
   Star,
   Users,
-  Eye
+  Eye,
+  Settings,
+  User
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 interface AttendeeDashboardProps {
   onPurchaseTicket: (eventId: string) => void;
+  onSetDisplayName?: (name: string) => void;
 }
 
 // Mock data for user's tickets
@@ -96,27 +102,62 @@ const poaBadges = [
   }
 ];
 
-export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) {
+export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName }: AttendeeDashboardProps) {
   const activeTickets = userTickets.filter(ticket => ticket.status === 'confirmed');
   const attendedEvents = userTickets.filter(ticket => ticket.status === 'attended');
+  const [displayName, setDisplayName] = React.useState('');
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">My Tickets</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <div className="w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:justify-start gap-4 mb-1">
+              <h1 className="text-2xl sm:text-3xl font-bold">My Tickets</h1>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Profile Settings</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Display Name</Label>
+                      <Input
+                        id="name"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="Enter your display name"
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        if (onSetDisplayName) onSetDisplayName(displayName);
+                      }}
+                      className="w-full"
+                    >
+                      Save Changes
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <p className="text-muted-foreground">Manage your event tickets and badges</p>
           </div>
-          <Button onClick={() => onPurchaseTicket('browse')} className="w-full sm:w-fit flex items-center space-x-2">
+          <Button onClick={() => onPurchaseTicket('browse')} className="w-full sm:w-auto flex items-center space-x-2">
             <Eye className="h-4 w-4" />
             <span>Browse Events</span>
           </Button>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Tickets</CardTitle>
@@ -173,68 +214,70 @@ export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) 
         </div>
 
         <Tabs defaultValue="tickets" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="tickets">My Tickets</TabsTrigger>
-            <TabsTrigger value="badges">POA Badges</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-          </TabsList>
+          <div className="border-b mb-4">
+            <TabsList className="w-full sm:w-auto flex">
+              <TabsTrigger value="tickets" className="flex-1 sm:flex-none">My Tickets</TabsTrigger>
+              <TabsTrigger value="badges" className="flex-1 sm:flex-none">POA Badges</TabsTrigger>
+              <TabsTrigger value="history" className="flex-1 sm:flex-none">History</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="tickets" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {userTickets.filter(ticket => ticket.status === 'confirmed').map((ticket) => (
-                <Card key={ticket.id} className="overflow-hidden">
+                <Card key={ticket.id} className="flex flex-col">
                   <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                     <Ticket className="h-16 w-16 text-primary/50" />
                   </div>
                   
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{ticket.eventTitle}</CardTitle>
-                        <CardDescription>{ticket.organizer}</CardDescription>
+                  <CardHeader className="flex-none pb-3">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-lg truncate">{ticket.eventTitle}</CardTitle>
+                        <CardDescription className="truncate">{ticket.organizer}</CardDescription>
                       </div>
-                      <Badge variant="outline">{ticket.ticketType}</Badge>
+                      <Badge variant="outline" className="flex-none">{ticket.ticketType}</Badge>
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <CardContent className="space-y-4 flex-1">
+                    <div className="grid gap-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{ticket.date}</span>
+                        <Calendar className="h-4 w-4 flex-none text-muted-foreground" />
+                        <span className="truncate">{ticket.date}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{ticket.time}</span>
+                        <Clock className="h-4 w-4 flex-none text-muted-foreground" />
+                        <span className="truncate">{ticket.time}</span>
                       </div>
-                      <div className="flex items-center space-x-2 col-span-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{ticket.venue}</span>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 flex-none text-muted-foreground" />
+                        <span className="truncate">{ticket.venue}</span>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="flex justify-between items-center py-3 border-y">
                       <div>
                         <p className="text-sm text-muted-foreground">Seat</p>
                         <p className="font-medium">{ticket.seatNumber}</p>
                       </div>
-                      <div>
+                      <div className="text-right">
                         <p className="text-sm text-muted-foreground">Price</p>
                         <p className="font-medium">${ticket.price}</p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto flex-1 flex items-center space-x-1">
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 min-w-[120px] flex items-center justify-center space-x-1">
                         <QrCode className="h-3 w-3" />
                         <span>QR Code</span>
                       </Button>
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
+                      <Button variant="outline" size="sm" className="flex-1 min-w-[120px] flex items-center justify-center space-x-1">
                         <Download className="h-3 w-3" />
                         <span>Download</span>
                       </Button>
                       {ticket.transferable && (
-                        <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
+                        <Button variant="outline" size="sm" className="flex-1 min-w-[120px] flex items-center justify-center space-x-1">
                           <Share className="h-3 w-3" />
                           <span>Transfer</span>
                         </Button>
@@ -266,20 +309,20 @@ export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) 
           </TabsContent>
 
           <TabsContent value="badges" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {poaBadges.map((badge) => (
-                <Card key={badge.id}>
-                  <CardHeader className="text-center">
-                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mb-4">
-                      <Trophy className="h-12 w-12 text-primary" />
+                <Card key={badge.id} className="flex flex-col">
+                  <CardHeader className="text-center pb-3">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mb-4">
+                      <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
                     </div>
-                    <CardTitle className="text-lg">{badge.eventTitle}</CardTitle>
-                    <CardDescription>{badge.date}</CardDescription>
+                    <CardTitle className="text-lg truncate">{badge.eventTitle}</CardTitle>
+                    <CardDescription className="truncate">{badge.date}</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-center">
+                  <CardContent className="text-center flex-1 flex flex-col justify-between gap-3">
                     <Badge 
                       variant={badge.rarity === 'Rare' ? 'default' : 'secondary'} 
-                      className="mb-3"
+                      className="w-fit mx-auto"
                     >
                       {badge.rarity}
                     </Badge>
@@ -305,29 +348,30 @@ export function AttendeeDashboard({ onPurchaseTicket }: AttendeeDashboardProps) 
             )}
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6">
-            <div className="space-y-4">
+          <TabsContent value="history" className="space-y-4">
+            <div className="grid gap-4">
               {userTickets.map((ticket) => (
                 <Card key={ticket.id}>
-                  <CardContent className="flex items-center justify-between p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
+                  <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 gap-4">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center flex-none">
                         <Ticket className="h-6 w-6 text-primary" />
                       </div>
-                      <div>
-                        <h4 className="font-semibold">{ticket.eventTitle}</h4>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold truncate">{ticket.eventTitle}</h4>
+                        <p className="text-sm text-muted-foreground truncate">
                           {ticket.date} • {ticket.venue}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 w-full sm:w-auto">
                       <Badge 
                         variant={ticket.status === 'attended' ? 'default' : 'secondary'}
+                        className="flex-none"
                       >
                         {ticket.status}
                       </Badge>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-muted-foreground">
                         ${ticket.price}
                       </p>
                     </div>
