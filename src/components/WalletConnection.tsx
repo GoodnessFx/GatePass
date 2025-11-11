@@ -15,7 +15,7 @@ import {
 
 interface WalletConnectionProps {
   isConnected: boolean;
-  walletAddress?: string;
+  walletAddress?: string | null;
   onConnect: () => void;
 }
 
@@ -65,20 +65,21 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
 
   if (isConnected && walletAddress) {
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="flex items-center space-x-1">
+      <div className="flex items-center gap-2">
+        {/* Show connection badge only on larger screens to save space on mobile */}
+        <Badge variant="secondary" className="hidden sm:inline-flex items-center space-x-1">
           <CheckCircle className="h-3 w-3 text-green-500" />
           <span>Connected</span>
         </Badge>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={copyAddress}
-          className="flex items-center space-x-2"
+          className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-10 rounded-full hover:bg-accent transition-colors space-x-2"
         >
-          <Wallet className="h-4 w-4" />
-          <span>{formatAddress(walletAddress)}</span>
-          <Copy className="h-3 w-3" />
+          <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">{formatAddress(walletAddress)}</span>
+          <Copy className="hidden sm:inline h-3 w-3" />
         </Button>
       </div>
     );
@@ -87,9 +88,13 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
   return (
     <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center space-x-2">
-          <Wallet className="h-4 w-4" />
-          <span>Connect Wallet</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-10 rounded-full hover:bg-accent transition-colors space-x-2"
+        >
+          <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">Connect Wallet</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

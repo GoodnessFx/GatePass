@@ -283,8 +283,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const grandTotal = Math.max(0, subtotal + fee - discount);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-svh bg-background no-scroll-x py-6">
+      <div className="container-fluid">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2">
@@ -362,7 +362,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           >
             Use My Location
           </Button>
-          <Select onValueChange={(v) => setRadiusKm(Number(v))}>
+          <Select onValueChange={(v: string) => setRadiusKm(Number(v))}>
             <SelectTrigger>
               <MapPin className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Any distance" />
@@ -522,7 +522,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                           {selectedTier && (
                             <div>
                               <Label className="text-base font-medium">Payment Method</Label>
-                              <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'crypto' | 'fiat')} className="mt-2">
+                              <Tabs value={paymentMethod} onValueChange={(value: string) => setPaymentMethod(value as 'crypto' | 'fiat')} className="mt-2">
                                 <TabsList className="grid w-full grid-cols-2">
                                   <TabsTrigger value="crypto" className="flex items-center space-x-2">
                                     <Wallet className="h-4 w-4" />
@@ -558,7 +558,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                                       <div>
                                         <Label className="text-sm">Currency</Label>
-                                        <Select value={fiatCurrency} onValueChange={(v) => setFiatCurrency(v as any)}>
+                                        <Select value={fiatCurrency} onValueChange={(v: string) => setFiatCurrency(v as any)}>
                                           <SelectTrigger>
                                             <SelectValue placeholder="Select currency" />
                                           </SelectTrigger>
