@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import supabase from '../utils/supabase/client';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -20,7 +21,7 @@ import {
   PieChart,
   Activity
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 interface AnalyticsProps {
   onBack: () => void;
@@ -91,11 +92,69 @@ const recentTransactions = [
 export function Analytics({ onBack }: AnalyticsProps) {
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [timeRange, setTimeRange] = useState('7d');
+  const [organizerEvents, setOrganizerEvents] = useState<Array<{ id: string; title?: string }>>([]);
+  const [serverAnalytics, setServerAnalytics] = useState<null | {
+    totalRevenue: number;
+    ticketsSold: number;
+    totalTickets: number;
+    salesByDay: Array<{ date: string; sales: number }>;
+    salesByTier: Array<{ name: string; sold: number; total: number }>;
+  }>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const totalRevenue = salesData.reduce((sum, day) => sum + day.revenue, 0);
-  const totalSales = salesData.reduce((sum, day) => sum + day.sales, 0);
+  useEffect(() => {
+    // Load organizer events if authenticated
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) return;
+        const res = await fetch('/make-server-f7f2fbf2/events', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const events = Array.isArray(json?.events) ? json.events : [];
+          setOrganizerEvents(events.map((e: any) => ({ id: e.id, title: e.title || e.name })));
+        }
+      } catch (e) {
+        console.warn('Failed to fetch organizer events:', e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    // Fetch analytics for selected event when available
+    (async () => {
+      if (selectedEvent === 'all') { setServerAnalytics(null); return; }
+      setIsLoading(true);
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) { setIsLoading(false); return; }
+        const res = await fetch(`/make-server-f7f2fbf2/analytics/${selectedEvent}`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setServerAnalytics(json);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch analytics:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [selectedEvent]);
+
+  const totalRevenue = serverAnalytics
+    ? serverAnalytics.totalRevenue
+    : salesData.reduce((sum, day) => sum + day.revenue, 0);
+  const totalSales = serverAnalytics
+    ? serverAnalytics.ticketsSold
+    : salesData.reduce((sum, day) => sum + day.sales, 0);
   const conversionRate = 3.2;
-  const avgOrderValue = totalRevenue / totalSales;
+  const avgOrderValue = totalSales ? totalRevenue / totalSales : 0;
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -120,9 +179,9 @@ export function Analytics({ onBack }: AnalyticsProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="tech-conf">Tech Conference 2024</SelectItem>
-                <SelectItem value="music-fest">Music Festival</SelectItem>
-                <SelectItem value="startup-pitch">Startup Pitch Night</SelectItem>
+                {organizerEvents.map(evt => (
+                  <SelectItem key={evt.id} value={evt.id}>{evt.title || evt.id}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             
@@ -228,7 +287,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={salesData}>
+                    <AreaChart data={serverAnalytics?.salesByDay || salesData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis yAxisId="left" />
@@ -251,15 +310,15 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <ResponsiveContainer width="100%" height={250}>
                     <RechartsPieChart>
                       <Pie
-                        data={ticketTypeData}
+                        data={serverAnalytics?.salesByTier?.map(t => ({ name: t.name, value: t.sold, color: '#8884d8' })) || ticketTypeData}
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percentage }) => `${name} ${percentage}%`}
+                        label={({ name, percent }: { name: string; percent: number }) => `${name} ${Math.round((percent || 0) * 100)}%`}
                       >
-                        {ticketTypeData.map((entry, index) => (
+                        {(serverAnalytics?.salesByTier || ticketTypeData).map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>

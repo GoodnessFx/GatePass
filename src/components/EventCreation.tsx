@@ -11,7 +11,7 @@ import { Progress } from './ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Calendar as CalendarIcon, 
@@ -181,7 +181,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
 
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select onValueChange={(value) => setEventData({...eventData, category: value})}>
+                  <Select onValueChange={(value: string) => setEventData({...eventData, category: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -332,7 +332,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                       <Calendar
                         mode="single"
                         selected={eventData.startDate}
-                        onSelect={(date) => setEventData({...eventData, startDate: date})}
+                        onSelect={(date: Date | undefined) => setEventData({...eventData, startDate: date})}
                         initialFocus
                       />
                     </PopoverContent>
@@ -351,7 +351,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
 
                 <div>
                   <Label htmlFor="timezone">Timezone</Label>
-                  <Select onValueChange={(value) => setEventData({...eventData, timezone: value})}>
+                  <Select onValueChange={(value: string) => setEventData({...eventData, timezone: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
@@ -396,7 +396,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                       <Calendar
                         mode="single"
                         selected={eventData.endDate}
-                        onSelect={(date) => setEventData({...eventData, endDate: date})}
+                        onSelect={(date: Date | undefined) => setEventData({...eventData, endDate: date})}
                         initialFocus
                       />
                     </PopoverContent>
@@ -546,7 +546,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.allowTransfers}
-                      onCheckedChange={(checked) => setSettings({...settings, allowTransfers: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, allowTransfers: checked})}
                     />
                   </div>
 
@@ -557,7 +557,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.enableRoyalties}
-                      onCheckedChange={(checked) => setSettings({...settings, enableRoyalties: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, enableRoyalties: checked})}
                     />
                   </div>
 
@@ -580,7 +580,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.enableRefunds}
-                      onCheckedChange={(checked) => setSettings({...settings, enableRefunds: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, enableRefunds: checked})}
                     />
                   </div>
 
@@ -610,7 +610,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.privateEvent}
-                      onCheckedChange={(checked) => setSettings({...settings, privateEvent: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, privateEvent: checked})}
                     />
                   </div>
 
@@ -621,7 +621,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.enableWhitelist}
-                      onCheckedChange={(checked) => setSettings({...settings, enableWhitelist: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, enableWhitelist: checked})}
                     />
                   </div>
 
@@ -632,7 +632,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     </div>
                     <Switch
                       checked={settings.requireKYC}
-                      onCheckedChange={(checked) => setSettings({...settings, requireKYC: checked})}
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, requireKYC: checked})}
                     />
                   </div>
                 </CardContent>
@@ -678,8 +678,8 @@ export function EventCreation({ onBack }: EventCreationProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background px-4 sm:px-6 overflow-x-hidden">
+      <div className="max-w-4xl w-full mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2">
@@ -695,11 +695,11 @@ export function EventCreation({ onBack }: EventCreationProps) {
         {/* Progress Bar */}
         <div className="mb-8">
           <Progress value={progress} className="w-full" />
-          <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-            <span>Details</span>
-            <span>Date & Time</span>
-            <span>Tickets</span>
-            <span>Settings</span>
+          <div className="flex justify-between mt-2 text-[11px] sm:text-sm text-muted-foreground flex-wrap gap-x-3">
+            <span className="whitespace-nowrap">Details</span>
+            <span className="whitespace-nowrap">Date & Time</span>
+            <span className="whitespace-nowrap">Tickets</span>
+            <span className="whitespace-nowrap">Settings</span>
           </div>
         </div>
 

@@ -28,6 +28,7 @@ import {
   Info
 } from 'lucide-react';
 import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
+import supabase from '../utils/supabase/client';
 import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
 import { getActivePromotion, getSuggestedPromoCode, calculateDiscount } from '../utils/promotions/seasonal';
 
@@ -234,6 +235,33 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     });
 
     try {
+      // Attempt to record purchase server-side if authenticated
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (accessToken && selectedTierData) {
+          const res = await fetch('/make-server-f7f2fbf2/tickets/purchase', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+              eventId: String(event.id),
+              tierId: String(selectedTierData.id),
+              quantity,
+              paymentMethod,
+            })
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            console.warn('Server purchase record failed:', text);
+          }
+        }
+      } catch (e) {
+        console.warn('Skipping server purchase recording:', e);
+      }
+
       if (selectedTierData) {
         const input = {
           eventId: String(event.id),
@@ -283,8 +311,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const grandTotal = Math.max(0, subtotal + fee - discount);
 
   return (
-    <div className="min-h-svh bg-background no-scroll-x py-6">
-      <div className="container-fluid">
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-8">
           <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2">

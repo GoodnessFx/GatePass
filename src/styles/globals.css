@@ -197,26 +197,6 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Fluid container utility for consistent responsive layout */
-.container-fluid {
-  max-width: min(1400px, 100vw - clamp(16px, 4vw, 48px));
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: clamp(16px, 3vw, 32px);
-  padding-right: clamp(16px, 3vw, 32px);
-}
-
-/* Helper to prevent horizontal overflow on sections */
-.no-scroll-x {
-  overflow-x: hidden;
-}
-
-/* Calligraphy font utility for branding text */
-.font-calligraphy {
-  font-family: 'Segoe Script', 'Brush Script MT', 'Lucida Handwriting', 'Pacifico', 'Great Vibes', cursive;
-  letter-spacing: 0.5px;
-}
-
 /* Ensure media scales within containers on small screens */
 img, video {
   max-width: 100%;

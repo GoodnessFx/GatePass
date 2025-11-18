@@ -26,7 +26,7 @@ export async function paystackCheckout(opts: {
   onSuccess?: CheckoutSuccess;
   onCancel?: CheckoutCancel;
 }): Promise<{ ok: boolean; error?: string }> {
-  const key = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string | undefined;
+  const key = (import.meta as any).env?.VITE_PAYSTACK_PUBLIC_KEY as string | undefined;
   if (!key) return { ok: false, error: 'Missing Paystack public key (VITE_PAYSTACK_PUBLIC_KEY).' };
 
   await loadScript('https://js.paystack.co/v1/inline.js');
@@ -61,7 +61,7 @@ export async function flutterwaveCheckout(opts: {
   onSuccess?: CheckoutSuccess;
   onCancel?: CheckoutCancel;
 }): Promise<{ ok: boolean; error?: string }> {
-  const key = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY as string | undefined;
+  const key = (import.meta as any).env?.VITE_FLUTTERWAVE_PUBLIC_KEY as string | undefined;
   if (!key) return { ok: false, error: 'Missing Flutterwave public key (VITE_FLUTTERWAVE_PUBLIC_KEY).' };
 
   await loadScript('https://checkout.flutterwave.com/v3.js');

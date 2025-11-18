@@ -17,39 +17,19 @@ import {
   Ticket,
   Clock,
   MapPin,
-  ExternalLink,
-  Share2
+  ExternalLink
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface OrganizerDashboardProps {
   onCreateEvent: () => void;
   onViewAnalytics: () => void;
   onOpenScanner: () => void;
-  onBack?: () => void;
-}
-
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  venue: string;
-  status: 'live' | 'completed' | 'draft';
-  ticketsSold: number;
-  totalTickets: number;
-  revenue: number;
-  ticketPrice: number;
-  attendees: number;
-  image: string;
-  ticketTiers?: any[];
-  maxCapacity?: number;
 }
 
 // Mock data for demonstration
-const mockEvents: Event[] = [
+const mockEvents = [
   {
-    id: "1",
+    id: 1,
     title: "Tech Conference 2024",
     date: "2024-03-15",
     time: "09:00 AM",
@@ -59,11 +39,10 @@ const mockEvents: Event[] = [
     totalTickets: 500,
     revenue: 22500,
     ticketPrice: 50,
-    attendees: 450,
-    image: ''
+    attendees: 450
   },
   {
-    id: "2",
+    id: 2,
     title: "Music Festival Summer",
     date: "2024-06-20",
     time: "12:00 PM",
@@ -73,11 +52,10 @@ const mockEvents: Event[] = [
     totalTickets: 10000,
     revenue: 0,
     ticketPrice: 120,
-    attendees: 0,
-    image: ''
+    attendees: 0
   },
   {
-    id: "3",
+    id: 3,
     title: "Startup Pitch Night",
     date: "2024-02-28",
     time: "06:00 PM",
@@ -87,8 +65,7 @@ const mockEvents: Event[] = [
     totalTickets: 100,
     revenue: 2400,
     ticketPrice: 30,
-    attendees: 75,
-    image: ''
+    attendees: 75
   }
 ];
 
@@ -99,32 +76,8 @@ const recentSales = [
   { id: 4, buyer: "0x9d7c...43Fa", amount: 0.025, tickets: 1, timestamp: "18 mins ago" },
 ];
 
-export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScanner, onBack }: OrganizerDashboardProps) {
-  const [localEvents, setLocalEvents] = useState<Event[]>([]);
-
-  // Handler functions for event actions
-  const handleViewEvent = (event: Event) => {
-    toast.success(`Viewing Event: "${event.title}"`);
-  };
-
-  const handleEditEvent = (event: Event) => {
-    toast.success(`Editing Event: "${event.title}"`);
-  };
-
-  const handleShareEvent = (event: Event) => {
-    const shareData = {
-      title: event.title,
-      text: `Check out this event: ${event.title} on ${event.date} at ${event.venue}`,
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      navigator.share(shareData);
-    } else {
-      navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
-      toast.success("Event link copied to clipboard");
-    }
-  };
+export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScanner }: OrganizerDashboardProps) {
+  const [localEvents, setLocalEvents] = useState<any[]>([]);
 
   useEffect(() => {
     try {
@@ -166,96 +119,87 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
   const activeEvents = combinedEvents.filter(e => e.status === 'live').length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 sm:p-6 lg:p-8 scroll-container no-scroll-x">
-      <div className="container-fluid space-y-6 lg:space-y-8">
+    <div className="min-h-screen bg-background p-6 scroll-container">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Organizer Dashboard
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">Manage your events and track performance</p>
+            <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
+            <p className="text-muted-foreground">Manage your events and track performance</p>
           </div>
-          <Button 
-            onClick={onCreateEvent} 
-            size="sm" 
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200"
-          >
+          <Button onClick={onCreateEvent} className="flex items-center space-x-2">
             <Plus className="h-4 w-4" />
             <span>Create Event</span>
           </Button>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <Card className="hover:shadow-lg transition-shadow duration-200 border-border/50">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">${totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
-                +20.1% from last month
+            <CardContent>
+              <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                +12.5% from last month
               </p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow duration-200 border-border/50">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Tickets Sold</CardTitle>
-              <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
+              <Ticket className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">{totalTicketsSold.toLocaleString()}</div>
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
+            <CardContent>
+              <div className="text-2xl font-bold">{totalTicketsSold}</div>
+              <p className="text-xs text-muted-foreground">
                 +8.2% from last month
               </p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow duration-200 border-border/50">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Active Events</CardTitle>
-              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <CardTitle className="text-sm font-medium">Active Events</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">{activeEvents}</div>
-              <p className="text-xs text-muted-foreground font-medium mt-1">
+            <CardContent>
+              <div className="text-2xl font-bold">{activeEvents}</div>
+              <p className="text-xs text-muted-foreground">
                 {mockEvents.length} total events
               </p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow duration-200 border-border/50">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Conversion Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">3.2%</div>
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
+            <CardContent>
+              <div className="text-2xl font-bold">3.2%</div>
+              <p className="text-xs text-muted-foreground">
                 +0.3% from last month
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Events List */}
-          <div className="xl:col-span-2">
-            <Card className="border-border/50">
+          <div className="lg:col-span-2">
+            <Card>
               <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <CardTitle className="text-lg sm:text-xl">Your Events</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Manage and track your event performance</CardDescription>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Your Events</CardTitle>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={onViewAnalytics}
-                    className="w-full sm:w-auto flex items-center justify-center space-x-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="flex items-center space-x-2"
                   >
                     <BarChart3 className="h-4 w-4" />
                     <span>View Analytics</span>
@@ -263,71 +207,57 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+                <div className="space-y-6">
                   {combinedEvents.map((event) => (
-                    <div key={event.id} className="border border-border/50 rounded-lg p-3 sm:p-4 lg:p-6 hover:shadow-md transition-all duration-200 bg-card/50">
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base sm:text-lg text-foreground mb-1 sm:mb-2">{event.title}</h3>
-                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <div key={event.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-lg">{event.title}</h3>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-3 w-3" />
                               <span>{event.date} at {event.time}</span>
                             </div>
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="h-3 w-3" />
                               <span>{event.venue}</span>
                             </div>
                           </div>
                         </div>
                         <Badge 
                           variant={event.status === 'live' ? 'default' : event.status === 'completed' ? 'secondary' : 'outline'}
-                          className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-medium"
                         >
-                          {event.status.toUpperCase()}
+                          {event.status}
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div className="bg-muted/30 rounded-lg p-2 sm:p-3">
-                          <p className="text-xs text-muted-foreground mb-1 sm:mb-2">Sales Progress</p>
-                          <div className="flex items-center space-x-1 sm:space-x-2">
-                            <Progress value={(event.ticketsSold / event.totalTickets) * 100} className="flex-1 h-2" />
-                            <span className="text-xs sm:text-sm font-semibold text-foreground">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Sales Progress</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Progress value={(event.ticketsSold / event.totalTickets) * 100} className="flex-1" />
+                            <span className="text-sm font-medium">
                               {event.ticketsSold}/{event.totalTickets}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                            {Math.round((event.ticketsSold / event.totalTickets) * 100)}% sold
-                          </p>
                         </div>
-                        <div className="bg-muted/30 rounded-lg p-2 sm:p-3">
-                          <p className="text-xs text-muted-foreground mb-0.5 sm:mb-1">Revenue</p>
-                          <p className="font-semibold text-sm sm:text-lg text-foreground">${event.revenue.toLocaleString()}</p>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Revenue</p>
+                          <p className="font-semibold">${event.revenue.toLocaleString()}</p>
                         </div>
-                        <div className="bg-muted/30 rounded-lg p-3">
-                          <p className="text-xs text-muted-foreground mb-1">Ticket Price</p>
-                          <p className="font-semibold text-lg text-foreground">${event.ticketPrice}</p>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Ticket Price</p>
+                          <p className="font-semibold">${event.ticketPrice}</p>
                         </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div className="flex flex-wrap gap-2 w-full sm:w-auto min-w-0 max-w-full sm:pr-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleViewEvent(event)}
-                            className="flex-1 sm:flex-none shrink-0 flex items-center justify-center space-x-1 hover:bg-primary hover:text-primary-foreground transition-colors min-w-[80px]"
-                          >
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
                             <Eye className="h-3 w-3" />
                             <span>View</span>
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleEditEvent(event)}
-                            className="flex-1 sm:flex-none shrink-0 flex items-center justify-center space-x-1 hover:bg-primary hover:text-primary-foreground transition-colors min-w-[80px]"
-                          >
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
                             <Edit className="h-3 w-3" />
                             <span>Edit</span>
                           </Button>
@@ -336,20 +266,15 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                               variant="outline" 
                               size="sm" 
                               onClick={onOpenScanner}
-                              className="flex-1 sm:flex-none shrink-0 flex items-center justify-center space-x-1 hover:bg-primary hover:text-primary-foreground transition-colors min-w-[80px]"
+                              className="w-full sm:w-auto flex items-center space-x-1"
                             >
                               <Scan className="h-3 w-3" />
                               <span>Scan</span>
                             </Button>
                           )}
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleShareEvent(event)}
-                          className="w-full sm:w-auto flex items-center justify-center space-x-1 hover:bg-accent transition-colors min-w-[80px]"
-                        >
-                          <Share2 className="h-3 w-3" />
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto flex items-center space-x-1">
+                          <ExternalLink className="h-3 w-3" />
                           <span>Share</span>
                         </Button>
                       </div>
@@ -363,24 +288,24 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
           {/* Recent Activity */}
           <div className="space-y-6">
             {/* Recent Sales */}
-            <Card className="border-border/50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-base">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="h-5 w-5" />
                   <span>Recent Sales</span>
                 </CardTitle>
-                <CardDescription className="text-sm">Latest ticket purchases</CardDescription>
+                <CardDescription>Latest ticket purchases</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentSales.map((sale) => (
-                    <div key={sale.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div key={sale.id} className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium text-sm text-foreground">{sale.buyer}</p>
+                        <p className="font-medium text-sm">{sale.buyer}</p>
                         <p className="text-xs text-muted-foreground">{sale.timestamp}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-sm text-foreground">{sale.amount} ETH</p>
+                        <p className="font-medium">{sale.amount} ETH</p>
                         <p className="text-xs text-muted-foreground">{sale.tickets} ticket{sale.tickets > 1 ? 's' : ''}</p>
                       </div>
                     </div>
@@ -390,34 +315,34 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
             </Card>
 
             {/* Quick Actions */}
-            <Card className="border-border/50">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base">Quick Actions</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="w-full justify-start" 
                     onClick={onCreateEvent}
                   >
-                    <Plus className="h-4 w-4 mr-3" />
+                    <Plus className="h-4 w-4 mr-2" />
                     Create New Event
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="w-full justify-start"
                     onClick={onOpenScanner}
                   >
-                    <Scan className="h-4 w-4 mr-3" />
+                    <Scan className="h-4 w-4 mr-2" />
                     Open Scanner
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="w-full justify-start"
                     onClick={onViewAnalytics}
                   >
-                    <BarChart3 className="h-4 w-4 mr-3" />
+                    <BarChart3 className="h-4 w-4 mr-2" />
                     View Analytics
                   </Button>
                 </div>
