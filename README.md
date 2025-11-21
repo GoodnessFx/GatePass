@@ -1,20 +1,7 @@
 # GatePass
 
-GatePass is a comprehensive, blockchain-inspired event ticketing platform that revolutionizes how events are created, managed, and attended. Built with modern web technologies, it provides a seamless experience for both event organizers and attendees without traditional authentication barriers.
+GatePass is a  blockchain-inspired event ticketing platform that revolutionizes how events are created, managed, and attended. Built with modern web technologies, it provides a seamless experience for both event organizers and attendees without traditional authentication barriers.
 
-## ✨ What's New
-
-- Login, Signup, and Splash screens 
-- True previous-page navigation across the app via an internal history stack
-- Landing “How It Works” expanded with Jobs, Communities, and Web3 wallet connection
-- Beginner Guide card added with a clear external tutorial link and quick wallet connect
-- Light theme readability improvements for hero text and muted content
-- Polished layout and spacing so cards don’t visually overlap across breakpoints
-
-Key references:
-- Navigation and back button: `src/App.tsx:367-376`
-- Landing layout and new sections: `src/components/LandingPage.tsx:200-303`
-- Payment gateways: `src/utils/payments/gateways.ts`
 
 ## 🎯 Core Features
 
@@ -52,7 +39,7 @@ Key references:
 - **Real-time Pricing**: Dynamic pricing with fees, taxes, and discount calculations
 - **Seasonal Promotions**: Automatic discount detection and promo code application
 - **Secure Checkout**: PCI-compliant payment processing with receipt generation
-- **Multi-currency Support**: NGN, USD, GHS, KES, ZAR and more
+- **Multi-currency Support**: NGN, USD, GHS, KES, ZAR ,MPesaand more
 
 ### 📱 **Mobile Scanner**
 - **QR Code Scanning**: Fast ticket validation with camera integration
@@ -589,6 +576,4 @@ GatePass/
 - Keep PRs focused and include a brief rationale.
 - Run the dev server locally to validate UI changes.
 
-## Disclaimer
-
-This project includes placeholder integrations and mock data for development. Review and harden payment flows, data storage, and security before production use.
+Lock In
