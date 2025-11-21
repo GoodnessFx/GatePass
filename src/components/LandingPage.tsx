@@ -297,22 +297,22 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             </div>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-2 hover:border-primary/50 transition-colors">
+          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="border-2 hover:border-primary/50 transition-colors shadow-sm rounded-xl h-full">
               <CardHeader>
                 <Briefcase className="h-10 w-10 text-primary mb-2" />
                 <CardTitle>Jobs</CardTitle>
                 <CardDescription>Find or post roles for ushers, security, vendors, and more.</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="border-2 hover:border-primary/50 transition-colors">
+            <Card className="border-2 hover:border-primary/50 transition-colors shadow-sm rounded-xl h-full">
               <CardHeader>
                 <Users className="h-10 w-10 text-primary mb-2" />
                 <CardTitle>Communities</CardTitle>
                 <CardDescription>Join city and interest-based groups to discover events and collaborate.</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="border-2 hover:border-primary/50 transition-colors">
+            <Card className="border-2 hover:border-primary/50 transition-colors shadow-sm rounded-xl h-full">
               <CardHeader>
                 <Wallet className="h-10 w-10 text-primary mb-2" />
                 <CardTitle>Web3 Wallet Connection</CardTitle>
@@ -321,8 +321,8 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             </Card>
           </div>
 
-          <div className="mt-16">
-            <Card className="border-2 bg-background/60 backdrop-blur">
+          <div className="mt-8">
+            <Card className="border-2 bg-background/60 backdrop-blur shadow-sm rounded-xl">
               <CardHeader>
                 <CardTitle>Beginner Guide</CardTitle>
                 <CardDescription>Step-by-step tutorial for creating events, buying tickets, scanning, and transfers.</CardDescription>

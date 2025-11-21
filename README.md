@@ -2,6 +2,20 @@
 
 GatePass is a comprehensive, blockchain-inspired event ticketing platform that revolutionizes how events are created, managed, and attended. Built with modern web technologies, it provides a seamless experience for both event organizers and attendees without traditional authentication barriers.
 
+## ✨ What's New
+
+- Login, Signup, and Splash screens 
+- True previous-page navigation across the app via an internal history stack
+- Landing “How It Works” expanded with Jobs, Communities, and Web3 wallet connection
+- Beginner Guide card added with a clear external tutorial link and quick wallet connect
+- Light theme readability improvements for hero text and muted content
+- Polished layout and spacing so cards don’t visually overlap across breakpoints
+
+Key references:
+- Navigation and back button: `src/App.tsx:367-376`
+- Landing layout and new sections: `src/components/LandingPage.tsx:200-303`
+- Payment gateways: `src/utils/payments/gateways.ts`
+
 ## 🎯 Core Features
 
 ### 🎪 **Event Management**
@@ -531,9 +545,11 @@ GatePass/
 - Payments
   - Gateway wrappers are included; production usage requires API keys/credentials and domain whitelisting.
   - For local development, the gateways may be mocked or limited; adjust implementations in `src/utils/payments/gateways` as needed.
+  - Paystack integration example: set `VITE_PAYSTACK_PUBLIC_KEY` and call `paystackCheckout({ email, amount, currency })` — see `src/utils/payments/gateways.ts:19-52`.
 
 - Wallet
   - The wallet connection component exposes `onConnect`/`isConnected` props and shows the address in the header when connected.
+  - Wallet connect flow is triggered from Landing and Header; see `src/App.tsx:124-148`.
 
 - Authentication
   - Traditional auth has been removed. Users select a role directly from the landing page.
