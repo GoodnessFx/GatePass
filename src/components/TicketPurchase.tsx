@@ -7,6 +7,8 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Switch } from './ui/switch';
+import { Slider } from './ui/slider';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -114,10 +116,13 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [selectedTier, setSelectedTier] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'fiat'>('crypto');
-  const [paymentGateway, setPaymentGateway] = useState<'paystack' | 'flutterwave' | 'mpesa' | 'none'>('none');
+  const [paymentGateway, setPaymentGateway] = useState<'paystack' | 'flutterwave' | 'mpesa' | 'stripe' | 'none'>('none');
   const [fiatCurrency, setFiatCurrency] = useState<'NGN' | 'GHS' | 'KES' | 'ZAR'>('NGN');
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [installmentsEnabled, setInstallmentsEnabled] = useState(false);
+  const [donationAmount, setDonationAmount] = useState<number>(0);
+  const [tipAmount, setTipAmount] = useState<number>(0);
   const activePromo = getActivePromotion();
   const [promoCode, setPromoCode] = useState<string>(getSuggestedPromoCode() || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,7 +166,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     const subtotal = totalPrice;
     const fee = subtotal * 0.025;
     const discount = calculateDiscount(subtotal, activePromo, promoCode);
-    const amountWithFees = Math.max(0, subtotal + fee - discount);
+    const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
+    const amountWithFees = Math.max(0, subtotal + fee - discount - groupDiscount + donationAmount + tipAmount);
 
     try {
       if (paymentMethod === 'fiat') {
@@ -214,6 +220,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           setIsPurchasing(false);
           return;
         }
+        if (paymentGateway === 'stripe') {
+          toast.error('Stripe not configured.');
+          setIsPurchasing(false);
+          return;
+        }
         toast.error('Please select a local payment gateway.');
         setIsPurchasing(false);
         return;
@@ -233,6 +244,38 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     toast.success('Ticket purchased successfully!', {
       description: `Your NFT ticket has been minted to your wallet.`
     });
+
+    try {
+      const confetti = document.createElement('div');
+      confetti.style.position = 'fixed';
+      confetti.style.inset = '0';
+      confetti.style.pointerEvents = 'none';
+      confetti.style.zIndex = '1000';
+      document.body.appendChild(confetti);
+      const colors = ['#FFD166','#06D6A0','#EF476F','#118AB2','#8338EC'];
+      const pieces = Array.from({ length: 140 }, (_, i) => {
+        const el = document.createElement('div');
+        el.style.position = 'absolute';
+        el.style.width = Math.round(Math.random()*6+4)+'px';
+        el.style.height = Math.round(Math.random()*12+6)+'px';
+        el.style.background = colors[i % colors.length];
+        el.style.left = Math.round(Math.random()*100)+'%';
+        el.style.top = '-20px';
+        el.style.opacity = '0.9';
+        el.style.transform = `rotate(${Math.round(Math.random()*360)}deg)`;
+        confetti.appendChild(el);
+        const duration = Math.random()*1200 + 1600;
+        const translateX = (Math.random()*2-1)*120;
+        const keyframes = [
+          { transform: el.style.transform, top: '-20px' },
+          { transform: `translate(${translateX}px, 0px) rotate(${Math.round(Math.random()*360)}deg)`, top: '100vh' }
+        ] as any;
+        (el as any).animate(keyframes, { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+        setTimeout(()=>{ el.remove(); }, duration+200);
+        return el;
+      });
+      setTimeout(()=>{ confetti.remove(); }, 2400);
+    } catch {}
 
     try {
       // Attempt to record purchase server-side if authenticated
@@ -308,7 +351,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const subtotal = totalPrice;
   const fee = subtotal * 0.025;
   const discount = calculateDiscount(subtotal, activePromo, promoCode);
-  const grandTotal = Math.max(0, subtotal + fee - discount);
+  const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
+  const grandTotalBase = Math.max(0, subtotal + fee - discount - groupDiscount);
+  const grandTotal = Math.max(0, grandTotalBase + donationAmount + tipAmount);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -534,15 +579,13 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setQuantity(Math.min(4, quantity + 1))}
-                                  disabled={quantity >= 4 || (selectedTierData && quantity >= selectedTierData.available)}
+                                  onClick={() => setQuantity(Math.min(12, quantity + 1))}
+                                  disabled={quantity >= 12 || (selectedTierData && quantity >= selectedTierData.available)}
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Maximum 4 tickets per person
-                              </p>
+                                </div>
+                              <p className="text-sm text-muted-foreground mt-1">Group discount applies at 10+ tickets</p>
                             </div>
                           )}
 
@@ -622,6 +665,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                       <Button type="button" variant={paymentGateway === 'paystack' ? 'default' : 'outline'} onClick={() => setPaymentGateway('paystack')}>Paystack</Button>
                                       <Button type="button" variant={paymentGateway === 'flutterwave' ? 'default' : 'outline'} onClick={() => setPaymentGateway('flutterwave')}>Flutterwave</Button>
                                       <Button type="button" variant={paymentGateway === 'mpesa' ? 'default' : 'outline'} onClick={() => setPaymentGateway('mpesa')}>M-Pesa</Button>
+                                      <Button type="button" variant={paymentGateway === 'stripe' ? 'default' : 'outline'} onClick={() => setPaymentGateway('stripe')}>Stripe</Button>
                                     </div>
                                   </div>
                                 </TabsContent>
@@ -629,7 +673,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                             </div>
                           )}
 
-                          {/* Order Summary */}
                           {selectedTier && (
                             <div className="border rounded-lg p-4 bg-muted/30">
                               <h4 className="font-medium mb-3">Order Summary</h4>
@@ -648,9 +691,53 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                     <span>- ${discount.toFixed(2)}</span>
                                   </div>
                                 )}
+                                {groupDiscount > 0 && (
+                                  <div className="flex justify-between text-sm text-green-600">
+                                    <span>Group discount</span>
+                                    <span>- ${groupDiscount.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                {donationAmount > 0 && (
+                                  <div className="flex justify-between text-sm">
+                                    <span>Donation</span>
+                                    <span>+ ${donationAmount.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                {tipAmount > 0 && (
+                                  <div className="flex justify-between text-sm">
+                                    <span>Tip</span>
+                                    <span>+ ${tipAmount.toFixed(2)}</span>
+                                  </div>
+                                )}
                                 <div className="border-t pt-2 flex justify-between font-medium">
                                   <span>Total</span>
                                   <span>${grandTotal.toFixed(2)}</span>
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-sm">Enable Installments</Label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Switch checked={installmentsEnabled} onCheckedChange={setInstallmentsEnabled} />
+                                    <span className="text-xs text-muted-foreground">Pay in 4</span>
+                                  </div>
+                                  {installmentsEnabled && (
+                                    <div className="text-xs mt-2">
+                                      <div className="flex justify-between"><span>Now</span><span>${(grandTotal/4).toFixed(2)}</span></div>
+                                      <div className="flex justify-between"><span>In 30 days</span><span>${(grandTotal/4).toFixed(2)}</span></div>
+                                      <div className="flex justify-between"><span>In 60 days</span><span>${(grandTotal/4).toFixed(2)}</span></div>
+                                      <div className="flex justify-between"><span>In 90 days</span><span>${(grandTotal/4).toFixed(2)}</span></div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <Label className="text-sm">Donation</Label>
+                                  <div className="mt-2">
+                                    <Slider value={[donationAmount]} onValueChange={(v: number[])=>setDonationAmount(Number(v[0]||0))} max={100} step={1} />
+                                    <div className="text-xs mt-1">${donationAmount.toFixed(0)}</div>
+                                  </div>
+                                  <Label className="text-sm mt-3">Tip</Label>
+                                  <Input type="number" value={tipAmount} onChange={(e)=>setTipAmount(Number(e.target.value||0))} placeholder="$0" />
                                 </div>
                               </div>
                             </div>

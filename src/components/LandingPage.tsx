@@ -14,7 +14,9 @@ import {
   Wallet, 
   Globe,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Briefcase,
+  ExternalLink
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -26,66 +28,98 @@ interface LandingPageProps {
 export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPageProps) {
   const promo = getActivePromotion();
   const suggestedCode = getSuggestedPromoCode();
+  const [email, setEmail] = React.useState('');
+  const [name, setName] = React.useState('');
+  const [avatar, setAvatar] = React.useState<string | undefined>(undefined);
+  const [showcaseIndex, setShowcaseIndex] = React.useState(0);
+  const savedName = React.useMemo(()=>{ try { return localStorage.getItem('gp_display_name') || ''; } catch { return ''; } }, []);
+  React.useEffect(() => {
+    const t = setInterval(() => setShowcaseIndex((i) => (i + 1) % 3), 3000);
+    return () => clearInterval(t);
+  }, []);
+  const handleSignup = () => {
+    if (!email.trim()) return;
+    try {
+      localStorage.setItem('gp_user_email', email.trim());
+      if (name.trim()) localStorage.setItem('gp_display_name', name.trim());
+      if (avatar) localStorage.setItem('gp_avatar', avatar);
+      localStorage.setItem('gp_demo_loggedin','true');
+      localStorage.setItem('gp_demo_role','attendee');
+    } catch {}
+    onRoleSelect('attendee');
+  };
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-background via-background to-muted py-20">
-        {/* Hero background image */}
-        <div className="absolute inset-0 -z-10" style={{ backgroundImage: "url('/Gate.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 -z-10 bg-black/50" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex justify-center items-center space-x-2 mb-6">
-              <Ticket className="h-12 w-12 text-primary" />
-              <h1 className="text-4xl md:text-6xl font-bold text-primary">Gatepass</h1>
-            </div>
-            
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              The future of event ticketing. Create, sell, and verify tickets as NFTs with 
-              built-in fraud protection and instant settlement.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Button size="lg" onClick={() => onRoleSelect('attendee')} className="flex items-center space-x-2">
-                <Users className="h-5 w-5" />
-                <span>Join as Attendee</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => onRoleSelect('organizer')} className="flex items-center space-x-2">
-                <Ticket className="h-5 w-5" />
-                <span>Join as Organizer</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* Hero */}
+      <section className="relative py-16 sm:py-20 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border rounded-lg overflow-hidden">
+            <TicketScrollHero />
+          </div>
+        </div>
+      </section>
 
-            {promo && (
-              <div className="mt-6 max-w-3xl mx-auto">
-                <Card className="border-2 border-primary/40 bg-background/60 backdrop-blur">
-                  <CardHeader className="py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Badge variant="outline" className="text-primary">Seasonal Offer</Badge>
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    </div>
-                    <CardTitle className="text-xl md:text-2xl">{promo.name}: {promo.discountPercent}% off</CardTitle>
-                    <CardDescription className="text-base">
-                      {promo.description} — Use code <span className="font-semibold">{promo.code}</span> at checkout.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                      <Button size="sm" onClick={() => onRoleSelect('attendee')} className="flex items-center gap-2">
-                        <Ticket className="h-4 w-4" />
-                        <span>Grab the Deal</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                      {suggestedCode && (
-                        <Badge variant="secondary" className="text-xs">Promo Code: {suggestedCode}</Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+      
+
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-br from-[#0a0f1f] via-[#0e1426] to-[#1a1f2f]">
+        <div className="absolute inset-0 -z-10 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 60%)' }} />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="text-left">
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">Ticket Anything. Beautifully.</h1>
+              <p className="mt-4 text-lg md:text-xl text-muted-foreground max-w-xl">Create museum‑quality digital tickets with fraud‑proof verification and instant settlement.</p>
+              <div className="mt-8 flex gap-4">
+                <Button size="lg" onClick={() => onRoleSelect('organizer')} className="flex items-center space-x-2">
+                  <Ticket className="h-5 w-5" />
+                  <span>Create Event</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => onRoleSelect('attendee')} className="flex items-center space-x-2">
+                  <Users className="h-5 w-5" />
+                  <span>Find Events</span>
+                </Button>
               </div>
-            )}
+              <div className="mt-12 flex items-center gap-2 text-muted-foreground">
+                <div className="animate-bounce">
+                  <ArrowRight className="rotate-90 h-5 w-5" />
+                </div>
+                <span className="text-sm">Scroll to explore</span>
+              </div>
+              {promo && (
+                <div className="mt-8 max-w-lg">
+                  <Card className="border-2 border-primary/40 bg-background/60 backdrop-blur">
+                    <CardHeader className="py-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-primary">Seasonal Offer</Badge>
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      </div>
+                      <CardTitle className="text-xl md:text-2xl">{promo.name}: {promo.discountPercent}% off</CardTitle>
+                      <CardDescription className="text-base">
+                        {promo.description} — Use code <span className="font-semibold">{promo.code}</span> at checkout.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0 pb-4">
+                      <div className="flex items-center gap-3">
+                        <Button size="sm" onClick={() => onRoleSelect('attendee')} className="flex items-center gap-2">
+                          <Ticket className="h-4 w-4" />
+                          <span>Grab the Deal</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        {suggestedCode && (
+                          <Badge variant="secondary" className="text-xs">Promo Code: {suggestedCode}</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+            <div className="hidden lg:block">
+              <div className="border rounded-lg overflow-hidden">
+                <TicketScrollHero />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -164,18 +198,14 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
         </div>
       </section>
 
-      {/* How It Works */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-xl text-muted-foreground">
-              Simple for organizers, seamless for attendees
-            </p>
+            <p className="text-xl text-muted-foreground">Simple for organizers, seamless for attendees</p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* For Organizers */}
             <div>
               <h3 className="text-2xl font-bold mb-8 text-center">For Event Organizers</h3>
               <div className="space-y-6">
@@ -221,7 +251,6 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
               </div>
             </div>
             
-            {/* For Attendees */}
             <div>
               <h3 className="text-2xl font-bold mb-8 text-center">For Attendees</h3>
               <div className="space-y-6">
@@ -267,82 +296,57 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
               </div>
             </div>
           </div>
+
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <Briefcase className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>Jobs</CardTitle>
+                <CardDescription>Find or post roles for ushers, security, vendors, and more.</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <Users className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>Communities</CardTitle>
+                <CardDescription>Join city and interest-based groups to discover events and collaborate.</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <Wallet className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>Web3 Wallet Connection</CardTitle>
+                <CardDescription>Connect MetaMask or WalletConnect to pay in crypto and manage NFT tickets.</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+
+          <div className="mt-16">
+            <Card className="border-2 bg-background/60 backdrop-blur">
+              <CardHeader>
+                <CardTitle>Beginner Guide</CardTitle>
+                <CardDescription>Step-by-step tutorial for creating events, buying tickets, scanning, and transfers.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  <Button size="sm" onClick={() => window.open('https://gatepass.guide/getting-started','_blank')} className="flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    <span>Open Beginner Guide</span>
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => onConnect()} className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4" />
+                    <span>Connect Wallet</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to revolutionize your events?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of event organizers already using GatePass to create secure, 
-            fraud-proof ticketing experiences.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" onClick={() => onRoleSelect('organizer')}>
-              Start Creating Events
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => onRoleSelect('attendee')} className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              Browse Events
-            </Button>
-          </div>
-        </div>
-      </section>
+      
 
-      {/* Footer */}
-      <footer className="py-12 bg-background border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Ticket className="h-6 w-6" />
-                <span className="font-bold">GatePass</span>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                The future of event ticketing, powered by blockchain technology.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>API</li>
-                <li>Documentation</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Status</li>
-                <li>Community</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Privacy</li>
-                <li>Terms</li>
-                <li>Security</li>
-                <li>Audits</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t mt-12 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">
-              © 2024 GatePass. All rights reserved. Built on Polygon.
-            </p>
-          </div>
-        </div>
-      </footer>
+      
     </div>
   );
 }

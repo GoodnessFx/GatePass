@@ -227,6 +227,25 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
   const validScans = scanResults.filter(scan => scan.status === 'valid').length;
   const totalScans = scanResults.length;
   const checkedInCount = scanResults.filter(scan => scan.status === 'valid' || scan.status === 'used').length;
+  const flaggedCount = scanResults.filter(scan => scan.status === 'invalid' || scan.status === 'expired').length;
+
+  const exportCsv = () => {
+    try {
+      const header = ['id','ticketId','eventTitle','attendeeName','ticketType','seatNumber','status','scanTime','walletAddress'];
+      const rows = scanResults.map(s=>[s.id,s.ticketId,s.eventTitle,s.attendeeName,s.ticketType,s.seatNumber,s.status,s.scanTime,s.walletAddress]);
+      const csv = [header.join(','), ...rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'\"')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=`checkins-${Date.now()}.csv`; a.click(); URL.revokeObjectURL(url);
+      toast.success('Exported CSV');
+    } catch {
+      toast.error('Export failed');
+    }
+  };
+
+  const preDownloadDb = () => {
+    toast.info('Pre-downloaded ticket database (stub)');
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -313,6 +332,16 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
               </p>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Flagged Tickets</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{flaggedCount}</div>
+              <p className="text-xs text-muted-foreground">Invalid or expired</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -347,6 +376,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
                   >
                     <Flashlight className="h-4 w-4" />
                   </Button>
+                  <Button variant="outline" onClick={preDownloadDb}>Pre-Download DB</Button>
                 </div>
               </CardContent>
             </Card>
@@ -405,7 +435,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Recent Scans</CardTitle>
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={exportCsv}>
                     <Download className="h-3 w-3" />
                     <span>Export</span>
                   </Button>

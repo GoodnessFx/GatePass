@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -78,6 +79,12 @@ const recentSales = [
 
 export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScanner }: OrganizerDashboardProps) {
   const [localEvents, setLocalEvents] = useState<any[]>([]);
+  const [gigRole, setGigRole] = useState('');
+  const [gigEvent, setGigEvent] = useState('');
+  const [gigLocation, setGigLocation] = useState('');
+  const [gigDate, setGigDate] = useState('');
+  const [gigPay, setGigPay] = useState('');
+  const [guestList, setGuestList] = useState<any[]>([]);
 
   useEffect(() => {
     try {
@@ -86,6 +93,9 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
     } catch (e) {
       setLocalEvents([]);
     }
+  }, []);
+  useEffect(() => {
+    try { const guests = JSON.parse(localStorage.getItem('gatepass_guest_list')||'[]'); setGuestList(Array.isArray(guests)?guests:[]); } catch {}
   }, []);
 
   const combinedEvents = useMemo(() => {
@@ -349,6 +359,23 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Escrow & Payouts</CardTitle>
+                <CardDescription>Deposit funds and release after job completion</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <input className="border rounded px-3 py-2" placeholder="Amount" value={gigPay} onChange={(e)=>setGigPay(e.target.value)} />
+                  <Button onClick={()=>toast.success('Escrow deposited (stub)')}>Deposit</Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input className="border rounded px-3 py-2" placeholder="Recipient" />
+                  <Button variant="outline" onClick={()=>toast.success('Payout released (stub)')}>Release</Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Network Status */}
             <Card>
               <CardHeader>
@@ -374,8 +401,168 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing Tools</CardTitle>
+                <CardDescription>Surge, early bird, waitlist, promos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="surge" onChange={(e)=>{ try{ localStorage.setItem('gatepass_surge_enabled', JSON.stringify(!!e.target.checked)); toast.success('Surge pricing updated'); }catch{} }} />
+                    <label htmlFor="surge" className="text-sm">Surge Pricing</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="early" onChange={(e)=>{ try{ localStorage.setItem('gatepass_early_enabled', JSON.stringify(!!e.target.checked)); toast.success('Early bird updated'); }catch{} }} />
+                    <label htmlFor="early" className="text-sm">Early Bird Discounts</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="waitlist" onChange={(e)=>{ try{ localStorage.setItem('gatepass_waitlist_enabled', JSON.stringify(!!e.target.checked)); toast.success('Waitlist updated'); }catch{} }} />
+                    <label htmlFor="waitlist" className="text-sm">Waitlist</label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input className="border rounded px-3 py-2" placeholder="Promo code" id="promo-code" />
+                    <Button onClick={()=>toast.success('Promo saved (stub)')}>Save</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Trust & Safety</CardTitle>
+                <CardDescription>Insurance and dispute resolution</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-sm">Insurance Options</p>
+                    <select className="border rounded px-3 py-2">
+                      <option>None</option>
+                      <option>Basic Coverage</option>
+                      <option>Extended Coverage</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-sm">Dispute Center</p>
+                    <Button variant="outline" onClick={()=>toast.info('Open disputes (stub)')}>Open</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>VIP & Speaker Management</CardTitle>
+            <CardDescription>Guest list, speaker coordination, comp tickets</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm">Import Guest List CSV</p>
+              <input type="file" accept=".csv" onChange={(e)=>{ const f=e.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const txt=String(r.result||''); const rows=txt.split(/\r?\n/).map(l=>l.split(',').map(s=>s.trim())); const guests=rows.filter(r=>r[0]).map((r,i)=>({ id:`guest-${Date.now()}-${i}`, name:r[0], tier:r[1]||'VIP', email:r[2]||'' })); setGuestList(guests); try{ localStorage.setItem('gatepass_guest_list', JSON.stringify(guests)); }catch{}; toast.success('Guest list imported'); }; r.readAsText(f); }} />
+              <div className="grid grid-cols-2 gap-2">
+                {guestList.slice(0,6).map(g=> (
+                  <Badge key={g.id} variant="outline">{g.name} • {g.tier}</Badge>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <p className="text-sm">Speaker Slots</p>
+                <input className="border rounded px-3 py-2" placeholder="10:00 - 10:30" onBlur={(e)=>{ try{ const s=JSON.parse(localStorage.getItem('gatepass_speaker_schedule')||'[]'); s.unshift({ id:`slot-${Date.now()}`, slot:e.target.value }); localStorage.setItem('gatepass_speaker_schedule', JSON.stringify(s)); }catch{} }} />
+                <input className="border rounded px-3 py-2" placeholder="Green room time" onBlur={(e)=>{ try{ const s=JSON.parse(localStorage.getItem('gatepass_speaker_schedule')||'[]'); s.unshift({ id:`slot-${Date.now()}`, slot:e.target.value }); localStorage.setItem('gatepass_speaker_schedule', JSON.stringify(s)); }catch{} }} />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm">Comp Tickets</p>
+                <input className="border rounded px-3 py-2" placeholder="Recipient name" id="comp-name" />
+                <Button onClick={()=>{ const name=(document.getElementById('comp-name') as HTMLInputElement)?.value || 'Guest'; try{ const t=JSON.parse(localStorage.getItem('gatepass_comp_tickets')||'[]'); t.unshift({ id:`comp-${Date.now()}`, name, status:'generated' }); localStorage.setItem('gatepass_comp_tickets', JSON.stringify(t)); toast.success('Comp ticket generated'); }catch{} }}>Generate</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Post Gigs</CardTitle>
+            <CardDescription>Template roles or custom job descriptions</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <input className="border rounded px-3 py-2" placeholder="Role" value={gigRole} onChange={(e)=>setGigRole(e.target.value)} />
+              <input className="border rounded px-3 py-2" placeholder="Event" value={gigEvent} onChange={(e)=>setGigEvent(e.target.value)} />
+              <input className="border rounded px-3 py-2" placeholder="Location" value={gigLocation} onChange={(e)=>setGigLocation(e.target.value)} />
+              <input className="border rounded px-3 py-2" placeholder="Date" value={gigDate} onChange={(e)=>setGigDate(e.target.value)} />
+              <input className="border rounded px-3 py-2" placeholder="Pay/hr" value={gigPay} onChange={(e)=>setGigPay(e.target.value)} />
+            </div>
+            <Button onClick={()=>{ if(!gigRole.trim()) return; const gig={ id:`gig-${Date.now()}`, role:gigRole.trim(), event:gigEvent.trim(), location:gigLocation.trim(), date:gigDate.trim(), pay: Number(gigPay)||0 }; try{ const list=JSON.parse(localStorage.getItem('gatepass_gigs')||'[]'); list.unshift(gig); localStorage.setItem('gatepass_gigs', JSON.stringify(list)); toast.success('Gig posted'); setGigRole(''); setGigEvent(''); setGigLocation(''); setGigDate(''); setGigPay(''); }catch{} }}>Post Gig</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Applicant Management</CardTitle>
+            <CardDescription>Swipe-like quick decisions</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              {(()=>{ try{ return JSON.parse(localStorage.getItem('gatepass_applications')||'[]'); }catch{ return []; } })().map((a:any)=> (
+                <div key={a.id} className="border rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Application {a.id}</p>
+                    <p className="text-sm text-muted-foreground">Status: {a.status}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={()=>{ try{ const apps=JSON.parse(localStorage.getItem('gatepass_applications')||'[]'); const i=apps.findIndex((x:any)=>x.id===a.id); if(i>=0){ apps[i].status='accepted'; localStorage.setItem('gatepass_applications', JSON.stringify(apps)); } toast.success('Accepted'); }catch{} }}>Accept</Button>
+                    <Button size="sm" variant="outline" onClick={()=>{ try{ const apps=JSON.parse(localStorage.getItem('gatepass_applications')||'[]'); const i=apps.findIndex((x:any)=>x.id===a.id); if(i>=0){ apps[i].status='rejected'; localStorage.setItem('gatepass_applications', JSON.stringify(apps)); } toast.success('Rejected'); }catch{} }}>Reject</Button>
+                  </div>
+                </div>
+              ))}
+              {(()=>{ try{ const apps=JSON.parse(localStorage.getItem('gatepass_applications')||'[]'); return apps.length===0; }catch{ return true; } })() && (
+                <p className="text-sm text-muted-foreground">No applications yet</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Day-of Staff Management</CardTitle>
+            <CardDescription>Clock-in/out and alerts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <input className="border rounded px-3 py-2" id="staff-name" placeholder="Staff name" />
+              <Button onClick={()=>{ try{ const s=JSON.parse(localStorage.getItem('gatepass_staff')||'[]'); s.unshift({ id:`staff-${Date.now()}`, name:(document.getElementById('staff-name') as HTMLInputElement)?.value||'Staff', clockedIn:false, rating:0 }); localStorage.setItem('gatepass_staff', JSON.stringify(s)); toast.success('Staff added'); }catch{} }}>Add</Button>
+            </div>
+            <div className="space-y-2">
+              {(()=>{ try{ return JSON.parse(localStorage.getItem('gatepass_staff')||'[]'); }catch{ return []; } })().map((s:any)=> (
+                <div key={s.id} className="border rounded-lg p-3 flex items-center justify-between">
+                  <p className="font-medium">{s.name}</p>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={()=>{ try{ const arr=JSON.parse(localStorage.getItem('gatepass_staff')||'[]'); const i=arr.findIndex((x:any)=>x.id===s.id); if(i>=0){ arr[i].clockedIn=!arr[i].clockedIn; localStorage.setItem('gatepass_staff', JSON.stringify(arr)); } toast.success(arr[i].clockedIn?'Clocked in':'Clocked out'); }catch{} }}>{s.clockedIn?'Clock Out':'Clock In'}</Button>
+                    <select className="border rounded px-2 py-1 text-sm" onChange={(e)=>{ try{ const arr=JSON.parse(localStorage.getItem('gatepass_staff')||'[]'); const i=arr.findIndex((x:any)=>x.id===s.id); if(i>=0){ arr[i].rating=Number(e.target.value||0); localStorage.setItem('gatepass_staff', JSON.stringify(arr)); } }catch{} }}>
+                      <option value="0">Rate</option>
+                      <option value="1">⭐</option>
+                      <option value="2">⭐⭐</option>
+                      <option value="3">⭐⭐⭐</option>
+                      <option value="4">⭐⭐⭐⭐</option>
+                      <option value="5">⭐⭐⭐⭐⭐</option>
+                    </select>
+                    <Button size="sm" variant="outline" onClick={()=>toast.info('Alert sent')}>Alert</Button>
+                  </div>
+                </div>
+              ))}
+              {(()=>{ try{ const arr=JSON.parse(localStorage.getItem('gatepass_staff')||'[]'); return arr.length===0; }catch{ return true; } })() && (
+                <p className="text-sm text-muted-foreground">No staff added</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

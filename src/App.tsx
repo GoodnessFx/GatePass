@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { LandingPage } from './components/LandingPage';
-import { EventCreation } from './components/EventCreation';
-import { OrganizerDashboard } from './components/OrganizerDashboard';
-import { AttendeeDashboard } from './components/AttendeeDashboard';
-import { TicketPurchase } from './components/TicketPurchase';
-import { MobileScanner } from './components/MobileScanner';
-import { Analytics } from './components/Analytics';
-import { SplashScreen } from './components/SplashScreen';
+const LandingPage = React.lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = React.lazy(() => import('./components/SignupPage').then(m => ({ default: m.SignupPage })));
+const EventCreation = React.lazy(() => import('./components/EventCreation').then(m => ({ default: m.EventCreation })));
+const OrganizerDashboard = React.lazy(() => import('./components/OrganizerDashboard').then(m => ({ default: m.OrganizerDashboard })));
+const AttendeeDashboard = React.lazy(() => import('./components/AttendeeDashboard').then(m => ({ default: m.AttendeeDashboard })));
+const TicketPurchase = React.lazy(() => import('./components/TicketPurchase').then(m => ({ default: m.TicketPurchase })));
+const MobileScanner = React.lazy(() => import('./components/MobileScanner').then(m => ({ default: m.MobileScanner })));
+const Analytics = React.lazy(() => import('./components/Analytics').then(m => ({ default: m.Analytics })));
+const SplashScreen = React.lazy(() => import('./components/SplashScreen').then(m => ({ default: m.SplashScreen })));
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { WalletConnection } from './components/WalletConnection';
@@ -25,7 +27,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-type AppView = 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
+type AppView = 'login' | 'signup' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
@@ -37,12 +39,13 @@ function App() {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
+  const [viewHistory, setViewHistory] = useState<AppView[]>([]);
 
-  // Initialize dark mode from localStorage (default to dark if no preference saved)
+  // Initialize dark mode from localStorage (default to light if no preference saved)
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldUseDark = savedTheme ? savedTheme === 'dark' : true;
+    const shouldUseDark = savedTheme ? savedTheme === 'dark' : false;
 
     setIsDarkMode(shouldUseDark);
     document.documentElement.classList.toggle('dark', shouldUseDark);
@@ -59,6 +62,12 @@ function App() {
     if (!showSplash) return;
     const t = setTimeout(() => setShowSplash(false), 3000);
     return () => clearTimeout(t);
+  }, [showSplash]);
+
+  useEffect(() => {
+    if (showSplash) return;
+    const hasAccount = localStorage.getItem('gp_account_created') === 'true';
+    setCurrentView(hasAccount ? 'login' : 'signup');
   }, [showSplash]);
 
   // Accept an optional name; if not provided open a prompt fallback
@@ -93,9 +102,23 @@ function App() {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
   };
 
+  const navigate = (next: AppView) => {
+    setViewHistory((h) => [...h, currentView]);
+    setCurrentView(next);
+  };
+
+  const goBack = () => {
+    setViewHistory((h) => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setCurrentView(prev);
+      return h.slice(0, -1);
+    });
+  };
+
   const handleRoleSelection = (role: 'attendee' | 'organizer') => {
     setUserRole(role);
-    setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+    navigate(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
   };
 
   const handleWalletConnect = async () => {
@@ -134,7 +157,7 @@ function App() {
 
   const handleEventPurchase = (eventId: string) => {
     setSelectedEvent(eventId);
-    setCurrentView('ticket-purchase');
+    navigate('ticket-purchase');
   };
 
   // Header component for users who selected a role
@@ -191,6 +214,35 @@ function App() {
     </header>
   );
 
+  const SiteHeader = () => (
+    <header className="bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-4">
+            <h1 
+              className="font-bold text-xl cursor-pointer"
+              onClick={() => setCurrentView('landing')}
+            >
+              GatePass
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="flex items-center"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setCurrentView('login')}>Sign In</Button>
+            <Button size="sm" onClick={() => setCurrentView('signup')}>Sign Up</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'landing':
@@ -202,19 +254,29 @@ function App() {
           />
         );
 
+      case 'login':
+        return (
+          <LoginPage onLoginComplete={() => setCurrentView('landing')} onShowSignup={() => setCurrentView('signup')} />
+        );
+
+      case 'signup':
+        return (
+          <SignupPage onSignupComplete={() => setCurrentView('login')} onShowLogin={() => setCurrentView('login')} />
+        );
+
       case 'create-event':
         return (
           <EventCreation
-            onBack={() => setCurrentView('organizer-dashboard')}
+            onBack={() => goBack()}
           />
         );
 
       case 'organizer-dashboard':
         return (
           <OrganizerDashboard
-            onCreateEvent={() => setCurrentView('create-event')}
-            onViewAnalytics={() => setCurrentView('analytics')}
-            onOpenScanner={() => setCurrentView('scanner')}
+            onCreateEvent={() => navigate('create-event')}
+            onViewAnalytics={() => navigate('analytics')}
+            onOpenScanner={() => navigate('scanner')}
           />
         );
 
@@ -231,22 +293,22 @@ function App() {
         return (
           <TicketPurchase
             eventId={selectedEvent!}
-            onBack={() => setCurrentView('attendee-dashboard')}
-            onPurchaseComplete={() => setCurrentView('attendee-dashboard')}
+            onBack={() => goBack()}
+            onPurchaseComplete={() => navigate('attendee-dashboard')}
           />
         );
 
       case 'scanner':
         return (
           <MobileScanner
-            onBack={() => setCurrentView('organizer-dashboard')}
+            onBack={() => goBack()}
           />
         );
 
       case 'analytics':
         return (
           <Analytics
-            onBack={() => setCurrentView('organizer-dashboard')}
+            onBack={() => goBack()}
           />
         );
 
@@ -272,34 +334,54 @@ function App() {
     }
   };
 
+  if (showSplash) {
+    return (
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+        <SplashScreen onComplete={() => setShowSplash(false)} />
+      </React.Suspense>
+    );
+  }
+
+  if (currentView === 'login') {
+    return (
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+        <LoginPage onLoginComplete={() => setCurrentView('landing')} onShowSignup={() => setCurrentView('signup')} />
+      </React.Suspense>
+    );
+  }
+
+  if (currentView === 'signup') {
+    return (
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+        <SignupPage onSignupComplete={() => setCurrentView('login')} onShowLogin={() => setCurrentView('login')} />
+      </React.Suspense>
+    );
+  }
+
+  
+
   return (
-    showSplash ? (
-      <SplashScreen onComplete={() => setShowSplash(false)} />
-    ) : (
     <div className="flex flex-col min-h-screen bg-background">
-      {userRole && <RoleHeader />}
-      
+      {userRole ? <RoleHeader /> : <SiteHeader />}
       <main className="flex-1 container mx-auto px-4 py-8">
-        {currentView !== 'landing' && (
+        {viewHistory.length > 0 && (
           <Button 
             variant="ghost" 
             size="sm" 
             className="mb-4 flex items-center" 
-            onClick={() => setCurrentView('landing')}
+            onClick={goBack}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            Back
           </Button>
         )}
-        {renderCurrentView()}
+        <React.Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2"></div></div>}>
+          {renderCurrentView()}
+        </React.Suspense>
       </main>
-
       <Footer />
-
-      {/* Toast Notifications */}
       <Toaster position="top-right" />
     </div>
-    )
   );
 }
 
