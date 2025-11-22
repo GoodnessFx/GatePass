@@ -154,6 +154,16 @@ function App() {
     setWalletAddress(null);
   };
 
+  useEffect(() => {
+    try {
+      const loggedIn = localStorage.getItem('gp_demo_loggedin') === 'true';
+      const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+      if (loggedIn && role) {
+        setUserRole(role);
+      }
+    } catch {}
+  }, []);
+
   const handleEventPurchase = (eventId: string) => {
     setSelectedEvent(eventId);
     navigate('ticket-purchase');
@@ -255,7 +265,22 @@ function App() {
 
       case 'login':
         return (
-          <LoginPage onLoginComplete={() => setCurrentView('landing')} onShowSignup={() => setCurrentView('signup')} />
+          <LoginPage 
+            onLoginComplete={() => {
+              try {
+                const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+                if (role) {
+                  setUserRole(role);
+                  setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+                } else {
+                  setCurrentView('landing');
+                }
+              } catch {
+                setCurrentView('landing');
+              }
+            }} 
+            onShowSignup={() => setCurrentView('signup')} 
+          />
         );
 
       case 'signup':
@@ -344,7 +369,22 @@ function App() {
   if (currentView === 'login') {
     return (
       <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-        <LoginPage onLoginComplete={() => setCurrentView('landing')} onShowSignup={() => setCurrentView('signup')} />
+        <LoginPage 
+          onLoginComplete={() => {
+            try {
+              const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+              if (role) {
+                setUserRole(role);
+                setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+              } else {
+                setCurrentView('landing');
+              }
+            } catch {
+              setCurrentView('landing');
+            }
+          }} 
+          onShowSignup={() => setCurrentView('signup')} 
+        />
       </React.Suspense>
     );
   }
