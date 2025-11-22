@@ -3,11 +3,10 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { countries } from '../utils/countries';
-import { Ticket } from 'lucide-react';
+import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -55,16 +54,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        <div className="hidden lg:flex items-center justify-center p-6">
-          <div className="relative w-full max-w-md lg:h-[700px] rounded-[24px] overflow-hidden">
-            <img src="/ticketbooth.jpg" alt="Ticket booth" className="w-full h-full object-cover" />
-            <div className="absolute top-6 right-8 z-10">
-              <span className="gatepass-logo">GatePass</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex items-center justify-center p-6">
+        <div className="flex items-center justify-center p-6 order-2 lg:order-none">
           <Card className="w-full max-w-md lg:h-[700px]">
             <CardHeader>
               <CardTitle className="text-3xl">Sign Up</CardTitle>
@@ -108,10 +99,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 <span className="text-sm">Accept Terms & Conditions</span>
               </div>
               <Button className="w-full" onClick={handleSignup}>Continue</Button>
-              <div className="relative">
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-border" />
-                <div className="relative w-full text-center text-xs text-muted-foreground">or</div>
-              </div>
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <Button variant="outline" className="flex items-center gap-2 justify-center">
                   <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.78 0 7.22 1.44 9.86 3.8l5.94-5.94C35.46 3.46 30.04 1 24 1 14.73 1 6.65 6.16 2.72 14.02l7.54 5.86C12.31 13.19 17.73 9.5 24 9.5z"/><path fill="#4285F4" d="M46.08 24.3c0-2.02-.18-3.98-.52-5.86H24v11.1h12.4c-.53 2.87-2.16 5.29-4.61 6.91l7.07 5.49c4.13-3.81 7.22-9.35 7.22-17.64z"/><path fill="#FBBC05" d="M10.26 28.14c-.48-1.41-.76-2.91-.76-4.46s.28-3.05.76-4.46l-7.54-5.86C1.63 16.06 1 19.01 1 22.06s.63 6 1.72 8.71l7.54-2.63z"/><path fill="#34A853" d="M24 46c6.05 0 11.18-1.99 14.9-5.41l-7.07-5.49c-2.01 1.36-4.58 2.15-7.83 2.15-6.68 0-12.35-4.51-14.39-10.66l-7.54 2.63C6.65 41.84 14.73 46 24 46z"/></svg>
@@ -128,6 +115,39 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="hidden lg:block p-6 order-1 lg:order-none">
+          <FloatingCardGrid className="rounded-[24px] p-6" cols="grid-cols-2 xl:grid-cols-3">
+            <FloatingCard
+              variant="text"
+              label="Get Started"
+              title="Join the GatePass party"
+              className="mt-6"
+              accentColor="#22c55e"
+              floatDelayMs={0}
+            >
+              Set up in seconds. Discover events and keep every pass in one place.
+            </FloatingCard>
+            <FloatingCard
+              variant="text"
+              label="Payments"
+              title="Pay your way"
+              className="-mt-4"
+              accentColor="#06b6d4"
+              floatDelayMs={200}
+            >
+              Swipe, tap, or crypto. Fast checkout with fees that won't bite.
+            </FloatingCard>
+            <FloatingCard
+              variant="image"
+              imgSrc="/Gate.jpg"
+              imgAlt="Explore events"
+              className="xl:col-span-1 mt-2"
+              accentColor="#f59e0b"
+              floatDelayMs={400}
+            />
+          </FloatingCardGrid>
         </div>
       </div>
     </div>

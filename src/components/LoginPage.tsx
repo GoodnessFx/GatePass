@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
+import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
@@ -41,14 +42,6 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
         />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        <div className="hidden lg:flex items-center justify-center p-6">
-          <div className="relative w-full max-w-md lg:h-[700px] rounded-[24px] overflow-hidden">
-            <img src="/ticketbooth.jpg" alt="Ticket booth" className="w-full h-full object-cover" />
-            <div className="absolute top-6 right-8 z-10">
-              <span className="gatepass-logo">GatePass</span>
-            </div>
-          </div>
-        </div>
 
         <div className="flex items-center justify-center p-6">
           <Card className="w-full max-w-md lg:h-[700px]">
@@ -86,6 +79,39 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="hidden lg:block p-6">
+          <FloatingCardGrid className="rounded-[24px] p-6" cols="grid-cols-2 xl:grid-cols-3">
+            <FloatingCard
+              variant="text"
+              label="GatePass Mission"
+              title="Your ticket to adventure"
+              className="mt-8"
+              accentColor="#22c55e"
+              floatDelayMs={0}
+            >
+              Scan, share, and glide past lines—no paper, no stress.
+            </FloatingCard>
+            <FloatingCard
+              variant="text"
+              label="Organizer Tools"
+              title="Organizer superpowers"
+              className="-mt-2"
+              accentColor="#06b6d4"
+              floatDelayMs={200}
+            >
+              Live sales, instant check-ins, and anti-scalper shields—built in.
+            </FloatingCard>
+            <FloatingCard
+              variant="image"
+              imgSrc="/ticketbooth.jpg"
+              imgAlt="GatePass experience"
+              className="xl:col-span-1 mt-4"
+              accentColor="#f59e0b"
+              floatDelayMs={400}
+            />
+          </FloatingCardGrid>
         </div>
       </div>
     </div>

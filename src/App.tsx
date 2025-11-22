@@ -66,8 +66,7 @@ function App() {
 
   useEffect(() => {
     if (showSplash) return;
-    const hasAccount = localStorage.getItem('gp_account_created') === 'true';
-    setCurrentView(hasAccount ? 'login' : 'signup');
+    setCurrentView('login');
   }, [showSplash]);
 
   // Accept an optional name; if not provided open a prompt fallback
