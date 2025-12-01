@@ -4,10 +4,10 @@ import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { toast } from 'sonner';
-import { 
-  Wallet, 
-  Copy, 
-  ExternalLink, 
+import {
+  Wallet,
+  Copy,
+  ExternalLink,
   CheckCircle,
   AlertCircle,
   Smartphone
@@ -32,9 +32,9 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
 
   const handleWalletConnect = async (walletName: string) => {
     if (isConnecting) return; // Prevent multiple connections
-    
+
     setIsConnecting(true);
-    
+
     // Simulate wallet connection
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -65,9 +65,9 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
 
   if (isConnected && walletAddress) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {/* Show connection badge only on larger screens to save space on mobile */}
-        <Badge variant="secondary" className="hidden sm:inline-flex items-center space-x-1">
+        <Badge variant="secondary" className="hidden sm:inline-flex items-center space-x-2 px-3">
           <CheckCircle className="h-3 w-3 text-green-500" />
           <span>Connected</span>
         </Badge>
@@ -75,11 +75,11 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
           variant="ghost"
           size="sm"
           onClick={copyAddress}
-          className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-10 rounded-full hover:bg-accent transition-colors space-x-2"
+          className="flex items-center justify-center h-8 sm:h-10 rounded-full hover:bg-accent transition-colors px-2 sm:px-5 gap-2 sm:gap-3"
         >
           <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline">{formatAddress(walletAddress)}</span>
-          <Copy className="hidden sm:inline h-3 w-3" />
+          <span className="hidden lg:inline">{formatAddress(walletAddress)}</span>
+          <Copy className="hidden lg:inline h-3 w-3" />
         </Button>
       </div>
     );
@@ -91,10 +91,10 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
         <Button
           variant="ghost"
           size="sm"
-          className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-10 rounded-full hover:bg-accent transition-colors space-x-2"
+          className="flex items-center justify-center h-8 sm:h-10 rounded-full hover:bg-accent transition-colors px-2 sm:px-5 gap-2 sm:gap-3"
         >
           <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline">Connect Wallet</span>
+          <span className="hidden lg:inline">Connect Wallet</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -104,10 +104,10 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
             Choose a wallet to connect to GatePass. You'll need a wallet to purchase tickets and manage your NFTs.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-3">
           {mockWallets.map((wallet) => (
-            <Card 
+            <Card
               key={wallet.name}
               className="cursor-pointer transition-colors hover:bg-muted/50"
               onClick={() => handleWalletConnect(wallet.name)}

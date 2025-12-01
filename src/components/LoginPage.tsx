@@ -46,8 +46,8 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
         <div className="flex items-center justify-center p-6">
           <Card className="w-full max-w-md lg:h-[700px]">
             <CardHeader>
-              <CardTitle className="text-3xl">Sign in</CardTitle>
-              <CardDescription>Use email or continue with a provider</CardDescription>
+              <CardTitle className="text-3xl text-black">Sign in</CardTitle>
+              <CardDescription className="text-black">Use email or continue with a provider</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
@@ -63,7 +63,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
               <Button className="w-full" onClick={handleLogin}>Login</Button>
-              <div className="text-sm text-muted-foreground text-center">
+              <div className="text-sm text-black text-center">
                 <span>New to GatePass? </span>
                 <button className="underline" onClick={()=>onShowSignup && onShowSignup()}>Click to Sign Up</button>
               </div>
