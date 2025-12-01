@@ -58,8 +58,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         <div className="flex items-center justify-center p-6 order-2 lg:order-none">
           <Card className="w-full max-w-md lg:h-[700px]">
             <CardHeader>
-              <CardTitle className="text-3xl">Sign Up</CardTitle>
-              <CardDescription>Create an account to continue</CardDescription>
+              <CardTitle className="text-3xl text-black">Sign Up</CardTitle>
+              <CardDescription className="text-black">Create an account to continue</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {error && <div className="text-sm text-destructive">{error}</div>}
@@ -94,7 +94,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 <Label>Password</Label>
                 <Input type="password" placeholder="At least 8 characters" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-black">
                 <Checkbox checked={accepted} onCheckedChange={(v)=>setAccepted(Boolean(v))} />
                 <span className="text-sm">Accept Terms & Conditions</span>
               </div>
@@ -109,7 +109,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                   <span>Sign up with X</span>
                 </Button>
               </div>
-              <div className="text-sm text-muted-foreground text-center pt-1">
+              <div className="text-sm text-black text-center pt-1">
                 <span>Already registered? </span>
                 <button className="underline" onClick={onShowLogin}>Sign In</button>
               </div>
