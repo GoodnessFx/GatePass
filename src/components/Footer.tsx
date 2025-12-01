@@ -11,13 +11,7 @@ const Footer = () => {
         <div className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="relative rounded-lg overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1b1f2a] via-[#332622] to-[#0d0f14]" />
-              <div className="relative p-6 text-white flex items-center justify-center">
-                <div className="max-w-sm text-center">
-                  <div className="text-xl font-semibold">GatePass</div>
-                  <div className="text-white/70 text-sm mt-2">A quiet visual panel lives here. Minimal, aligned, responsive.</div>
-                </div>
-              </div>
+              
             </div>
             <div className="rounded-lg border bg-muted/30 p-6">
               <div className="text-sm text-muted-foreground">Secure access, global payments, offline scanning. Crafted for organizers and attendees.</div>

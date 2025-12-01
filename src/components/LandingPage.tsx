@@ -4,14 +4,14 @@ import { getActivePromotion, getSuggestedPromoCode, formatMoney } from '../utils
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { 
-  Ticket, 
-  Shield, 
-  Zap, 
-  Users, 
-  Scan, 
-  BarChart3, 
-  Wallet, 
+import {
+  Ticket,
+  Shield,
+  Zap,
+  Users,
+  Scan,
+  BarChart3,
+  Wallet,
   Globe,
   ArrowRight,
   CheckCircle,
@@ -22,17 +22,18 @@ import {
 interface LandingPageProps {
   onRoleSelect: (role: 'attendee' | 'organizer') => void;
   onConnect: () => void;
+  onBrowseEvents: () => void;
   isConnected: boolean;
 }
 
-export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPageProps) {
+export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnected }: LandingPageProps) {
   const promo = getActivePromotion();
   const suggestedCode = getSuggestedPromoCode();
   const [email, setEmail] = React.useState('');
   const [name, setName] = React.useState('');
   const [avatar, setAvatar] = React.useState<string | undefined>(undefined);
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
-  const savedName = React.useMemo(()=>{ try { return localStorage.getItem('gp_display_name') || ''; } catch { return ''; } }, []);
+  const savedName = React.useMemo(() => { try { return localStorage.getItem('gp_display_name') || ''; } catch { return ''; } }, []);
   React.useEffect(() => {
     const t = setInterval(() => setShowcaseIndex((i) => (i + 1) % 3), 3000);
     return () => clearInterval(t);
@@ -43,9 +44,9 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
       localStorage.setItem('gp_user_email', email.trim());
       if (name.trim()) localStorage.setItem('gp_display_name', name.trim());
       if (avatar) localStorage.setItem('gp_avatar', avatar);
-      localStorage.setItem('gp_demo_loggedin','true');
-      localStorage.setItem('gp_demo_role','attendee');
-    } catch {}
+      localStorage.setItem('gp_demo_loggedin', 'true');
+      localStorage.setItem('gp_demo_role', 'attendee');
+    } catch { }
     onRoleSelect('attendee');
   };
   return (
@@ -59,7 +60,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
         </div>
       </section>
 
-      
+
 
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-[#0a0f1f] via-[#0e1426] to-[#1a1f2f]">
@@ -75,7 +76,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                   <span>Create Event</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-                <Button size="lg" variant="outline" onClick={() => onRoleSelect('attendee')} className="flex items-center space-x-2">
+                <Button size="lg" variant="outline" onClick={onBrowseEvents} className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
                   <span>Find Events</span>
                 </Button>
@@ -133,7 +134,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
               Built for the modern event industry with blockchain security and traditional payment options.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
@@ -144,7 +145,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </CardDescription>
               </CardHeader>
             </Card>
-            
+
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 <Zap className="h-10 w-10 text-primary mb-2" />
@@ -154,7 +155,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </CardDescription>
               </CardHeader>
             </Card>
-            
+
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 <Scan className="h-10 w-10 text-primary mb-2" />
@@ -164,7 +165,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </CardDescription>
               </CardHeader>
             </Card>
-            
+
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 <BarChart3 className="h-10 w-10 text-primary mb-2" />
@@ -174,7 +175,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </CardDescription>
               </CardHeader>
             </Card>
-            
+
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 <Wallet className="h-10 w-10 text-primary mb-2" />
@@ -184,7 +185,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </CardDescription>
               </CardHeader>
             </Card>
-            
+
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 <Globe className="h-10 w-10 text-primary mb-2" />
@@ -204,7 +205,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
             <p className="text-xl text-muted-foreground">Simple for organizers, seamless for attendees</p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div>
               <h3 className="text-2xl font-bold mb-8 text-center">For Event Organizers</h3>
@@ -218,7 +219,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">Set up your event details, ticket tiers, and pricing in under 10 minutes.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     2
@@ -228,7 +229,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">Automatic smart contract deployment creates your secure ticket collection.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     3
@@ -238,7 +239,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">Share your event page and watch real-time sales analytics.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     4
@@ -250,7 +251,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h3 className="text-2xl font-bold mb-8 text-center">For Attendees</h3>
               <div className="space-y-6">
@@ -263,7 +264,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">Discover events in your area or search by interest and date.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     2
@@ -273,7 +274,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">Buy with crypto or credit card. Tickets are minted as NFTs to your wallet.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     3
@@ -283,7 +284,7 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
                     <p className="text-muted-foreground">View, transfer, or resell your tickets through your wallet.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">
                     4
@@ -329,13 +330,9 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  <Button size="sm" onClick={() => window.open('https://gatepass.guide/getting-started','_blank')} className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => window.open('https://gatepass.guide/getting-started', '_blank')} className="flex items-center gap-2">
                     <ExternalLink className="h-4 w-4" />
                     <span>Open Beginner Guide</span>
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => onConnect()} className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4" />
-                    <span>Connect Wallet</span>
                   </Button>
                 </div>
               </CardContent>
@@ -344,9 +341,9 @@ export function LandingPage({ onRoleSelect, onConnect, isConnected }: LandingPag
         </div>
       </section>
 
-      
 
-      
+
+
     </div>
   );
 }

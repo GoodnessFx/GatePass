@@ -30,7 +30,7 @@ function FloatingCard({
   return (
     <div
       className={cn(
-        'bg-[#2a2a2a] text-white rounded-[24px] shadow-2xl ring-1 ring-white/5',
+        'bg-[#2f2f2f] text-white rounded-[24px] shadow-2xl ring-1 ring-white/5',
         'transition-all duration-300 ease-out will-change-transform',
         'hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)]',
         className,
@@ -47,20 +47,20 @@ function FloatingCard({
         {variant === 'image' && imgSrc ? (
           <div className="p-8">
             <div className="overflow-hidden rounded-[20px] bg-[#3a3a3a]">
-              <img src={imgSrc} alt={imgAlt || ''} className="w-full h-[220px] object-cover" />
+              <img src={imgSrc} alt={imgAlt || ''} className="w-full h-[220px] object-cover rounded-[20px]" />
             </div>
           </div>
-        ) : (
-          <div className="p-8 min-h-[280px]">
-            {label && <div className="text-sm text-gray-400 mb-2">{label}</div>}
-            {title && <div className="text-2xl sm:text-3xl font-semibold leading-snug">{title}</div>}
-            {children && <div className="mt-3 text-gray-200">{children}</div>}
-          </div>
-        )}
-      </div>
-      <style>{kf}</style>
-    </div>
-  );
+                ) : (
+                  <div className="p-8 min-h-[280px]">
+                    {label && <div className="text-sm text-white/70 mb-2">{label}</div>}
+                    {title && <div className="text-2xl sm:text-3xl font-semibold leading-snug text-white">{title}</div>}
+                    {children && <div className="mt-3 text-white/85">{children}</div>}
+                  </div>
+                )}
+              </div>
+              <style>{kf}</style>
+            </div>
+          );
 }
 
 type FloatingCardGridProps = {
@@ -73,7 +73,7 @@ function FloatingCardGrid({ children, className, cols }: FloatingCardGridProps) 
   return (
     <div
       className={cn(
-        'bg-[#000000] py-8 grid gap-6 sm:gap-8',
+        'bg-[#0b0b0b] py-8 grid gap-6 sm:gap-8',
         cols || 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
         className,
       )}
