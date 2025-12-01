@@ -94,6 +94,15 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   return (
     <div className="min-h-screen bg-background p-6 scroll-container">
       <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Attendee Dashboard</h1>
+            <p className="text-muted-foreground">Manage your events and track tickets</p>
+          </div>
+          <Button onClick={() => onPurchaseTicket('browse')} className="hidden sm:flex items-center space-x-2">
+            <span>Browse Events</span>
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
