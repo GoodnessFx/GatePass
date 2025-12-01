@@ -1,0 +1,31 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite/Build output
+dist/
+.vite/
+.cache/
+
+# Monorepo tooling
+.turbo/
+
+# Env files
+.env
+.env.*
+
+# Testing
+coverage/
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Next.js (if used in subapps)
+.next/
+out/
