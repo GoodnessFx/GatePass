@@ -83,5 +83,4 @@ function FloatingCardGrid({ children, className, cols }: FloatingCardGridProps) 
   );
 }
 
-<<<<<<< HEAD
 export { FloatingCard, FloatingCardGrid };
