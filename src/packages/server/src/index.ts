@@ -33,7 +33,18 @@ const limiter = rateLimit({
 app.use(helmet())
 app.use(compression())
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowed = [
+      process.env.CORS_ORIGIN || 'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173'
+    ]
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(null, true)
+    }
+  },
   credentials: true
 }))
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }))
