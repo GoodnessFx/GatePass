@@ -63,7 +63,7 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
 
 
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-[#0a0f1f] via-[#0e1426] to-[#1a1f2f]">
+      <section className="relative py-20 bg-gradient-to-br from-[#0B0D17] via-[#13151F] to-[#0B0D17]">
         <div className="absolute inset-0 -z-10 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 60%)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">

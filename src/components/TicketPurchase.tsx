@@ -460,7 +460,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
             <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+              <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                 <Calendar className="h-16 w-16 text-primary/50" />
               </div>
               

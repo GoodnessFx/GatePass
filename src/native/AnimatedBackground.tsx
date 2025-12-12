@@ -1,96 +1,14 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Dimensions, Easing } from 'react-native';
-
-const { width, height } = Dimensions.get('window');
-
-function useLoop(duration: number, start: number, end: number) {
-  const val = useRef(new Animated.Value(start)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(val, { toValue: end, duration, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(val, { toValue: start, duration, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [val, duration, start, end]);
-  return val;
-}
+import React from 'react';
 
 export default function AnimatedBackground() {
-  const tx1 = useLoop(18000, -20, 20);
-  const ty1 = useLoop(21000, -15, 15);
-  const s1 = useLoop(18000, 0.95, 1.05);
-  const r1 = useLoop(20000, 0, 1);
-
-  const tx2 = useLoop(22000, -25, 25);
-  const ty2 = useLoop(16000, -18, 18);
-  const s2 = useLoop(22000, 0.9, 1.1);
-  const r2 = useLoop(24000, 0, 1);
-
-  const tx3 = useLoop(25000, -30, 30);
-  const ty3 = useLoop(19000, -20, 20);
-  const s3 = useLoop(25000, 0.92, 1.08);
-  const r3 = useLoop(23000, 0, 1);
-
-  const rotate1 = r1.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const rotate2 = r2.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const rotate3 = r3.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
+  const kf = `@keyframes abFloat{0%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(3vw,-2vw) rotate(180deg)}100%{transform:translate(0,0) rotate(360deg)}}`;
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Animated.View
-        style={[
-          styles.shape,
-          {
-            backgroundColor: 'rgba(255,255,255,0.10)',
-            width: width * 0.6,
-            height: width * 0.6,
-            borderRadius: width * 0.3,
-            transform: [{ translateX: tx1 }, { translateY: ty1 }, { scale: s1 }, { rotate: rotate1 }],
-            top: height * 0.15,
-            left: -width * 0.1,
-          },
-        ]}
-      />
-
-      <Animated.View
-        style={[
-          styles.shape,
-          {
-            backgroundColor: 'rgba(245,245,245,0.12)',
-            width: width * 0.5,
-            height: width * 0.5,
-            borderRadius: width * 0.25,
-            transform: [{ translateX: tx2 }, { translateY: ty2 }, { scale: s2 }, { rotate: rotate2 }],
-            top: height * 0.55,
-            left: width * 0.55,
-          },
-        ]}
-      />
-
-      <Animated.View
-        style={[
-          styles.shape,
-          {
-            backgroundColor: 'rgba(230,230,230,0.08)',
-            width: width * 0.45,
-            height: width * 0.45,
-            borderRadius: width * 0.225,
-            transform: [{ translateX: tx3 }, { translateY: ty3 }, { scale: s3 }, { rotate: rotate3 }],
-            top: -height * 0.05,
-            left: width * 0.4,
-          },
-        ]}
-      />
-    </View>
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: '15vh', left: '-10vw', width: '60vw', height: '60vw', borderRadius: '30vw', backgroundColor: 'rgba(0,217,255,0.10)', animation: 'abFloat 20s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', top: '55vh', left: '55vw', width: '50vw', height: '50vw', borderRadius: '25vw', backgroundColor: 'rgba(0,217,255,0.08)', animation: 'abFloat 22s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', top: '-5vh', left: '40vw', width: '45vw', height: '45vw', borderRadius: '22.5vw', backgroundColor: 'rgba(0,217,255,0.06)', animation: 'abFloat 24s ease-in-out infinite' }} />
+      <style>{kf}</style>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  shape: {
-    position: 'absolute',
-  },
-});
 

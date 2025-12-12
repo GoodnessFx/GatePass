@@ -92,16 +92,18 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   const submitHelp = () => { toast.success('Help submitted'); setIsHelpOpen(false); };
 
   return (
-    <div className="min-h-screen bg-background p-6 scroll-container">
+    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 scroll-container">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
           <div>
             <h1 className="text-3xl font-bold">Attendee Dashboard</h1>
             <p className="text-muted-foreground">Manage your events and track tickets</p>
           </div>
-          <Button onClick={() => onPurchaseTicket('browse')} className="hidden sm:flex items-center space-x-2">
-            <span>Browse Events</span>
-          </Button>
+          <div className="hidden sm:flex ml-auto sm:ml-0">
+            <Button onClick={() => onPurchaseTicket('browse')} className="items-center space-x-2">
+              <span>Browse Events</span>
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -177,10 +179,10 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
                   <div className={`aspect-video bg-gradient-to-br ${getThemeClasses(ticket)} relative overflow-hidden`}>
                     <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(120deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.6) 20%, rgba(255,255,255,0.0) 40%)', backgroundSize: '200% 100%', animation: 'shine 6s linear infinite' }} />
                     <style>{`@keyframes shine { 0%{background-position:-200% 0} 100%{background-position:200% 0} }`}</style>
-                    <Ticket className="absolute left-4 top-4 h-10 w-10 text-white/50" />
-                    <div className="absolute right-3 top-3 text-xs bg-black/30 text-white px-2 py-1 rounded">{getCountdown(ticket)}</div>
-                    <div className="absolute bottom-3 right-3 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-white">#{ticket.id}</div>
-                    <a href={`https://www.google.com/maps/search/?q=${encodeURIComponent(ticket.venue)}`} target="_blank" rel="noreferrer" className="absolute bottom-3 left-3 bg-black/30 text-white text-[11px] px-2 py-1 rounded">Map</a>
+                    <Ticket className="absolute left-4 top-4 h-10 w-10 text-foreground/50" />
+                    <div className="absolute right-3 top-3 text-xs bg-background/40 text-foreground px-2 py-1 rounded">{getCountdown(ticket)}</div>
+                    <div className="absolute bottom-3 right-3 bg-background/30 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-foreground">#{ticket.id}</div>
+                    <a href={`https://www.google.com/maps/search/?q=${encodeURIComponent(ticket.venue)}`} target="_blank" rel="noreferrer" className="absolute bottom-3 left-3 bg-background/40 text-foreground text-[11px] px-2 py-1 rounded">Map</a>
                   </div>
                   
                   <CardHeader className="flex-none pb-3">
@@ -298,7 +300,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
                     <Label>Selfie</Label>
                     <Input type="file" accept="image/*" />
                     <div className="flex items-center gap-2">
-                      <Switch onCheckedChange={(v)=>{ try{ const p=JSON.parse(localStorage.getItem('gatepass_profile')||'{}'); p.verified=!!v; localStorage.setItem('gatepass_profile', JSON.stringify(p)); }catch{} }} />
+                      <Switch onCheckedChange={(v: boolean)=>{ try{ const p=JSON.parse(localStorage.getItem('gatepass_profile')||'{}'); p.verified=!!v; localStorage.setItem('gatepass_profile', JSON.stringify(p)); }catch{} }} />
                       <span className="text-sm">Background Checked</span>
                     </div>
                   </div>
@@ -439,7 +441,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Label>Sort by</Label>
-                <Select defaultValue="rarity" onValueChange={(v)=>{
+                <Select defaultValue="rarity" onValueChange={(v: string)=>{
                   const sorted = [...poaBadges].sort((a,b)=>{
                     if(v==='rarity'){ const order={ 'Rare':0, 'Common':1 } as any; return (order[a.rarity]||9)-(order[b.rarity]||9); }
                     if(v==='date'){ return (new Date(b.date).getTime()) - (new Date(a.date).getTime()); }
@@ -460,7 +462,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
               {poaBadges.map((badge) => (
                 <Card key={badge.id} className="flex flex-col">
                   <CardHeader className="text-center pb-3">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
                       <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
                       {badge.rarity === 'Rare' && (
                         <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(120deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.6) 20%, rgba(255,255,255,0.0) 40%)', backgroundSize: '200% 100%', animation: 'shine 5s linear infinite' }} />
@@ -505,7 +507,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
                 <Card key={ticket.id}>
                   <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 gap-4">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center flex-none">
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-none">
                         <Ticket className="h-6 w-6 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">

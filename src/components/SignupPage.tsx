@@ -56,10 +56,10 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
 
         <div className="flex items-center justify-center p-6 order-2 lg:order-none">
-          <Card className="w-full max-w-md lg:h-[700px]">
+          <Card className="w-full max-w-lg lg:h-[700px]">
             <CardHeader>
-              <CardTitle className="text-3xl text-black">Sign Up</CardTitle>
-              <CardDescription className="text-black">Create an account to continue</CardDescription>
+              <CardTitle className="text-3xl text-foreground">Sign Up</CardTitle>
+              <CardDescription className="text-foreground">Create an account to continue</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {error && <div className="text-sm text-destructive">{error}</div>}
@@ -94,8 +94,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 <Label>Password</Label>
                 <Input type="password" placeholder="At least 8 characters" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
-              <div className="flex items-center gap-2 text-black">
-                <Checkbox checked={accepted} onCheckedChange={(v)=>setAccepted(Boolean(v))} />
+              <div className="flex items-center gap-2 text-foreground">
+                <Checkbox checked={accepted} onCheckedChange={(v: boolean)=>setAccepted(Boolean(v))} />
                 <span className="text-sm">Accept Terms & Conditions</span>
               </div>
               <Button className="w-full" onClick={handleSignup}>Continue</Button>
@@ -109,7 +109,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                   <span>Sign up with X</span>
                 </Button>
               </div>
-              <div className="text-sm text-black text-center pt-1">
+              <div className="text-sm text-foreground text-center pt-1">
                 <span>Already registered? </span>
                 <button className="underline" onClick={onShowLogin}>Sign In</button>
               </div>
@@ -118,36 +118,16 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         </div>
 
         <div className="hidden lg:block p-6 order-1 lg:order-none">
-          <FloatingCardGrid className="rounded-[24px] p-6" cols="grid-cols-2 xl:grid-cols-3">
-            <FloatingCard
-              variant="text"
-              label="Get Started"
-              title="Join the GatePass party"
-              className="mt-6"
-              accentColor="#22c55e"
-              floatDelayMs={0}
-            >
-              Set up in seconds. Discover events and keep every pass in one place.
-            </FloatingCard>
-            <FloatingCard
-              variant="text"
-              label="Payments"
-              title="Pay your way"
-              className="-mt-4"
-              accentColor="#06b6d4"
-              floatDelayMs={200}
-            >
-              Swipe, tap, or crypto. Fast checkout with fees that won't bite.
-            </FloatingCard>
-            <FloatingCard
-              variant="image"
-              imgSrc="/Gate.jpg"
-              imgAlt="Explore events"
-              className="xl:col-span-1 mt-2"
-              accentColor="#f59e0b"
-              floatDelayMs={400}
-            />
-          </FloatingCardGrid>
+          <Card className="h-full rounded-[28px] border-2 overflow-hidden bg-gradient-to-br from-primary/40 via-primary/20 to-accent/20">
+            <div className="relative h-full w-full">
+              <img src="/Gate.jpg" alt="Explore events" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-background/10 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8">
+                <div className="text-4xl md:text-5xl font-bold text-foreground">Join GatePass</div>
+                <div className="mt-2 text-lg text-foreground/90">Create account and explore events</div>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

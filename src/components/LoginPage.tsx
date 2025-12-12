@@ -44,10 +44,10 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
 
         <div className="flex items-center justify-center p-6">
-          <Card className="w-full max-w-md lg:h-[700px]">
+          <Card className="w-full max-w-lg lg:h-[700px]">
             <CardHeader>
-              <CardTitle className="text-3xl text-black">Sign in</CardTitle>
-              <CardDescription className="text-black">Use email or continue with a provider</CardDescription>
+              <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
+              <CardDescription className="text-foreground">Login and deploy in seconds</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
@@ -63,7 +63,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
               <Button className="w-full" onClick={handleLogin}>Login</Button>
-              <div className="text-sm text-black text-center">
+              <div className="text-sm text-foreground text-center">
                 <span>New to GatePass? </span>
                 <button className="underline" onClick={()=>onShowSignup && onShowSignup()}>Click to Sign Up</button>
               </div>
@@ -82,36 +82,16 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
         </div>
 
         <div className="hidden lg:block p-6">
-          <FloatingCardGrid className="rounded-[24px] p-6" cols="grid-cols-2 xl:grid-cols-3">
-            <FloatingCard
-              variant="text"
-              label="GatePass Mission"
-              title="Your ticket to adventure"
-              className="mt-8"
-              accentColor="#22c55e"
-              floatDelayMs={0}
-            >
-              Scan, share, and glide past lines—no paper, no stress.
-            </FloatingCard>
-            <FloatingCard
-              variant="text"
-              label="Organizer Tools"
-              title="Organizer superpowers"
-              className="-mt-2"
-              accentColor="#06b6d4"
-              floatDelayMs={200}
-            >
-              Live sales, instant check-ins, and anti-scalper shields—built in.
-            </FloatingCard>
-            <FloatingCard
-              variant="image"
-              imgSrc="/ticketbooth.jpg"
-              imgAlt="GatePass experience"
-              className="xl:col-span-1 mt-4"
-              accentColor="#f59e0b"
-              floatDelayMs={400}
-            />
-          </FloatingCardGrid>
+          <Card className="h-full rounded-[28px] border-2 overflow-hidden bg-gradient-to-br from-primary/40 via-primary/20 to-accent/20">
+            <div className="relative h-full w-full">
+              <img src="/Gate.jpg" alt="GatePass" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-background/10 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8">
+                <div className="text-4xl md:text-5xl font-bold text-foreground">GatePass</div>
+                <div className="mt-2 text-lg text-foreground/90">Create account and deploy in seconds</div>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
