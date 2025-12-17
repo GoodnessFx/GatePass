@@ -166,6 +166,18 @@ contract EventTicket is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard, Paus
         }
     }
 
+    function mintFor(address to, uint256 quantity) external onlyOwner nonReentrant whenNotPaused {
+        require(quantity > 0 && quantity <= 50, "Invalid quantity");
+        if (tokenCounter + quantity - 1 > totalSupply) {
+            revert MaxSupplyExceeded();
+        }
+        for (uint256 i = 0; i < quantity; i++) {
+            uint256 tokenId = tokenCounter++;
+            _safeMint(to, tokenId);
+            emit TicketMinted(to, tokenId, ticketPrice);
+        }
+    }
+
     /**
      * @notice Allowlist mint function
      * @param quantity Number of tickets to mint

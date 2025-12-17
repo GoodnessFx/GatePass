@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
 
 const router = Router()
@@ -53,4 +53,3 @@ router.get(
 )
 
 export { router as analyticsRoutes }
-

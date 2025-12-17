@@ -38,6 +38,8 @@ model Event {
   address     String?
   city        String?
   country     String?
+  latitude    Float?
+  longitude   Float?
   
   // Dates
   eventDate   DateTime
@@ -79,8 +81,11 @@ model Event {
   tickets     Ticket[]
   checkIns    CheckIn[]
   analytics   EventAnalytics[]
+  tiers       TicketTier[]
 
   @@map("events")
+  @@index([eventDate, category])
+  @@index([latitude, longitude])
 }
 
 model Ticket {
@@ -124,6 +129,7 @@ model Order {
   
   // Payment info
   totalAmount    Decimal     @db.Decimal(18, 8)
+  quantity       Int
   currency       String
   paymentMethod  PaymentMethod
   paymentStatus  PaymentStatus @default(PENDING)
@@ -132,6 +138,10 @@ model Order {
   stripePaymentId    String?
   coinbaseChargeId   String?
   blockchainTxHash   String?
+  paystackReference  String?
+  flutterwaveReference String?
+  mpesaCheckoutRequestId String?
+  paymentTxId        String?
   
   // Customer info
   customerEmail  String
@@ -151,6 +161,7 @@ model Order {
   tickets Ticket[]
 
   @@map("orders")
+  @@index([paymentStatus])
 }
 
 model CheckIn {
@@ -205,6 +216,26 @@ model EventAnalytics {
 
   @@unique([eventId, date])
   @@map("event_analytics")
+}
+
+model TicketTier {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  price            Decimal  @db.Decimal(18, 8)
+  availableQuantity Int
+  maxPerPerson     Int      @default(5)
+  saleStart        DateTime
+  saleEnd          DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  event   Event   @relation(fields: [eventId], references: [id])
+  eventId String
+
+  @@map("ticket_tiers")
+  @@index([eventId])
 }
 
 // Enums

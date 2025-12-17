@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import supabase from '../utils/supabase/client';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -103,15 +102,9 @@ export function Analytics({ onBack }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Load organizer events if authenticated
     (async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData?.session?.access_token;
-        if (!accessToken) return;
-        const res = await fetch('/make-server-f7f2fbf2/events', {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
+        const res = await fetch('/api/events');
         if (res.ok) {
           const json = await res.json();
           const events = Array.isArray(json?.events) ? json.events : [];
@@ -129,12 +122,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
       if (selectedEvent === 'all') { setServerAnalytics(null); return; }
       setIsLoading(true);
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData?.session?.access_token;
-        if (!accessToken) { setIsLoading(false); return; }
-        const res = await fetch(`/make-server-f7f2fbf2/analytics/${selectedEvent}`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
+        const res = await fetch(`/api/analytics/${selectedEvent}`);
         if (res.ok) {
           const json = await res.json();
           setServerAnalytics(json);

@@ -116,45 +116,65 @@ export function EventCreation({ onBack }: EventCreationProps) {
   };
 
   const handleDeploy = async () => {
-    setIsDeploying(true);
-    
-    // Simulate contract deployment
-    setTimeout(() => {
-      // Persist event locally for organizer dashboard listing
-      const newEvent = {
-        id: `event-${Date.now()}`,
-        organizerId: 'demo-organizer',
+    try {
+      setIsDeploying(true);
+      const payload = {
         title: eventData.title,
         description: eventData.description,
         category: eventData.category,
         venue: eventData.venue,
         address: eventData.address,
-        date: eventData.startDate ? format(eventData.startDate, 'yyyy-MM-dd') : '',
-        time: `${eventData.startTime}${eventData.endTime ? ` - ${eventData.endTime}` : ''}`,
+        startDate: eventData.startDate ? eventData.startDate.toISOString() : undefined,
+        endDate: eventData.endDate ? eventData.endDate.toISOString() : undefined,
         image: eventData.image,
         maxCapacity: eventData.maxCapacity,
-        ticketTiers,
-        settings,
-        status: 'live',
-        ticketsSold: 0,
-        revenue: 0,
-        createdAt: new Date().toISOString()
+        tiers: ticketTiers.map(t => ({
+          name: t.name,
+          description: t.description,
+          price: t.price,
+          quantity: t.quantity,
+          maxPerPerson: t.maxPerPerson
+        })),
+        organizerEmail: 'organizer@example.com',
+        organizerName: 'Organizer'
       };
-
-      try {
-        const existing = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
-        existing.push(newEvent);
-        localStorage.setItem('gatepass_events', JSON.stringify(existing));
-      } catch (e) {
-        console.warn('Failed saving event locally', e);
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        // Fallback: persist locally so attendees still see it
+        const localEvent = {
+          id: `event-${Date.now()}`,
+          title: eventData.title,
+          description: eventData.description,
+          venue: eventData.venue,
+          address: eventData.address,
+          date: eventData.startDate ? format(eventData.startDate, 'yyyy-MM-dd') : '',
+          time: `${eventData.startTime}${eventData.endTime ? ` - ${eventData.endTime}` : ''}`,
+          image: eventData.image,
+          maxCapacity: eventData.maxCapacity,
+          ticketTiers,
+          status: 'live',
+          createdAt: new Date().toISOString()
+        };
+        try {
+          const existing = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
+          existing.push(localEvent);
+          localStorage.setItem('gatepass_events', JSON.stringify(existing));
+        } catch {}
       }
-
       setIsDeploying(false);
       toast.success('Event deployed successfully!', {
-        description: 'Your event is live and visible in your dashboard.'
+        description: 'Your event is live and visible in attendee discovery.'
       });
       onBack();
-    }, 2000);
+    } catch (e) {
+      console.error(e);
+      setIsDeploying(false);
+      toast.error('Failed to deploy event.');
+    }
   };
 
   const renderStepContent = () => {

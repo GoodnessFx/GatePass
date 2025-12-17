@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import axios from 'axios'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
 import { readStoredEvents, writeStoredEvent } from '../storage/eventsStore'
 

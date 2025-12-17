@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { logger } from '../utils/logger'
 
 const router = Router()

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { asyncHandler } from '../middleware/errorHandler'
 import { mintTicketsFor } from '../utils/blockchain'
 
@@ -74,4 +74,3 @@ router.post(
 )
 
 export { router as webhookRoutes }
-
