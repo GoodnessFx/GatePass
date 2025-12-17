@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Ticket } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -20,46 +19,88 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       if (i >= fullText.length) {
         clearInterval(typeInterval);
       }
-    }, 140);
+    }, 220);
     return () => { clearTimeout(t1); clearTimeout(t2); clearInterval(typeInterval); };
   }, [onComplete, fullText]);
 
+  const shapes = useMemo(
+    () => [
+      { x: '6vw', y: '12vh', w: 160, h: 28, c: 'var(--primary)', a: 'gpSlideA' },
+      { x: '20vw', y: '6vh', w: 24, h: 24, c: 'var(--accent)', a: 'gpSlideB' },
+      { x: '32vw', y: '18vh', w: 120, h: 26, c: 'var(--primary)', a: 'gpSlideA' },
+      { x: '46vw', y: '10vh', w: 28, h: 28, c: 'var(--accent)', a: 'gpSlideC' },
+      { x: '60vw', y: '7vh', w: 180, h: 30, c: 'var(--primary)', a: 'gpSlideB' },
+      { x: '76vw', y: '14vh', w: 26, h: 26, c: 'var(--accent)', a: 'gpSlideA' },
+      { x: '10vw', y: '70vh', w: 26, h: 26, c: 'var(--accent)', a: 'gpSlideB' },
+      { x: '22vw', y: '66vh', w: 150, h: 28, c: 'var(--primary)', a: 'gpSlideC' },
+      { x: '38vw', y: '76vh', w: 26, h: 26, c: 'var(--accent)', a: 'gpSlideA' },
+      { x: '52vw', y: '68vh', w: 130, h: 26, c: 'var(--primary)', a: 'gpSlideB' },
+      { x: '68vw', y: '74vh', w: 26, h: 26, c: 'var(--accent)', a: 'gpSlideC' },
+      { x: '82vw', y: '64vh', w: 170, h: 30, c: 'var(--primary)', a: 'gpSlideA' }
+    ],
+    []
+  );
+
   return (
-    <div className="min-h-svh w-full relative overflow-hidden">
+    <div className="fixed inset-0 z-[9999] w-full overflow-hidden" style={{ height: '100vh' }}>
       <div className="absolute inset-0 bg-background" />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute" style={{ top: '15vh', left: '-10vw', width: '60vw', height: '60vw', borderRadius: '30vw', backgroundColor: 'rgba(0,217,255,0.10)', animation: 'gpFloat1 20s ease-in-out infinite' }} />
-        <div className="absolute" style={{ top: '55vh', left: '55vw', width: '50vw', height: '50vw', borderRadius: '25vw', backgroundColor: 'rgba(0,217,255,0.08)', animation: 'gpFloat2 22s ease-in-out infinite' }} />
-        <div className="absolute" style={{ top: '-5vh', left: '40vw', width: '45vw', height: '45vw', borderRadius: '22.5vw', backgroundColor: 'rgba(0,217,255,0.06)', animation: 'gpFloat3 24s ease-in-out infinite' }} />
         <style>{`
-          @keyframes gpFloat1 {
-            0%   { transform: translate(0,0) rotate(0deg) scale(1); }
-            50%  { transform: translate(3vw,-2.5vw) rotate(180deg) scale(1.05); }
-            100% { transform: translate(0,0) rotate(360deg) scale(1); }
+          @keyframes gpSlideA {
+            0%   { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.9; }
+            50%  { transform: translate3d(2vw,-2vw,0) rotate(32deg); opacity: 1; }
+            100% { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.9; }
           }
-          @keyframes gpFloat2 {
-            0%   { transform: translate(0,0) rotate(0deg) scale(0.95); }
-            50%  { transform: translate(-3vw,2.8vw) rotate(180deg) scale(1.08); }
-            100% { transform: translate(0,0) rotate(360deg) scale(0.95); }
+          @keyframes gpSlideB {
+            0%   { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.85; }
+            50%  { transform: translate3d(-2vw,2vw,0) rotate(32deg); opacity: 1; }
+            100% { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.85; }
           }
-          @keyframes gpFloat3 {
-            0%   { transform: translate(0,0) rotate(0deg) scale(0.92); }
-            50%  { transform: translate(2.4vw,2.2vw) rotate(180deg) scale(1.06); }
-            100% { transform: translate(0,0) rotate(360deg) scale(0.92); }
+          @keyframes gpSlideC {
+            0%   { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.9; }
+            50%  { transform: translate3d(3vw,1.5vw,0) rotate(32deg); opacity: 1; }
+            100% { transform: translate3d(0,0,0) rotate(32deg); opacity: 0.9; }
+          }
+          @keyframes gpPulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.05); }
+            100% { transform: scale(1); }
+          }
+          @keyframes gpTitleIntro {
+            0%   { opacity: 0; transform: translateY(8px) scale(0.98); letter-spacing: 0.08em; }
+            100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0em; }
           }
         `}</style>
+        {shapes.map((s, idx) => (
+          <div
+            key={idx}
+            className="absolute"
+            style={{
+              left: s.x,
+              top: s.y,
+              width: `${s.w}px`,
+              height: `${s.h}px`,
+              borderRadius: `${Math.min(s.h / 2, 9999)}px`,
+              backgroundColor: s.c,
+              animation: `${s.a} ${16 + (idx % 3) * 2}s ease-in-out infinite`,
+              transform: 'rotate(32deg)'
+            }}
+          />
+        ))}
       </div>
-      <div className="relative z-10 min-h-svh flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className={`mx-auto mb-4 flex items-center justify-center transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-            <Ticket className="text-foreground" style={{ width: '96px', height: '96px' }} />
-          </div>
-          <h1 className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-foreground font-extrabold tracking-tight`}
-              style={{ fontSize: '4rem' }}>
-            <span className="font-mono">{typed}</span>
-            <span className="inline-block w-[1ch] align-baseline ml-1 bg-foreground animate-pulse" style={{ height: '1em' }}></span>
-          </h1>
-        </div>
+      <div className="absolute inset-0 z-10 grid place-items-center">
+        <h1
+          className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground`}
+          style={{
+            fontSize: 'clamp(56px, 9vw, 120px)',
+            fontFamily:
+              "system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Ubuntu, Cantarell, 'Noto Sans', sans-serif",
+            animation: 'gpTitleIntro 900ms ease-out forwards, gpPulse 2.2s ease-in-out infinite',
+            fontWeight: 900
+          }}
+        >
+          {typed}
+        </h1>
       </div>
     </div>
   );
