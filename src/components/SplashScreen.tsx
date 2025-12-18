@@ -42,7 +42,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] w-full overflow-hidden" style={{ height: '100vh' }}>
+    <div
+      className="fixed inset-0 z-[9999] w-full overflow-hidden"
+      style={{ height: '100vh', minHeight: '100svh' }}
+    >
       <div className="absolute inset-0 bg-background" />
       <div className="absolute inset-0 pointer-events-none">
         <style>{`
@@ -92,12 +95,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         <h1
           className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground px-4`}
           style={{
-            fontSize: 'clamp(40px, 9vw, 120px)',
+            fontSize: 'clamp(32px, 8vw, 96px)',
             fontFamily:
               "system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Ubuntu, Cantarell, 'Noto Sans', sans-serif",
             animation: 'gpTitleIntro 900ms ease-out forwards, gpPulse 2.2s ease-in-out infinite',
             fontWeight: 900,
-            lineHeight: 1.1
+            lineHeight: 1.1,
+            maxWidth: '90vw'
           }}
         >
           {typed}

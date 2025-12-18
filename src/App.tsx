@@ -207,9 +207,9 @@ function App() {
             onRoleSelect={handleRoleSelection}
             onConnect={handleWalletConnect}
             isConnected={isWalletConnected}
-            onBrowseEvents={() => {
-              setSelectedEvent('browse');
-              navigate('ticket-purchase');
+          onBrowseEvents={() => {
+              setUserRole('attendee');
+              navigate('attendee-dashboard');
             }}
           />
         );
@@ -222,13 +222,10 @@ function App() {
                 const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
                 if (role) {
                   setUserRole(role);
-                  setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
-                } else {
-                  setCurrentView('landing');
                 }
               } catch {
-                setCurrentView('landing');
               }
+              setCurrentView('landing');
             }}
             onShowSignup={() => setCurrentView('signup')}
           />
@@ -236,7 +233,10 @@ function App() {
 
       case 'signup':
         return (
-          <SignupPage onSignupComplete={() => setCurrentView('login')} onShowLogin={() => setCurrentView('login')} />
+          <SignupPage
+            onSignupComplete={() => setCurrentView('landing')}
+            onShowLogin={() => setCurrentView('login')}
+          />
         );
 
       case 'create-event':
@@ -327,13 +327,11 @@ function App() {
               const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
               if (role) {
                 setUserRole(role);
-                setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
-              } else {
-                setCurrentView('landing');
               }
             } catch {
-              setCurrentView('landing');
+              // ignore
             }
+            setCurrentView('landing');
           }}
           onShowSignup={() => setCurrentView('signup')}
         />
@@ -344,7 +342,10 @@ function App() {
   if (currentView === 'signup') {
     return (
       <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-        <SignupPage onSignupComplete={() => setCurrentView('login')} onShowLogin={() => setCurrentView('login')} />
+        <SignupPage
+          onSignupComplete={() => setCurrentView('landing')}
+          onShowLogin={() => setCurrentView('login')}
+        />
       </React.Suspense>
     );
   }

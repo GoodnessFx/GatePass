@@ -44,7 +44,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
       <div className="grid grid-cols-1 min-h-screen">
 
         <div className="flex items-center justify-center p-6">
-          <Card className="w-full max-w-md lg:h-[700px]">
+          <Card className="w-full lg:h-[700px]" style={{ maxWidth: 450 }}>
             <CardHeader>
               <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
               <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>

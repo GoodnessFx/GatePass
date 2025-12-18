@@ -56,7 +56,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       <div className="grid grid-cols-1 min-h-screen">
 
         <div className="flex items-center justify-center p-6 order-2 lg:order-none">
-          <Card className="w-full max-w-md lg:h-[700px]">
+          <Card className="w-full mx-auto lg:h-[700px]" style={{ maxWidth: '450px' }}>
             <CardHeader>
               <CardTitle className="text-3xl text-foreground">Sign Up</CardTitle>
               <CardDescription className="text-foreground">Create an account to start ticketing</CardDescription>
