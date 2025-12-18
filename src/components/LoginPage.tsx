@@ -33,7 +33,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: "url('/Gate.jpg')",
+            backgroundImage: "url('/ticketbooth.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(6px)',
@@ -41,13 +41,13 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
           }}
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+      <div className="grid grid-cols-1 min-h-screen">
 
         <div className="flex items-center justify-center p-6">
-          <Card className="w-full max-w-lg lg:h-[700px]">
+          <Card className="w-full max-w-md lg:h-[700px]">
             <CardHeader>
               <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
-              <CardDescription className="text-foreground">Login and deploy in seconds</CardDescription>
+              <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
@@ -81,18 +81,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
           </Card>
         </div>
 
-        <div className="hidden lg:block p-6">
-          <Card className="h-full rounded-[28px] border-2 overflow-hidden bg-gradient-to-br from-primary/40 via-primary/20 to-accent/20">
-            <div className="relative h-full w-full">
-              <img src="/Gate.jpg" alt="GatePass" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-background/10 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <div className="text-4xl md:text-5xl font-bold text-foreground">GatePass</div>
-                <div className="mt-2 text-lg text-foreground/90">Create account and deploy in seconds</div>
-              </div>
-            </div>
-          </Card>
-        </div>
+        
       </div>
     </div>
   );

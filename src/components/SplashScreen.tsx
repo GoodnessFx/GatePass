@@ -88,15 +88,16 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           />
         ))}
       </div>
-      <div className="absolute inset-0 z-10 grid place-items-center">
+      <div className="absolute inset-0 z-10 flex items-center justify-center w-full h-full">
         <h1
-          className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground`}
+          className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground px-4`}
           style={{
-            fontSize: 'clamp(56px, 9vw, 120px)',
+            fontSize: 'clamp(40px, 9vw, 120px)',
             fontFamily:
               "system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Ubuntu, Cantarell, 'Noto Sans', sans-serif",
             animation: 'gpTitleIntro 900ms ease-out forwards, gpPulse 2.2s ease-in-out infinite',
-            fontWeight: 900
+            fontWeight: 900,
+            lineHeight: 1.1
           }}
         >
           {typed}
