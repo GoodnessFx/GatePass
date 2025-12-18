@@ -45,6 +45,12 @@ function App() {
     const savedName = localStorage.getItem('displayName');
     if (savedName) setDisplayName(savedName);
   }, []);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('displayName') || localStorage.getItem('gp_display_name') || '';
+      if (saved && saved !== displayName) setDisplayName(saved);
+    } catch {}
+  }, [currentView]);
 
   // Splash screen logic handled by the component callback
 
@@ -166,7 +172,7 @@ function App() {
                 GatePass
               </h1>
               {userRole && (
-                <Badge variant="secondary">{isOrganizer ? 'Organizer' : 'Attendee'}</Badge>
+                <Badge variant="secondary">{displayName || (isOrganizer ? 'Organizer' : 'Attendee')}</Badge>
               )}
             </div>
 

@@ -2,8 +2,10 @@ import React from 'react';
 import TicketScrollHero from './TicketScrollHero';
 import { getActivePromotion, getSuggestedPromoCode, formatMoney } from '../utils/promotions/seasonal';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import {
   Ticket,
   Shield,
@@ -34,10 +36,53 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
   const [avatar, setAvatar] = React.useState<string | undefined>(undefined);
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
   const savedName = React.useMemo(() => { try { return localStorage.getItem('gp_display_name') || ''; } catch { return ''; } }, []);
+  const [isNameDialogOpen, setIsNameDialogOpen] = React.useState(false);
+  const [pendingRole, setPendingRole] = React.useState<'attendee'|'organizer'|null>(null);
+  const [tempNameInput, setTempNameInput] = React.useState('');
+  const [messageVisible, setMessageVisible] = React.useState(false);
+  const [messageText, setMessageText] = React.useState('');
   React.useEffect(() => {
     const t = setInterval(() => setShowcaseIndex((i) => (i + 1) % 3), 3000);
     return () => clearInterval(t);
   }, []);
+  const openNameDialog = (role: 'attendee'|'organizer') => {
+    setPendingRole(role);
+    const existing = savedName || (typeof window !== 'undefined' ? (localStorage.getItem('displayName') || '') : '');
+    if (existing && existing.trim().length > 0) {
+      const msg = role === 'organizer'
+        ? `Lets help you tickets your event ${existing.trim()}`
+        : `${existing.trim()} Lets get you those ticket joh!`;
+      setMessageText(msg);
+      setMessageVisible(true);
+      window.setTimeout(() => {
+        setMessageVisible(false);
+        if (role === 'organizer') onRoleSelect('organizer');
+        else onRoleSelect('attendee');
+      }, 800);
+      return;
+    }
+    setTempNameInput(existing || '');
+    setIsNameDialogOpen(true);
+  };
+  const confirmName = () => {
+    const trimmed = tempNameInput.trim();
+    if (!trimmed) return;
+    try {
+      localStorage.setItem('gp_display_name', trimmed);
+      localStorage.setItem('displayName', trimmed);
+    } catch {}
+    const msg = pendingRole === 'organizer'
+      ? `Lets help you tickets your event ${trimmed}`
+      : `${trimmed} Lets get you those ticket joh!`;
+    setMessageText(msg);
+    setIsNameDialogOpen(false);
+    setMessageVisible(true);
+    window.setTimeout(() => {
+      setMessageVisible(false);
+      if (pendingRole === 'organizer') onRoleSelect('organizer');
+      else onRoleSelect('attendee');
+    }, 1200);
+  };
   const handleSignup = () => {
     if (!email.trim()) return;
     try {
@@ -51,6 +96,13 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
   };
   return (
     <div className="min-h-screen">
+      {messageVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background border rounded-xl px-6 py-4 text-center transition-opacity duration-700">
+            <p className="text-lg">{messageText}</p>
+          </div>
+        </div>
+      )}
       {/* Hero */}
       <section className="relative py-16 sm:py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,12 +123,12 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">Ticket Anything. Beautifully.</h1>
               <p className="mt-4 text-lg md:text-xl text-muted-foreground max-w-xl">Create museum‑quality digital tickets with fraud‑proof verification and instant settlement.</p>
               <div className="mt-8 flex gap-4">
-                <Button size="lg" onClick={() => onRoleSelect('organizer')} className="flex items-center space-x-2">
+                <Button size="lg" onClick={() => openNameDialog('organizer')} className="flex items-center space-x-2">
                   <Ticket className="h-5 w-5" />
                   <span>Create Event</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-                <Button size="lg" variant="outline" onClick={onBrowseEvents} className="flex items-center space-x-2">
+                <Button size="lg" variant="outline" onClick={() => openNameDialog('attendee')} className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
                   <span>Find Events</span>
                 </Button>
@@ -124,6 +176,25 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
           </div>
         </div>
       </section>
+      <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>What should GatePass call you?</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={tempNameInput}
+              onChange={(e) => setTempNameInput(e.target.value)}
+              placeholder="Enter your name"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNameDialogOpen(false)}>Cancel</Button>
+            <Button onClick={confirmName}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Features Grid */}
       <section className="py-20 bg-background">
