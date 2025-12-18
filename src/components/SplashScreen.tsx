@@ -92,20 +92,31 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         ))}
       </div>
       <div className="absolute inset-0 z-10 flex items-center justify-center w-full h-full">
-        <h1
-          className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground px-4`}
-          style={{
-            fontSize: 'clamp(32px, 8vw, 96px)',
-            fontFamily:
-              "system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Ubuntu, Cantarell, 'Noto Sans', sans-serif",
-            animation: 'gpTitleIntro 900ms ease-out forwards, gpPulse 2.2s ease-in-out infinite',
-            fontWeight: 900,
-            lineHeight: 1.1,
-            maxWidth: '90vw'
-          }}
-        >
-          {typed}
-        </h1>
+        <div className="relative px-6">
+          <div
+            className="absolute -inset-8 rounded-[32px] pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(520px 260px at 50% 50%, var(--primary) 0%, transparent 70%), radial-gradient(480px 240px at 0% 100%, var(--accent) 0%, transparent 70%), radial-gradient(480px 240px at 100% 0%, var(--secondary) 0%, transparent 70%)',
+              filter: 'blur(28px)',
+              opacity: 0.28
+            }}
+          />
+          <h1
+            className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'} text-center font-black tracking-tighter text-foreground px-4`}
+            style={{
+              fontSize: 'clamp(32px, 8vw, 96px)',
+              fontFamily:
+                "system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Ubuntu, Cantarell, 'Noto Sans', sans-serif",
+              animation: 'gpTitleIntro 900ms ease-out forwards, gpPulse 2.2s ease-in-out infinite',
+              fontWeight: 900,
+              lineHeight: 1.1,
+              maxWidth: '90vw'
+            }}
+          >
+            {typed}
+          </h1>
+        </div>
       </div>
     </div>
   );

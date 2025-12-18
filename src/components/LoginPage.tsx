@@ -28,7 +28,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-[100svh] bg-background relative">
       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
         <div
           className="w-full h-full"
@@ -41,15 +41,25 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
           }}
         />
       </div>
-      <div className="grid grid-cols-1 min-h-screen">
+      <div className="grid grid-cols-1 min-h-[100svh]">
 
         <div className="flex items-center justify-center p-6">
-          <Card className="w-full lg:h-[700px]" style={{ maxWidth: 450 }}>
-            <CardHeader>
-              <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
-              <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="relative w-full" style={{ maxWidth: 450 }}>
+            <div
+              className="absolute -inset-6 rounded-[28px] pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(420px 220px at 50% 50%, var(--primary) 0%, transparent 70%), radial-gradient(380px 220px at 0% 100%, var(--accent) 0%, transparent 70%), radial-gradient(380px 220px at 100% 0%, var(--secondary) 0%, transparent 70%)',
+                filter: 'blur(26px)',
+                opacity: 0.24
+              }}
+            />
+            <Card className="w-full lg:h-[700px] relative">
+              <CardHeader>
+                <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
+                <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
                 <Button variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
                 <Button variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
@@ -78,7 +88,8 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         </div>
 
         

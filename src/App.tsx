@@ -359,7 +359,7 @@ function App() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-[100svh] bg-background">
       <Header />
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Back control moved to first ticket card overlay */}

@@ -698,7 +698,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background px-4 sm:px-6 overflow-x-hidden">
+    <div className="min-h-[100svh] bg-background px-3 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
       <div className="max-w-4xl w-full mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-8">

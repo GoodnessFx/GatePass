@@ -92,7 +92,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   const submitHelp = () => { toast.success('Help submitted'); setIsHelpOpen(false); };
 
   return (
-    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 scroll-container">
+    <div className="min-h-[100svh] bg-background px-3 sm:px-6 py-4 sm:py-6 scroll-container">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
           <div>

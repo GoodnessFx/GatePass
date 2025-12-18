@@ -129,7 +129,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
   const activeEvents = combinedEvents.filter(e => e.status === 'live').length;
 
   return (
-    <div className="min-h-screen bg-background p-6 scroll-container">
+    <div className="min-h-[100svh] bg-background p-4 sm:p-6 scroll-container">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">

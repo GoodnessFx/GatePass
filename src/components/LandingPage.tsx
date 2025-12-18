@@ -95,7 +95,7 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
     onRoleSelect('attendee');
   };
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[100svh]">
       {messageVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-background border rounded-xl px-6 py-4 text-center transition-opacity duration-700">
@@ -115,14 +115,14 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
 
 
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-[#0B0D17] via-[#13151F] to-[#0B0D17]">
+      <section className="relative py-14 sm:py-20 bg-gradient-to-br from-[#0B0D17] via-[#13151F] to-[#0B0D17]">
         <div className="absolute inset-0 -z-10 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 60%)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="text-left">
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">Ticket Anything. Beautifully.</h1>
-              <p className="mt-4 text-lg md:text-xl text-muted-foreground max-w-xl">Create museum‑quality digital tickets with fraud‑proof verification and instant settlement.</p>
-              <div className="mt-8 flex gap-4">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-foreground">Ticket Anything. Beautifully.</h1>
+              <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl">Create museum‑quality digital tickets with fraud‑proof verification and instant settlement.</p>
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button size="lg" onClick={() => openNameDialog('organizer')} className="flex items-center space-x-2">
                   <Ticket className="h-5 w-5" />
                   <span>Create Event</span>
