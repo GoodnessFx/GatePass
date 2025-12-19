@@ -45,6 +45,18 @@ function App() {
     const savedName = localStorage.getItem('displayName');
     if (savedName) setDisplayName(savedName);
   }, []);
+
+  // Visitor tracking logic
+  useEffect(() => {
+    try {
+      const sessionVisited = sessionStorage.getItem('gp_session_visited');
+      if (!sessionVisited) {
+        sessionStorage.setItem('gp_session_visited', 'true');
+        const currentCount = parseInt(localStorage.getItem('gp_visitor_count') || '0', 10);
+        localStorage.setItem('gp_visitor_count', (currentCount + 1).toString());
+      }
+    } catch {}
+  }, []);
   useEffect(() => {
     try {
       const saved = localStorage.getItem('displayName') || localStorage.getItem('gp_display_name') || '';

@@ -16,15 +16,55 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleLogin = () => {
-    if (!email.trim() || !password.trim()) return;
+    setError(null);
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both email and password.');
+      return;
+    }
+
     try {
-      localStorage.setItem('gp_demo_loggedin', 'true');
-      localStorage.setItem('gp_demo_role', role);
-      localStorage.setItem('gp_user_email', email.trim());
-    } catch {}
-    onLoginComplete();
+      // 1. Check registered users first
+      const storedUsers = localStorage.getItem('gp_users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const user = users.find((u: any) => u.email === email.trim());
+
+      if (user) {
+        if (user.password === password.trim()) {
+          // Success
+          localStorage.setItem('gp_demo_loggedin', 'true');
+          localStorage.setItem('gp_demo_role', user.role);
+          localStorage.setItem('gp_user_email', user.email);
+          localStorage.setItem('gp_display_name', `${user.firstName} ${user.lastName}`);
+          onLoginComplete();
+          return;
+        } else {
+          setError('Invalid password.');
+          return;
+        }
+      }
+
+      // 2. If not found in registered users, allow "Demo" mode ONLY if it matches the legacy demo flow
+      // OR, to "prevent duplicate user registration" and enforce the new flow, maybe we should FAIL if not found?
+      // The user said: "if no user can register twice so if they are signing up for the first time... the mail remembers their name too".
+      // This implies we should prioritize the registered user data.
+      // But for "WITHOUT BREAKING ANYHTHUNG", I will keep a fallback for the "demo" user if they are NOT in the list,
+      // but if they ARE in the list, they must use the correct password.
+      // Actually, if I just fail, I might break the "easy demo" access for testing.
+      // Let's assume if the user is NOT in the database, we might allow them in as a generic demo user, 
+      // OR we just say "User not found". 
+      // Given the requirement "fix the authentication", I should probably enforce real checks for consistency.
+      // But I'll leave a "backdoor" for specific demo accounts if needed, or just default to Error to encourage Signup.
+      // Let's be strict: If not found, Error. This validates the "Signup" requirement.
+      
+      setError('User not found. Please sign up.');
+      
+    } catch (e) {
+      console.error(e);
+      setError('Login failed. Please try again.');
+    }
   };
 
   return (
@@ -60,7 +100,8 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
                 <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
+               {error && <div className="text-sm text-destructive font-medium text-center">{error}</div>}
+                <div className="grid grid-cols-2 gap-2">
                 <Button variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
                 <Button variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
               </div>

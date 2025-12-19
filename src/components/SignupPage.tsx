@@ -7,6 +7,15 @@ import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { countries } from '../utils/countries';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './ui/dialog';
+import confetti from 'canvas-confetti';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -19,8 +28,35 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   const [email, setEmail] = React.useState('');
   const [country, setCountry] = React.useState('NG');
   const [password, setPassword] = React.useState('');
+  const [role, setRole] = React.useState<'attendee' | 'organizer'>('attendee');
   const [accepted, setAccepted] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [showEmailModal, setShowEmailModal] = React.useState(false);
+  const [isSending, setIsSending] = React.useState(false);
+
+  React.useEffect(() => {
+    if (showEmailModal) {
+      // Confetti explosion
+      const count = 200;
+      const defaults = {
+        origin: { y: 0.7 }
+      };
+
+      function fire(particleRatio: number, opts: any) {
+        confetti({
+          ...defaults,
+          ...opts,
+          particleCount: Math.floor(count * particleRatio)
+        });
+      }
+
+      fire(0.25, { spread: 26, startVelocity: 55 });
+      fire(0.2, { spread: 60 });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+      fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+      fire(0.1, { spread: 120, startVelocity: 45 });
+    }
+  }, [showEmailModal]);
 
   const handleSignup = () => {
     setError(null);
@@ -29,18 +65,96 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       setError('Please fill all fields correctly and accept the terms.');
       return;
     }
+
+    // Check for duplicate user
     try {
-      localStorage.setItem('gp_account_created', 'true');
-      localStorage.setItem('gp_user_email', email.trim());
-      localStorage.setItem('gp_user_first_name', firstName.trim());
-      localStorage.setItem('gp_user_last_name', lastName.trim());
-      localStorage.setItem('gp_user_country', country);
-    } catch {}
-    onSignupComplete();
+      const storedUsers = localStorage.getItem('gp_users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const exists = users.find((u: any) => u.email === email.trim());
+      
+      if (exists) {
+        setError('A user with this email address already exists. Please log in.');
+        return;
+      }
+
+      setIsSending(true);
+
+      // Simulate network request and email sending
+      setTimeout(() => {
+        const newUser = {
+          email: email.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          country,
+          role,
+          password: password.trim(), // In a real app, this would be hashed
+          createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        localStorage.setItem('gp_users', JSON.stringify(users));
+        
+        // Also set the legacy/simple auth items for compatibility
+        localStorage.setItem('gp_account_created', 'true');
+        localStorage.setItem('gp_user_email', email.trim());
+        localStorage.setItem('gp_user_first_name', firstName.trim());
+        localStorage.setItem('gp_user_last_name', lastName.trim());
+        localStorage.setItem('gp_user_country', country);
+        localStorage.setItem('gp_user_role', role);
+
+        setIsSending(false);
+        setShowEmailModal(true);
+      }, 1500);
+
+    } catch (e) {
+      console.error(e);
+      setError('An error occurred during signup. Please try again.');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowEmailModal(false);
+    onShowLogin();
   };
 
   return (
     <div className="min-h-[100svh] bg-background relative">
+      <Dialog open={showEmailModal} onOpenChange={(open) => { if(!open) handleCloseModal(); }}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle>Welcome to GatePass</DialogTitle>
+            <DialogDescription>
+              Official Sponsor by IG
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="bg-muted p-4 rounded-lg text-sm space-y-3 font-mono">
+              <p><strong>To:</strong> {email}</p>
+              <p><strong>Subject:</strong> Welcome to GatePass</p>
+              <div className="border-t border-border pt-3 mt-3">
+                <p className="text-base font-sans font-semibold mb-2">Welcome {firstName}!</p>
+                {role === 'organizer' ? (
+                  <p className="font-sans mb-4">
+                    Ready to create unforgettable events? We're thrilled to have you as an organizer.
+                    Start listing your events and reach thousands of attendees today!
+                  </p>
+                ) : (
+                  <p className="font-sans mb-4">
+                    Welcome to the ultimate event experience! Get ready to discover, attend, and collect memories from the best events around you.
+                  </p>
+                )}
+                <Button onClick={handleCloseModal} className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md shadow-sm transition-all duration-200">
+                  Verify Email & Login
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              (This is a simulation of the email sent to your inbox)
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
         <div
           className="w-full h-full"
@@ -101,6 +215,18 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>I want to join as</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as 'attendee' | 'organizer')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="attendee">Attendee</SelectItem>
+                    <SelectItem value="organizer">Organizer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Password</Label>
                 <Input type="password" placeholder="At least 8 characters" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
@@ -108,7 +234,9 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 <Checkbox checked={accepted} onCheckedChange={(v: boolean)=>setAccepted(Boolean(v))} />
                 <span className="text-sm">Accept Terms & Conditions</span>
               </div>
-              <Button className="w-full" onClick={handleSignup}>Continue</Button>
+              <Button className="w-full" onClick={handleSignup} disabled={isSending}>
+                {isSending ? 'Sending Confirmation...' : 'Continue'}
+              </Button>
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <Button variant="outline" className="flex items-center gap-2 justify-center">
                   <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.78 0 7.22 1.44 9.86 3.8l5.94-5.94C35.46 3.46 30.04 1 24 1 14.73 1 6.65 6.16 2.72 14.02l7.54 5.86C12.31 13.19 17.73 9.5 24 9.5z"/><path fill="#4285F4" d="M46.08 24.3c0-2.02-.18-3.98-.52-5.86H24v11.1h12.4c-.53 2.87-2.16 5.29-4.61 6.91l7.07 5.49c4.13-3.81 7.22-9.35 7.22-17.64z"/><path fill="#FBBC05" d="M10.26 28.14c-.48-1.41-.76-2.91-.76-4.46s.28-3.05.76-4.46l-7.54-5.86C1.63 16.06 1 19.01 1 22.06s.63 6 1.72 8.71l7.54-2.63z"/><path fill="#34A853" d="M24 46c6.05 0 11.18-1.99 14.9-5.41l-7.07-5.49c-2.01 1.36-4.58 2.15-7.83 2.15-6.68 0-12.35-4.51-14.39-10.66l-7.54 2.63C6.65 41.84 14.73 46 24 46z"/></svg>
