@@ -5,7 +5,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
-import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 import { hashPassword, checkRateLimit, sanitizeInput, validateEmail } from '../utils/security';
 
 interface LoginPageProps {
