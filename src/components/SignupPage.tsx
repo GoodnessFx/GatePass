@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import confetti from 'canvas-confetti';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
+import { hashPassword, sanitizeInput, validateEmail, validatePassword, validateName, checkRateLimit } from '../utils/security';
 import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
 import { OrganizerWelcomeEmail } from '../templates/email/OrganizerWelcome';
 import { registerUser } from '../services/authService';
@@ -75,7 +75,13 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     const trimmedFirst = sanitizeInput(firstName.trim());
     const trimmedLast = sanitizeInput(lastName.trim());
 
-    if (!trimmedFirst || !trimmedLast || !validateEmail(trimmedEmail) || !validatePassword(password) || !accepted) {
+    if (!validateName(trimmedFirst) || !validateName(trimmedLast)) {
+      setError('Please enter valid first and last names (min 2 chars, letters only).');
+      toast.error('Invalid Name', { description: 'Names must contain only letters.' });
+      return;
+    }
+
+    if (!validateEmail(trimmedEmail) || !validatePassword(password) || !accepted) {
       setError('Please fill all fields correctly and accept the terms.');
       toast.error('Validation Error', { description: 'Please check all fields and accept terms.' });
       return;

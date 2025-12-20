@@ -20,6 +20,10 @@ export function validatePassword(password: string): boolean {
   return password.length >= 8;
 }
 
+export function validateName(name: string): boolean {
+  return name.trim().length >= 2 && /^[a-zA-Z\s-]+$/.test(name);
+}
+
 export function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   try {
     const now = Date.now();
