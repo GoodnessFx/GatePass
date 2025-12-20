@@ -353,6 +353,7 @@ function App() {
           }}
           onShowSignup={() => setCurrentView('signup')}
         />
+        <Toaster position="top-right" />
       </React.Suspense>
     );
   }
@@ -364,6 +365,7 @@ function App() {
           onSignupComplete={() => setCurrentView('landing')}
           onShowLogin={() => setCurrentView('login')}
         />
+        <Toaster position="top-right" />
       </React.Suspense>
     );
   }

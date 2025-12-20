@@ -10,6 +10,7 @@ import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import confetti from 'canvas-confetti';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
 import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
 import { OrganizerWelcomeEmail } from '../templates/email/OrganizerWelcome';
@@ -66,6 +67,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     // Rate Limit Check: 5 attempts per minute
     if (!checkRateLimit('signup_attempt', 5, 60000)) {
       setError('Too many signup attempts. Please try again later.');
+      toast.error('Too many attempts', { description: 'Please try again in a minute.' });
       return;
     }
 
@@ -75,6 +77,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
     if (!trimmedFirst || !trimmedLast || !validateEmail(trimmedEmail) || !validatePassword(password) || !accepted) {
       setError('Please fill all fields correctly and accept the terms.');
+      toast.error('Validation Error', { description: 'Please check all fields and accept terms.' });
       return;
     }
 
@@ -86,6 +89,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       
       if (exists) {
         setError('A user with this email address already exists. Please log in.');
+        toast.error('User already exists', { description: 'Please log in instead.' });
         return;
       }
 
@@ -104,10 +108,12 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       setIsSending(false);
       setShowEmailModal(true);
+      toast.success('Registration successful!', { description: 'Please verify your email.' });
 
     } catch (e) {
       console.error(e);
       setError('An error occurred during signup. Please try again.');
+      toast.error('Registration failed', { description: 'Please try again later.' });
     }
   };
 
