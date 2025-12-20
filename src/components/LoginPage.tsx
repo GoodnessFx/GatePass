@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
-import { hashPassword, checkRateLimit } from '../utils/security';
+import { hashPassword, checkRateLimit, sanitizeInput, validateEmail } from '../utils/security';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
@@ -31,8 +31,15 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
       return;
     }
 
-    if (!email.trim() || !password.trim()) {
+    const trimmedEmail = sanitizeInput(email.trim());
+    
+    if (!trimmedEmail || !password.trim()) {
       setError('Please enter both email and password.');
+      return;
+    }
+
+    if (!validateEmail(trimmedEmail)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -40,7 +47,7 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
       // 1. Check registered users first
       const storedUsers = localStorage.getItem('gp_users');
       const users = storedUsers ? JSON.parse(storedUsers) : [];
-      const user = users.find((u: any) => u.email === email.trim());
+      const user = users.find((u: any) => u.email === trimmedEmail);
 
       if (user) {
         const hashedPassword = await hashPassword(password.trim());
