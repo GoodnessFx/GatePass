@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
+import { getVisitorCount } from '../services/analyticsService';
+
 interface AnalyticsProps {
   onBack: () => void;
 }
@@ -92,6 +94,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [timeRange, setTimeRange] = useState('7d');
   const [organizerEvents, setOrganizerEvents] = useState<Array<{ id: string; title?: string }>>([]);
+  const [visitorCount, setVisitorCount] = useState(0);
   const [serverAnalytics, setServerAnalytics] = useState<null | {
     totalRevenue: number;
     ticketsSold: number;
@@ -102,6 +105,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setVisitorCount(getVisitorCount());
     (async () => {
       try {
         const res = await fetch('/api/events');
