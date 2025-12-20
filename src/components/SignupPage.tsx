@@ -7,15 +7,9 @@ import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { countries } from '../utils/countries';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import confetti from 'canvas-confetti';
+import { Loader2 } from 'lucide-react';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
 import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
 import { OrganizerWelcomeEmail } from '../templates/email/OrganizerWelcome';
@@ -234,7 +228,14 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 <span className="text-sm">Accept Terms & Conditions</span>
               </div>
               <Button className="w-full" onClick={handleSignup} disabled={isSending}>
-                {isSending ? 'Sending Confirmation...' : 'Continue'}
+                {isSending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending Confirmation...
+                  </>
+                ) : (
+                  'Continue'
+                )}
               </Button>
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <Button variant="outline" className="flex items-center gap-2 justify-center">
