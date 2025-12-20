@@ -19,6 +19,7 @@ import confetti from 'canvas-confetti';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
 import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
 import { OrganizerWelcomeEmail } from '../templates/email/OrganizerWelcome';
+import { registerUser } from '../services/authService';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -98,32 +99,17 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       const hashedPassword = await hashPassword(password.trim());
 
-      // Simulate network request and email sending
-      setTimeout(() => {
-        const newUser = {
-          email: trimmedEmail,
-          firstName: trimmedFirst,
-          lastName: trimmedLast,
-          country,
-          role,
-          password: hashedPassword,
-          createdAt: new Date().toISOString()
-        };
+      await registerUser({
+        email: trimmedEmail,
+        firstName: trimmedFirst,
+        lastName: trimmedLast,
+        country,
+        role,
+        passwordHash: hashedPassword
+      });
 
-        users.push(newUser);
-        localStorage.setItem('gp_users', JSON.stringify(users));
-        
-        // Also set the legacy/simple auth items for compatibility
-        localStorage.setItem('gp_account_created', 'true');
-        localStorage.setItem('gp_user_email', trimmedEmail);
-        localStorage.setItem('gp_user_first_name', trimmedFirst);
-        localStorage.setItem('gp_user_last_name', trimmedLast);
-        localStorage.setItem('gp_user_country', country);
-        localStorage.setItem('gp_user_role', role);
-
-        setIsSending(false);
-        setShowEmailModal(true);
-      }, 1500);
+      setIsSending(false);
+      setShowEmailModal(true);
 
     } catch (e) {
       console.error(e);
