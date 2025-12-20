@@ -18,6 +18,7 @@ import {
 import confetti from 'canvas-confetti';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
 import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
+import { OrganizerWelcomeEmail } from '../templates/email/OrganizerWelcome';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -151,13 +152,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
               <p><strong>Subject:</strong> Welcome to GatePass</p>
               <div className="border-t border-border pt-3 mt-3">
                 {role === 'organizer' ? (
-                  <div className="font-sans text-sm">
-                    <p className="text-base font-semibold mb-2">Welcome {firstName}!</p>
-                    <p className="mb-4">
-                      Ready to create unforgettable events? We're thrilled to have you as an organizer.
-                      Start listing your events and reach thousands of attendees today!
-                    </p>
-                  </div>
+                  <OrganizerWelcomeEmail name={firstName} />
                 ) : (
                   <AttendeeWelcomeEmail name={firstName} />
                 )}
