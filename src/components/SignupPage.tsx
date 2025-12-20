@@ -17,6 +17,7 @@ import {
 } from './ui/dialog';
 import confetti from 'canvas-confetti';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
+import { AttendeeWelcomeEmail } from '../templates/email/AttendeeWelcome';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -149,16 +150,16 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
               <p><strong>To:</strong> {email}</p>
               <p><strong>Subject:</strong> Welcome to GatePass</p>
               <div className="border-t border-border pt-3 mt-3">
-                <p className="text-base font-sans font-semibold mb-2">Welcome {firstName}!</p>
                 {role === 'organizer' ? (
-                  <p className="font-sans mb-4">
-                    Ready to create unforgettable events? We're thrilled to have you as an organizer.
-                    Start listing your events and reach thousands of attendees today!
-                  </p>
+                  <div className="font-sans text-sm">
+                    <p className="text-base font-semibold mb-2">Welcome {firstName}!</p>
+                    <p className="mb-4">
+                      Ready to create unforgettable events? We're thrilled to have you as an organizer.
+                      Start listing your events and reach thousands of attendees today!
+                    </p>
+                  </div>
                 ) : (
-                  <p className="font-sans mb-4">
-                    Welcome to the ultimate event experience! Get ready to discover, attend, and collect memories from the best events around you.
-                  </p>
+                  <AttendeeWelcomeEmail name={firstName} />
                 )}
                 <Button onClick={handleCloseModal} className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md shadow-sm transition-all duration-200">
                   Verify Email & Login
