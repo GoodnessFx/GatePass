@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
+import { hashPassword, checkRateLimit } from '../utils/security';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
@@ -13,13 +14,23 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
-  const [email, setEmail] = React.useState('');
+  const [email, setEmail] = React.useState(() => {
+    // Auto-fill from signup if available
+    return localStorage.getItem('gp_user_email') || '';
+  });
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError(null);
+
+    // Rate Limit Check: 10 attempts per minute for login
+    if (!checkRateLimit('login_attempt', 10, 60000)) {
+      setError('Too many login attempts. Please try again later.');
+      return;
+    }
+
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
       return;
@@ -32,39 +43,40 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
       const user = users.find((u: any) => u.email === email.trim());
 
       if (user) {
-        if (user.password === password.trim()) {
+        const hashedPassword = await hashPassword(password.trim());
+        // Check hashed match first
+        if (user.password === hashedPassword) {
           // Success
-          localStorage.setItem('gp_demo_loggedin', 'true');
-          localStorage.setItem('gp_demo_role', user.role);
-          localStorage.setItem('gp_user_email', user.email);
-          localStorage.setItem('gp_display_name', `${user.firstName} ${user.lastName}`);
-          onLoginComplete();
+          loginUser(user);
           return;
-        } else {
+        } 
+        // Backward compatibility: check plaintext
+        else if (user.password === password.trim()) {
+           // Success (Legacy)
+           loginUser(user);
+           return;
+        }
+        else {
           setError('Invalid password.');
           return;
         }
       }
 
-      // 2. If not found in registered users, allow "Demo" mode ONLY if it matches the legacy demo flow
-      // OR, to "prevent duplicate user registration" and enforce the new flow, maybe we should FAIL if not found?
-      // The user said: "if no user can register twice so if they are signing up for the first time... the mail remembers their name too".
-      // This implies we should prioritize the registered user data.
-      // But for "WITHOUT BREAKING ANYHTHUNG", I will keep a fallback for the "demo" user if they are NOT in the list,
-      // but if they ARE in the list, they must use the correct password.
-      // Actually, if I just fail, I might break the "easy demo" access for testing.
-      // Let's assume if the user is NOT in the database, we might allow them in as a generic demo user, 
-      // OR we just say "User not found". 
-      // Given the requirement "fix the authentication", I should probably enforce real checks for consistency.
-      // But I'll leave a "backdoor" for specific demo accounts if needed, or just default to Error to encourage Signup.
-      // Let's be strict: If not found, Error. This validates the "Signup" requirement.
-      
+      // 2. If not found in registered users
       setError('User not found. Please sign up.');
       
     } catch (e) {
       console.error(e);
       setError('Login failed. Please try again.');
     }
+  };
+
+  const loginUser = (user: any) => {
+    localStorage.setItem('gp_demo_loggedin', 'true');
+    localStorage.setItem('gp_demo_role', user.role);
+    localStorage.setItem('gp_user_email', user.email);
+    localStorage.setItem('gp_display_name', `${user.firstName} ${user.lastName}`);
+    onLoginComplete();
   };
 
   return (
