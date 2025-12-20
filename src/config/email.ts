@@ -19,6 +19,6 @@ export const emailConfig = {
   },
   simulation: {
     enabled: true,
-    delay: 1500, // ms
+    delay: 2000, // ms
   }
 };
