@@ -25,6 +25,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+import { trackVisitor } from './services/analyticsService';
+
 type AppView = 'login' | 'signup' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
 type UserRole = 'attendee' | 'organizer' | null;
 
@@ -48,14 +50,7 @@ function App() {
 
   // Visitor tracking logic
   useEffect(() => {
-    try {
-      const sessionVisited = sessionStorage.getItem('gp_session_visited');
-      if (!sessionVisited) {
-        sessionStorage.setItem('gp_session_visited', 'true');
-        const currentCount = parseInt(localStorage.getItem('gp_visitor_count') || '0', 10);
-        localStorage.setItem('gp_visitor_count', (currentCount + 1).toString());
-      }
-    } catch {}
+    trackVisitor();
   }, []);
   useEffect(() => {
     try {
