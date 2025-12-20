@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from './ui/dialog';
 import confetti from 'canvas-confetti';
+import { hashPassword, sanitizeInput, validateEmail, validatePassword, checkRateLimit } from '../utils/security';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -62,10 +63,20 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     }
   }, [showEmailModal]);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     setError(null);
-    const isEmail = /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email.trim());
-    if (!firstName.trim() || !lastName.trim() || !isEmail || password.trim().length < 8 || !accepted) {
+
+    // Rate Limit Check: 5 attempts per minute
+    if (!checkRateLimit('signup_attempt', 5, 60000)) {
+      setError('Too many signup attempts. Please try again later.');
+      return;
+    }
+
+    const trimmedEmail = sanitizeInput(email.trim());
+    const trimmedFirst = sanitizeInput(firstName.trim());
+    const trimmedLast = sanitizeInput(lastName.trim());
+
+    if (!trimmedFirst || !trimmedLast || !validateEmail(trimmedEmail) || !validatePassword(password) || !accepted) {
       setError('Please fill all fields correctly and accept the terms.');
       return;
     }
@@ -74,7 +85,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     try {
       const storedUsers = localStorage.getItem('gp_users');
       const users = storedUsers ? JSON.parse(storedUsers) : [];
-      const exists = users.find((u: any) => u.email === email.trim());
+      const exists = users.find((u: any) => u.email === trimmedEmail);
       
       if (exists) {
         setError('A user with this email address already exists. Please log in.');
@@ -83,15 +94,17 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       setIsSending(true);
 
+      const hashedPassword = await hashPassword(password.trim());
+
       // Simulate network request and email sending
       setTimeout(() => {
         const newUser = {
-          email: email.trim(),
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          email: trimmedEmail,
+          firstName: trimmedFirst,
+          lastName: trimmedLast,
           country,
           role,
-          password: password.trim(), // In a real app, this would be hashed
+          password: hashedPassword,
           createdAt: new Date().toISOString()
         };
 
@@ -100,9 +113,9 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         
         // Also set the legacy/simple auth items for compatibility
         localStorage.setItem('gp_account_created', 'true');
-        localStorage.setItem('gp_user_email', email.trim());
-        localStorage.setItem('gp_user_first_name', firstName.trim());
-        localStorage.setItem('gp_user_last_name', lastName.trim());
+        localStorage.setItem('gp_user_email', trimmedEmail);
+        localStorage.setItem('gp_user_first_name', trimmedFirst);
+        localStorage.setItem('gp_user_last_name', trimmedLast);
         localStorage.setItem('gp_user_country', country);
         localStorage.setItem('gp_user_role', role);
 
