@@ -5,11 +5,11 @@ export const emailConfig = {
     email: 'noreply@gatepass.com',
   },
   smtp: {
-    host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
-    port: parseInt(process.env.SMTP_PORT || '2525'),
+    host: import.meta.env.VITE_SMTP_HOST || 'smtp.mailtrap.io',
+    port: parseInt(import.meta.env.VITE_SMTP_PORT || '2525'),
     auth: {
-      user: process.env.SMTP_USER || 'user',
-      pass: process.env.SMTP_PASS || 'pass',
+      user: import.meta.env.VITE_SMTP_USER || 'user',
+      pass: import.meta.env.VITE_SMTP_PASS || 'pass',
     },
   },
   templates: {

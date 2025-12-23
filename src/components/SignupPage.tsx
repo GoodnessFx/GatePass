@@ -6,7 +6,6 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { countries } from '../utils/countries';
-import confetti from 'canvas-confetti';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, validateName, checkRateLimit } from '../utils/security';
@@ -31,36 +30,41 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
   React.useEffect(() => {
     if (isSuccess) {
-      // Confetti explosion
-      try {
-        const count = 200;
-        const defaults = {
-          origin: { y: 0.7 }
-        };
+      const runConfetti = async () => {
+        try {
+          const confettiModule = await import('canvas-confetti');
+          const confetti = confettiModule.default || confettiModule;
 
-        const fire = (particleRatio: number, opts: any) => {
-          confetti({
-            ...defaults,
-            ...opts,
-            particleCount: Math.floor(count * particleRatio)
-          });
-        };
+          const count = 200;
+          const defaults = {
+            origin: { y: 0.7 }
+          };
 
-        fire(0.25, { spread: 26, startVelocity: 55 });
-        fire(0.2, { spread: 60 });
-        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-        fire(0.1, { spread: 120, startVelocity: 45 });
-      } catch (e) {
-        console.error("Confetti error:", e);
-      }
+          const fire = (particleRatio: number, opts: any) => {
+            confetti({
+              ...defaults,
+              ...opts,
+              particleCount: Math.floor(count * particleRatio)
+            });
+          };
+
+          fire(0.25, { spread: 26, startVelocity: 55 });
+          fire(0.2, { spread: 60 });
+          fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+          fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+          fire(0.1, { spread: 120, startVelocity: 45 });
+        } catch (e) {
+          console.error("Confetti error:", e);
+        }
+      };
+      runConfetti();
     }
   }, [isSuccess]);
 
   const handleSignup = async () => {
     setError(null);
 
-    // Rate Limit Check: 5 attempts per minute
+    // Rate Limit Check
     if (!checkRateLimit('signup_attempt', 5, 60000)) {
       setError('Too many signup attempts. Please try again later.');
       toast.error('Too many attempts', { description: 'Please try again in a minute.' });
@@ -83,7 +87,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       return;
     }
 
-    // Check for duplicate user
     try {
       const storedUsers = localStorage.getItem('gp_users');
       const users = storedUsers ? JSON.parse(storedUsers) : [];
@@ -122,6 +125,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       console.error(e);
       setError('An error occurred during signup. Please try again.');
       toast.error('Registration failed', { description: 'Please try again later.' });
+      setIsSending(false);
     }
   };
 
@@ -147,7 +151,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         />
       </div>
       <div className="grid grid-cols-1 min-h-[100svh]">
-
         <div className="flex items-center justify-center p-6 order-2 lg:order-none">
           <div className="relative w-full mx-auto" style={{ maxWidth: '450px' }}>
             <div
@@ -194,13 +197,13 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="w-full mx-auto lg:h-[700px] relative">
+              <Card className="w-full mx-auto lg:h-auto relative">
                 <CardHeader>
                   <CardTitle className="text-3xl text-foreground">Sign Up</CardTitle>
                   <CardDescription className="text-foreground">Create an account to start ticketing</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                {error && <div className="text-sm text-destructive">{error}</div>}
+                {error && <div className="text-sm text-destructive font-medium">{error}</div>}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label>First name</Label>
@@ -252,7 +255,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                   {isSending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending Confirmation...
+                      Sending...
                     </>
                   ) : (
                     'Continue'
@@ -270,15 +273,13 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 </div>
                 <div className="text-sm text-foreground text-center pt-1">
                   <span>Already registered? </span>
-                  <button className="underline" onClick={onShowLogin}>Sign In</button>
+                  <button className="underline hover:text-primary transition-colors" onClick={onShowLogin}>Sign In</button>
                 </div>
-              </CardContent>
+                </CardContent>
               </Card>
             )}
           </div>
         </div>
-
-        
       </div>
     </div>
   );
