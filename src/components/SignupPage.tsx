@@ -154,7 +154,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative">
+    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
         <div
           className="w-full h-full"
@@ -167,31 +167,25 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
           }}
         />
       </div>
-      <div className="grid grid-cols-1 min-h-[100svh]">
-        <div className="flex items-center justify-center p-6 order-2 lg:order-none">
-          <div className="relative w-full mx-auto" style={{ maxWidth: '450px' }}>
-            <div
-              className="absolute -inset-6 rounded-[28px] pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(420px 220px at 50% 50%, var(--primary) 0%, transparent 70%), radial-gradient(380px 220px at 0% 100%, var(--accent) 0%, transparent 70%), radial-gradient(380px 220px at 100% 0%, var(--secondary) 0%, transparent 70%)',
-                filter: 'blur(26px)',
-                opacity: 0.24
-              }}
-            />
-            
-            {isSuccess ? (
-              <Card className="w-full mx-auto relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <Mail className="w-6 h-6 text-green-600" />
-                  </div>
-                  <CardTitle className="text-2xl">Check your email</CardTitle>
-                  <CardDescription>
-                    We've sent a verification link to <span className="font-medium text-foreground">{email}</span>
-                  </CardDescription>
-                </CardHeader>
+
+      <div className="w-full max-w-md mx-auto relative z-10">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
+          <p className="text-muted-foreground">Join the Revolution</p>
+        </div>
+
+        {isSuccess ? (
+          <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+            <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <Mail className="w-6 h-6 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl font-calligraphy text-primary">Check your email</CardTitle>
+              <CardDescription>
+                We've sent a verification link to <span className="font-medium text-foreground">{email}</span>
+              </CardDescription>
+            </CardHeader>
                 <CardContent className="space-y-6 pt-4">
                   <div className="text-center text-sm text-muted-foreground">
                     <p>Click the link in the email to verify your account and start using GatePass.</p>
@@ -214,10 +208,10 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="w-full mx-auto lg:h-auto relative">
+              <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
                 <CardHeader>
-                  <CardTitle className="text-3xl text-foreground">Sign Up</CardTitle>
-                  <CardDescription className="text-foreground">Create an account to start ticketing</CardDescription>
+                  <CardTitle className="text-3xl font-calligraphy text-primary">Create Account</CardTitle>
+                  <CardDescription>Enter your details to get started</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 {error && <div className="text-sm text-destructive font-medium">{error}</div>}
@@ -295,8 +289,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                 </CardContent>
               </Card>
             )}
-          </div>
-        </div>
       </div>
     </div>
   );

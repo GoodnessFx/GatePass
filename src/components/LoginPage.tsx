@@ -87,7 +87,7 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative">
+    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
         <div
           className="w-full h-full"
@@ -100,25 +100,22 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
           }}
         />
       </div>
-      <div className="grid grid-cols-1 min-h-[100svh]">
 
-        <div className="flex items-center justify-center p-6">
-          <div className="relative w-full" style={{ maxWidth: 450 }}>
-            <div
-              className="absolute -inset-6 rounded-[28px] pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(420px 220px at 50% 50%, var(--primary) 0%, transparent 70%), radial-gradient(380px 220px at 0% 100%, var(--accent) 0%, transparent 70%), radial-gradient(380px 220px at 100% 0%, var(--secondary) 0%, transparent 70%)',
-                filter: 'blur(26px)',
-                opacity: 0.24
-              }}
-            />
-            <Card className="w-full lg:h-[700px] relative">
-              <CardHeader>
-                <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
-                <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      <div className="w-full max-w-md mx-auto relative z-10">
+        <div className="text-center mb-8">
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <Ticket className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
+          <p className="text-muted-foreground">Your Gateway to Decentralized Events</p>
+        </div>
+
+        <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+          <CardHeader>
+            <CardTitle className="text-3xl font-calligraphy text-primary">Welcome Back</CardTitle>
+            <CardDescription>Sign in to your account to continue</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
                {error && <div className="text-sm text-destructive font-medium text-center">{error}</div>}
                 <div className="grid grid-cols-2 gap-2">
                 <Button variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
@@ -156,13 +153,9 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
                   <span>X</span>
                 </Button>
               </div>
-            </CardContent>
-            </Card>
-          </div>
+          </CardContent>
+          </Card>
         </div>
-
-        
-      </div>
     </div>
   );
 }

@@ -10,9 +10,10 @@ import { validateEmail } from '../utils/security';
 
 interface ForgotPasswordPageProps {
   onBackToLogin: () => void;
+  onLinkSent?: () => void;
 }
 
-export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
+export function ForgotPasswordPage({ onBackToLogin, onLinkSent }: ForgotPasswordPageProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -73,7 +74,7 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
             <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardTitle className="text-2xl font-calligraphy text-primary">Check your email</CardTitle>
             <CardDescription>
               We've sent a password reset link to <span className="font-medium text-foreground">{email}</span>
             </CardDescription>
@@ -84,8 +85,11 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
               <p className="mt-2 text-xs">If you don't see it, check your spam folder.</p>
             </div>
             
-            <div className="text-center">
-              <Button onClick={onBackToLogin} className="w-full" variant="default">
+            <div className="text-center space-y-3">
+              <Button onClick={() => onLinkSent && onLinkSent()} className="w-full font-bold" variant="outline">
+                Open Reset Link (Demo)
+              </Button>
+              <Button onClick={onBackToLogin} className="w-full" variant="ghost">
                 Back to Login
               </Button>
             </div>
@@ -118,7 +122,7 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
             </Button>
             <span className="text-sm font-medium text-muted-foreground">Back</span>
           </div>
-          <CardTitle className="text-2xl">Forgot Password?</CardTitle>
+          <CardTitle className="text-3xl font-calligraphy text-primary">Forgot Password?</CardTitle>
           <CardDescription>
             Enter your email address and we'll send you a link to reset your password.
           </CardDescription>
