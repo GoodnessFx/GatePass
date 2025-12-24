@@ -10,9 +10,10 @@ import { hashPassword, checkRateLimit, sanitizeInput, validateEmail } from '../u
 interface LoginPageProps {
   onLoginComplete: () => void;
   onShowSignup?: () => void;
+  onShowForgotPassword?: () => void;
 }
 
-export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
+export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword }: LoginPageProps) {
   const [email, setEmail] = React.useState(() => {
     // Auto-fill from signup if available
     return localStorage.getItem('gp_user_email') || '';
@@ -130,6 +131,15 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
               <div className="space-y-2">
                 <Label>Password</Label>
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => onShowForgotPassword && onShowForgotPassword()}
+                    className="text-xs text-primary hover:underline font-medium"
+                    tabIndex={-1}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
               <Button className="w-full" onClick={handleLogin}>Login</Button>
               <div className="text-sm text-foreground text-center">

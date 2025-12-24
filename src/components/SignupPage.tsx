@@ -81,9 +81,18 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       return;
     }
 
-    if (!validateEmail(trimmedEmail) || !validatePassword(password) || !accepted) {
-      setError('Please fill all fields correctly and accept the terms.');
-      toast.error('Validation Error', { description: 'Please check all fields and accept terms.' });
+    if (!validateEmail(trimmedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setError('Password must be at least 8 characters and include both letters and numbers.');
+      return;
+    }
+
+    if (!accepted) {
+      setError('You must accept the terms and conditions.');
       return;
     }
 
@@ -102,16 +111,24 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       const hashedPassword = await hashPassword(password.trim());
 
-      await registerUser({
+      const { success, error: regError } = await registerUser({
         email: trimmedEmail,
         firstName: trimmedFirst,
         lastName: trimmedLast,
         country,
         role,
-        passwordHash: hashedPassword
+        password: password.trim(), // Send raw password for real auth
+        passwordHash: hashedPassword // Keep hash for fallback/simulation
       });
 
       setIsSending(false);
+
+      if (!success) {
+        setError(regError || 'Registration failed. Please try again.');
+        toast.error('Registration failed', { description: regError });
+        return;
+      }
+
       setIsSuccess(true);
       toast.success('Registration successful!', { 
         description: 'Verification email sent.',

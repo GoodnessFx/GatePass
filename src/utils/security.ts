@@ -16,8 +16,8 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePassword(password: string): boolean {
-  // At least 8 chars, 1 number, 1 special char is recommended but we'll stick to user's requirement of 8 chars for now
-  return password.length >= 8;
+  // Min 8 chars, at least one letter and one number
+  return password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
 export function validateName(name: string): boolean {
