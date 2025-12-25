@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 const LandingPage = React.lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
-const ForgotPasswordPage = React.lazy(() => import('./components/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
-const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
-const SignupPage = React.lazy(() => import('./components/SignupPage'));
+const SignupPage = React.lazy(() => import('./components/SignupPage').then(m => ({ default: m.SignupPage })));
 const EventCreation = React.lazy(() => import('./components/EventCreation').then(m => ({ default: m.EventCreation })));
 const OrganizerDashboard = React.lazy(() => import('./components/OrganizerDashboard').then(m => ({ default: m.OrganizerDashboard })));
 const AttendeeDashboard = React.lazy(() => import('./components/AttendeeDashboard').then(m => ({ default: m.AttendeeDashboard })));
@@ -27,9 +25,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-import { trackVisitor } from './services/analyticsService';
-
-type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
+type AppView = 'login' | 'signup' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
@@ -48,11 +44,6 @@ function App() {
   useEffect(() => {
     const savedName = localStorage.getItem('displayName');
     if (savedName) setDisplayName(savedName);
-  }, []);
-
-  // Visitor tracking logic
-  useEffect(() => {
-    trackVisitor();
   }, []);
   useEffect(() => {
     try {
@@ -243,22 +234,6 @@ function App() {
               setCurrentView('landing');
             }}
             onShowSignup={() => setCurrentView('signup')}
-            onShowForgotPassword={() => setCurrentView('forgot-password')}
-          />
-        );
-
-      case 'forgot-password':
-        return (
-          <ForgotPasswordPage
-            onBackToLogin={() => setCurrentView('login')}
-            onLinkSent={() => setCurrentView('reset-password')}
-          />
-        );
-
-      case 'reset-password':
-        return (
-          <ResetPasswordPage
-            onNavigate={setCurrentView}
           />
         );
 
@@ -366,7 +341,6 @@ function App() {
           }}
           onShowSignup={() => setCurrentView('signup')}
         />
-        <Toaster position="top-right" />
       </React.Suspense>
     );
   }
@@ -378,7 +352,6 @@ function App() {
           onSignupComplete={() => setCurrentView('landing')}
           onShowLogin={() => setCurrentView('login')}
         />
-        <Toaster position="top-right" />
       </React.Suspense>
     );
   }

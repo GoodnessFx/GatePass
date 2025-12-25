@@ -5,89 +5,30 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
-import { hashPassword, checkRateLimit, sanitizeInput, validateEmail } from '../utils/security';
+import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
   onShowSignup?: () => void;
-  onShowForgotPassword?: () => void;
 }
 
-export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword }: LoginPageProps) {
-  const [email, setEmail] = React.useState(() => {
-    // Auto-fill from signup if available
-    return localStorage.getItem('gp_user_email') || '';
-  });
+export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
-  const [error, setError] = React.useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setError(null);
-
-    // Rate Limit Check: 10 attempts per minute for login
-    if (!checkRateLimit('login_attempt', 10, 60000)) {
-      setError('Too many login attempts. Please try again later.');
-      return;
-    }
-
-    const trimmedEmail = sanitizeInput(email.trim());
-    
-    if (!trimmedEmail || !password.trim()) {
-      setError('Please enter both email and password.');
-      return;
-    }
-
-    if (!validateEmail(trimmedEmail)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
+  const handleLogin = () => {
+    if (!email.trim() || !password.trim()) return;
     try {
-      // 1. Check registered users first
-      const storedUsers = localStorage.getItem('gp_users');
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-      const user = users.find((u: any) => u.email === trimmedEmail);
-
-      if (user) {
-        const hashedPassword = await hashPassword(password.trim());
-        // Check hashed match first
-        if (user.password === hashedPassword) {
-          // Success
-          loginUser(user);
-          return;
-        } 
-        // Backward compatibility: check plaintext
-        else if (user.password === password.trim()) {
-           // Success (Legacy)
-           loginUser(user);
-           return;
-        }
-        else {
-          setError('Invalid password.');
-          return;
-        }
-      }
-
-      // 2. If not found in registered users
-      setError('User not found. Please sign up.');
-      
-    } catch (e) {
-      console.error(e);
-      setError('Login failed. Please try again.');
-    }
-  };
-
-  const loginUser = (user: any) => {
-    localStorage.setItem('gp_demo_loggedin', 'true');
-    localStorage.setItem('gp_demo_role', user.role);
-    localStorage.setItem('gp_user_email', user.email);
-    localStorage.setItem('gp_display_name', `${user.firstName} ${user.lastName}`);
+      localStorage.setItem('gp_demo_loggedin', 'true');
+      localStorage.setItem('gp_demo_role', role);
+      localStorage.setItem('gp_user_email', email.trim());
+    } catch {}
     onLoginComplete();
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
+    <div className="min-h-[100svh] bg-background relative">
       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
         <div
           className="w-full h-full"
@@ -100,24 +41,26 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
           }}
         />
       </div>
+      <div className="grid grid-cols-1 min-h-[100svh]">
 
-      <div className="w-full max-w-md mx-auto relative z-10">
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Ticket className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
-          <p className="text-muted-foreground">Your Gateway to Decentralized Events</p>
-        </div>
-
-        <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
-          <CardHeader>
-            <CardTitle className="text-3xl font-calligraphy text-primary">Welcome Back</CardTitle>
-            <CardDescription>Sign in to your account to continue</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-               {error && <div className="text-sm text-destructive font-medium text-center">{error}</div>}
-                <div className="grid grid-cols-2 gap-2">
+        <div className="flex items-center justify-center p-6">
+          <div className="relative w-full" style={{ maxWidth: 450 }}>
+            <div
+              className="absolute -inset-6 rounded-[28px] pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(420px 220px at 50% 50%, var(--primary) 0%, transparent 70%), radial-gradient(380px 220px at 0% 100%, var(--accent) 0%, transparent 70%), radial-gradient(380px 220px at 100% 0%, var(--secondary) 0%, transparent 70%)',
+                filter: 'blur(26px)',
+                opacity: 0.24
+              }}
+            />
+            <Card className="w-full lg:h-[700px] relative">
+              <CardHeader>
+                <CardTitle className="text-3xl text-foreground">Welcome Back</CardTitle>
+                <CardDescription className="text-foreground">Sign in to manage tickets</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-2">
                 <Button variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
                 <Button variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
               </div>
@@ -128,15 +71,6 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
               <div className="space-y-2">
                 <Label>Password</Label>
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
-                <div className="flex justify-end">
-                  <button 
-                    onClick={() => onShowForgotPassword && onShowForgotPassword()}
-                    className="text-xs text-primary hover:underline font-medium"
-                    tabIndex={-1}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
               </div>
               <Button className="w-full" onClick={handleLogin}>Login</Button>
               <div className="text-sm text-foreground text-center">
@@ -153,9 +87,13 @@ export function LoginPage({ onLoginComplete, onShowSignup, onShowForgotPassword 
                   <span>X</span>
                 </Button>
               </div>
-          </CardContent>
-          </Card>
+            </CardContent>
+            </Card>
+          </div>
         </div>
+
+        
+      </div>
     </div>
   );
 }

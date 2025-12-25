@@ -22,8 +22,6 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
-import { getVisitorCount } from '../services/analyticsService';
-
 interface AnalyticsProps {
   onBack: () => void;
 }
@@ -94,7 +92,6 @@ export function Analytics({ onBack }: AnalyticsProps) {
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [timeRange, setTimeRange] = useState('7d');
   const [organizerEvents, setOrganizerEvents] = useState<Array<{ id: string; title?: string }>>([]);
-  const [visitorCount, setVisitorCount] = useState(0);
   const [serverAnalytics, setServerAnalytics] = useState<null | {
     totalRevenue: number;
     ticketsSold: number;
@@ -105,7 +102,6 @@ export function Analytics({ onBack }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setVisitorCount(getVisitorCount());
     (async () => {
       try {
         const res = await fetch('/api/events');
@@ -203,20 +199,6 @@ export function Analytics({ onBack }: AnalyticsProps) {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Website Visits</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{visitorCount}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                All time
-              </p>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
