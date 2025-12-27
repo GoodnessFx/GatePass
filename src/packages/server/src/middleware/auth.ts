@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { createError } from './errorHandler'
 
 export interface AuthenticatedRequest extends Request {

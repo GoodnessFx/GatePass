@@ -10,9 +10,10 @@ import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 interface LoginPageProps {
   onLoginComplete: () => void;
   onShowSignup?: () => void;
+  onForgotPassword?: () => void;
 }
 
-export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
+export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: LoginPageProps) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
@@ -69,7 +70,16 @@ export function LoginPage({ onLoginComplete, onShowSignup }: LoginPageProps) {
                 <Input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Password</Label>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal text-xs text-muted-foreground hover:text-primary"
+                    onClick={() => onForgotPassword && onForgotPassword()}
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
               </div>
               <Button className="w-full" onClick={handleLogin}>Login</Button>

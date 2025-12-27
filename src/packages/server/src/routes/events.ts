@@ -257,7 +257,7 @@ router.post(
           imageUrl: body?.image || null,
           metadataUri: body?.metadataUri || null,
           category,
-          tags: [],
+          tags: '',
           isPublic: true,
           allowTransfers: true,
           requireKYC: false,

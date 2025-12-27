@@ -9,6 +9,7 @@ import swaggerUi from 'swagger-ui-express'
 
 import { logger } from './utils/logger'
 import { errorHandler } from './middleware/errorHandler'
+import { authRoutes } from './routes/auth'
 import { eventRoutes } from './routes/events'
 import { orderRoutes } from './routes/orders'
 import { ticketRoutes } from './routes/tickets'
@@ -89,15 +90,16 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // Routes
 app.use('/api/health', healthRoutes)
-// Auth routes temporarily disabled to avoid optional deps during local runs
+// Auth routes
+app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
 app.use('/api/orders', orderRoutes)
-app.use('/api/tickets', ticketRoutes)
+// app.use('/api/tickets', ticketRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/webhooks', webhookRoutes)
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
     message: `The route ${req.method} ${req.originalUrl} does not exist.`

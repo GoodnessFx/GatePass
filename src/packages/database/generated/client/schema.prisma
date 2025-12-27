@@ -8,16 +8,20 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String?
   name      String?
   walletAddress String? @unique
   avatar    String?
-  role      String   @default("USER")
+  role      String @default("USER")
+  
+  resetToken       String?
+  resetTokenExpiry DateTime?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,7 +52,7 @@ model Event {
   
   // Ticket info
   totalSupply    Int
-  ticketPrice    Float
+  ticketPrice    Float // Support crypto decimals
   currency       String  @default("ETH")
   maxPerWallet   Int     @default(5)
   
@@ -60,7 +64,7 @@ model Event {
   imageUrl       String?
   metadataUri    String?
   category       String @default("MUSIC")
-  tags           String
+  tags           String // Comma separated tags
   
   // Settings
   isPublic       Boolean @default(true)
@@ -146,7 +150,7 @@ model Order {
   // Customer info
   customerEmail  String
   customerName   String?
-  billingAddress String?
+  billingAddress String? // JSON string
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -204,11 +208,11 @@ model EventAnalytics {
   noShows        Int @default(0)
   
   // Geographic data
-  topCountries   String? // [{country: "US", count: 10}, ...]
-  topCities      String? // [{city: "New York", count: 5}, ...]
+  topCountries   String? // JSON string: [{country: "US", count: 10}, ...]
+  topCities      String? // JSON string: [{city: "New York", count: 5}, ...]
   
   // Time-based data
-  hourlyBreakdown String? // Check-in patterns by hour
+  hourlyBreakdown String? // JSON string: Check-in patterns by hour
 
   // Relations
   event   Event  @relation(fields: [eventId], references: [id])

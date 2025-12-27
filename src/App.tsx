@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 const LandingPage = React.lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = React.lazy(() => import('./components/SignupPage').then(m => ({ default: m.SignupPage })));
+const ForgotPasswordPage = React.lazy(() => import('./components/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const EventCreation = React.lazy(() => import('./components/EventCreation').then(m => ({ default: m.EventCreation })));
 const OrganizerDashboard = React.lazy(() => import('./components/OrganizerDashboard').then(m => ({ default: m.OrganizerDashboard })));
 const AttendeeDashboard = React.lazy(() => import('./components/AttendeeDashboard').then(m => ({ default: m.AttendeeDashboard })));
@@ -25,7 +27,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-type AppView = 'login' | 'signup' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
+type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
@@ -37,8 +39,19 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
   const [viewHistory, setViewHistory] = useState<AppView[]>([]);
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
-
+  useEffect(() => {
+    // Check for reset token in URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setResetToken(token);
+      setCurrentView('reset-password');
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // Load saved display name
   useEffect(() => {
@@ -340,6 +353,7 @@ function App() {
             setCurrentView('landing');
           }}
           onShowSignup={() => setCurrentView('signup')}
+          onForgotPassword={() => setCurrentView('forgot-password')}
         />
       </React.Suspense>
     );
@@ -351,6 +365,28 @@ function App() {
         <SignupPage
           onSignupComplete={() => setCurrentView('landing')}
           onShowLogin={() => setCurrentView('login')}
+        />
+      </React.Suspense>
+    );
+  }
+
+  if (currentView === 'forgot-password') {
+    return (
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+        <ForgotPasswordPage
+          onBack={() => setCurrentView('login')}
+        />
+      </React.Suspense>
+    );
+  }
+
+  if (currentView === 'reset-password' && resetToken) {
+    return (
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+        <ResetPasswordPage
+          token={resetToken}
+          onSuccess={() => setCurrentView('login')}
+          onBack={() => setCurrentView('login')}
         />
       </React.Suspense>
     );

@@ -2,10 +2,12 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { body, validationResult } from 'express-validator'
-import { prisma } from '@passmint/database'
+import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
 import { authenticate, AuthenticatedRequest } from '../middleware/auth'
 import { logger } from '../utils/logger'
+import crypto from 'crypto'
+import nodemailer from 'nodemailer'
 
 const router = Router()
 
@@ -105,6 +107,7 @@ router.post('/register', [
   const user = await prisma.user.create({
     data: {
       email,
+      password: hashedPassword,
       name,
       walletAddress,
       role: 'USER' // Default role
@@ -184,17 +187,20 @@ router.post('/login', [
       name: true,
       walletAddress: true,
       role: true,
-      // password: true // Note: password not included in Prisma schema for security
+      password: true // Select password to verify
     }
   })
 
-  if (!user) {
+  if (!user || !user.password) {
     throw createError('Invalid email or password', 401)
   }
 
-  // For demo purposes, we'll skip password verification
-  // In production, you'd verify against a hashed password stored in the database
-  
+  // Verify password
+  const isValidPassword = await bcrypt.compare(password, user.password)
+  if (!isValidPassword) {
+    throw createError('Invalid email or password', 401)
+  }
+
   // Generate JWT
   const token = jwt.sign(
     { userId: user.id, email: user.email },
@@ -204,11 +210,147 @@ router.post('/login', [
 
   logger.info(`User logged in: ${user.email}`)
 
+  // Remove password from response
+  const { password: _, ...userWithoutPassword } = user
+
   res.json({
     message: 'Login successful',
     token,
-    user
+    user: userWithoutPassword
   })
+}))
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Reset email sent
+ */
+router.post('/forgot-password', [
+  body('email').isEmail().normalizeEmail()
+], asyncHandler(async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    throw createError('Invalid email', 400)
+  }
+
+  const { email } = req.body
+  const user = await prisma.user.findUnique({ where: { email } })
+
+  if (!user) {
+    // Return success even if user not found to prevent enumeration
+    return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' })
+  }
+
+  // Generate token
+  const resetToken = crypto.randomBytes(32).toString('hex')
+  const resetTokenExpiry = new Date(Date.now() + 3600000) // 1 hour
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      resetToken,
+      resetTokenExpiry
+    }
+  })
+
+  // In a real production app, configure nodemailer transport
+  // const transporter = nodemailer.createTransport({
+  //   service: 'gmail',
+  //   auth: {
+  //     user: process.env.EMAIL_USER,
+  //     pass: process.env.EMAIL_PASS
+  //   }
+  // })
+
+  // For development/demo, we'll just log the token
+  logger.info(`Password reset token for ${email}: ${resetToken}`)
+  
+  // NOTE: In a real app, you would send the email here:
+  // await transporter.sendMail({
+  //   to: email,
+  //   subject: 'Password Reset',
+  //   html: `<p>Click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password.</p>`
+  // })
+
+  res.json({ message: 'If an account with that email exists, a password reset link has been sent.' })
+}))
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ */
+router.post('/reset-password', [
+  body('token').notEmpty(),
+  body('password').isLength({ min: 6 })
+], asyncHandler(async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    throw createError('Invalid input', 400)
+  }
+
+  const { token, password } = req.body
+
+  const user = await prisma.user.findFirst({
+    where: {
+      resetToken: token,
+      resetTokenExpiry: { gt: new Date() }
+    }
+  })
+
+  if (!user) {
+    throw createError('Invalid or expired password reset token', 400)
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12)
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null
+    }
+  })
+
+  res.json({ message: 'Password has been reset successfully' })
 }))
 
 /**
