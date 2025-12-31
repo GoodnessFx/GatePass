@@ -17,6 +17,8 @@ model User {
   password  String?
   name      String?
   walletAddress String? @unique
+  googleId      String? @unique
+  twitterId     String? @unique
   avatar    String?
   role      String @default("USER")
   

@@ -44,11 +44,35 @@ function App() {
   useEffect(() => {
     // Check for reset token in URL
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      setResetToken(token);
+    const resetTokenParam = params.get('token');
+    const authTokenParam = params.get('auth_token') || params.get('token'); // Handle both for now, but context matters
+    const pathname = window.location.pathname;
+
+    if (pathname === '/auth/callback' && authTokenParam) {
+        // Handle Social Login Callback
+        localStorage.setItem('auth_token', authTokenParam);
+        localStorage.setItem('gp_demo_loggedin', 'true'); // Keep legacy for now
+        
+        // Decode token to get user info if possible, or fetch profile
+        // For now, default to attendee dashboard or landing
+        setIsWalletConnected(false); // Reset wallet state
+        
+        // Fetch user profile to determine role/name (mocking for now or needs API call)
+        // We'll just set a default and let them choose or fetch real data later
+        // Ideally we should call an API /me to get user details
+        
+        // Clean URL
+        window.history.replaceState({}, document.title, '/');
+        
+        // For simple flow, just set view to landing or dashboard if we knew role
+        // Let's assume attendee for safety
+        setCurrentView('landing'); 
+        toast.success('Successfully logged in via social media');
+    } else if (resetTokenParam && !pathname.includes('/auth/callback')) {
+      // Handle Password Reset
+      setResetToken(resetTokenParam);
       setCurrentView('reset-password');
-      // Clean up URL
+      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -247,6 +271,22 @@ function App() {
               setCurrentView('landing');
             }}
             onShowSignup={() => setCurrentView('signup')}
+            onForgotPassword={() => setCurrentView('forgot-password')}
+          />
+        );
+
+      case 'forgot-password':
+        return (
+          <ForgotPasswordPage
+            onBack={() => setCurrentView('login')}
+          />
+        );
+
+      case 'reset-password':
+        return (
+          <ResetPasswordPage
+            token={resetToken || ''}
+            onSuccess={() => setCurrentView('login')}
           />
         );
 

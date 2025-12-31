@@ -9,7 +9,50 @@ import { logger } from '../utils/logger'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 
+import passport from 'passport'
 const router = Router()
+
+// Google Auth Routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Successful authentication
+    const user = req.user as any
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+    
+    // Redirect to frontend with token
+    const frontendUrl = process.env.CORS_ORIGIN || 'http://localhost:5173'
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`)
+  }
+)
+
+// Twitter Auth Routes
+router.get('/twitter', passport.authenticate('twitter'))
+
+router.get(
+  '/twitter/callback',
+  passport.authenticate('twitter', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Successful authentication
+    const user = req.user as any
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+    
+    // Redirect to frontend with token
+    const frontendUrl = process.env.CORS_ORIGIN || 'http://localhost:5173'
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`)
+  }
+)
 
 /**
  * @swagger

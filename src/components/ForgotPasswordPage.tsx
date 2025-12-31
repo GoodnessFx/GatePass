@@ -62,12 +62,12 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
         />
       </div>
 
-      <div className="w-full max-w-md mx-auto relative z-10">
+      <div className="w-[320px] mx-auto relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
         </div>
 
-        <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+        <Card className="w-full border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
           <CardHeader>
             <CardTitle className="text-2xl font-calligraphy text-primary text-center">Forgot Password</CardTitle>
             <CardDescription className="text-center">

@@ -17,6 +17,10 @@ import { analyticsRoutes } from './routes/analytics'
 import { webhookRoutes } from './routes/webhooks'
 import { healthRoutes } from './routes/health'
 
+import passport from 'passport'
+import session from 'express-session'
+import './config/passport'
+
 const app = express()
 const PORT = process.env.PORT || 8000
 
@@ -55,7 +59,22 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
+// Session and Passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_session_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+
+
 // Swagger documentation
+/*
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -87,6 +106,7 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+*/
 
 // Routes
 app.use('/api/health', healthRoutes)

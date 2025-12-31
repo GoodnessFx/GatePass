@@ -1497,6 +1497,8 @@ export namespace Prisma {
     password: string | null
     name: string | null
     walletAddress: string | null
+    googleId: string | null
+    twitterId: string | null
     avatar: string | null
     role: string | null
     resetToken: string | null
@@ -1511,6 +1513,8 @@ export namespace Prisma {
     password: string | null
     name: string | null
     walletAddress: string | null
+    googleId: string | null
+    twitterId: string | null
     avatar: string | null
     role: string | null
     resetToken: string | null
@@ -1525,6 +1529,8 @@ export namespace Prisma {
     password: number
     name: number
     walletAddress: number
+    googleId: number
+    twitterId: number
     avatar: number
     role: number
     resetToken: number
@@ -1541,6 +1547,8 @@ export namespace Prisma {
     password?: true
     name?: true
     walletAddress?: true
+    googleId?: true
+    twitterId?: true
     avatar?: true
     role?: true
     resetToken?: true
@@ -1555,6 +1563,8 @@ export namespace Prisma {
     password?: true
     name?: true
     walletAddress?: true
+    googleId?: true
+    twitterId?: true
     avatar?: true
     role?: true
     resetToken?: true
@@ -1569,6 +1579,8 @@ export namespace Prisma {
     password?: true
     name?: true
     walletAddress?: true
+    googleId?: true
+    twitterId?: true
     avatar?: true
     role?: true
     resetToken?: true
@@ -1656,6 +1668,8 @@ export namespace Prisma {
     password: string | null
     name: string | null
     walletAddress: string | null
+    googleId: string | null
+    twitterId: string | null
     avatar: string | null
     role: string
     resetToken: string | null
@@ -1687,6 +1701,8 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     walletAddress?: boolean
+    googleId?: boolean
+    twitterId?: boolean
     avatar?: boolean
     role?: boolean
     resetToken?: boolean
@@ -1705,6 +1721,8 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     walletAddress?: boolean
+    googleId?: boolean
+    twitterId?: boolean
     avatar?: boolean
     role?: boolean
     resetToken?: boolean
@@ -1734,6 +1752,8 @@ export namespace Prisma {
       password: string | null
       name: string | null
       walletAddress: string | null
+      googleId: string | null
+      twitterId: string | null
       avatar: string | null
       role: string
       resetToken: string | null
@@ -2128,6 +2148,8 @@ export namespace Prisma {
     readonly password: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
     readonly walletAddress: FieldRef<"User", 'String'>
+    readonly googleId: FieldRef<"User", 'String'>
+    readonly twitterId: FieldRef<"User", 'String'>
     readonly avatar: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'String'>
     readonly resetToken: FieldRef<"User", 'String'>
@@ -9082,6 +9104,8 @@ export namespace Prisma {
     password: 'password',
     name: 'name',
     walletAddress: 'walletAddress',
+    googleId: 'googleId',
+    twitterId: 'twitterId',
     avatar: 'avatar',
     role: 'role',
     resetToken: 'resetToken',
@@ -9295,6 +9319,8 @@ export namespace Prisma {
     password?: StringNullableFilter<"User"> | string | null
     name?: StringNullableFilter<"User"> | string | null
     walletAddress?: StringNullableFilter<"User"> | string | null
+    googleId?: StringNullableFilter<"User"> | string | null
+    twitterId?: StringNullableFilter<"User"> | string | null
     avatar?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     resetToken?: StringNullableFilter<"User"> | string | null
@@ -9312,6 +9338,8 @@ export namespace Prisma {
     password?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     walletAddress?: SortOrderInput | SortOrder
+    googleId?: SortOrderInput | SortOrder
+    twitterId?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     role?: SortOrder
     resetToken?: SortOrderInput | SortOrder
@@ -9327,6 +9355,8 @@ export namespace Prisma {
     id?: string
     email?: string
     walletAddress?: string
+    googleId?: string
+    twitterId?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -9341,7 +9371,7 @@ export namespace Prisma {
     organizedEvents?: EventListRelationFilter
     orders?: OrderListRelationFilter
     checkIns?: CheckInListRelationFilter
-  }, "id" | "email" | "walletAddress">
+  }, "id" | "email" | "walletAddress" | "googleId" | "twitterId">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
@@ -9349,6 +9379,8 @@ export namespace Prisma {
     password?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     walletAddress?: SortOrderInput | SortOrder
+    googleId?: SortOrderInput | SortOrder
+    twitterId?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     role?: SortOrder
     resetToken?: SortOrderInput | SortOrder
@@ -9369,6 +9401,8 @@ export namespace Prisma {
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     name?: StringNullableWithAggregatesFilter<"User"> | string | null
     walletAddress?: StringNullableWithAggregatesFilter<"User"> | string | null
+    googleId?: StringNullableWithAggregatesFilter<"User"> | string | null
+    twitterId?: StringNullableWithAggregatesFilter<"User"> | string | null
     avatar?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: StringWithAggregatesFilter<"User"> | string
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
@@ -10100,6 +10134,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -10117,6 +10153,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -10134,6 +10172,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10151,6 +10191,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10168,6 +10210,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10182,6 +10226,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10995,6 +11041,8 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     walletAddress?: SortOrder
+    googleId?: SortOrder
+    twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
@@ -11009,6 +11057,8 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     walletAddress?: SortOrder
+    googleId?: SortOrder
+    twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
@@ -11023,6 +11073,8 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     walletAddress?: SortOrder
+    googleId?: SortOrder
+    twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
@@ -12792,6 +12844,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -12808,6 +12862,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -13027,6 +13083,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13043,6 +13101,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13528,6 +13588,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -13544,6 +13606,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -13696,6 +13760,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13712,6 +13778,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13947,6 +14015,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -13963,6 +14033,8 @@ export namespace Prisma {
     password?: string | null
     name?: string | null
     walletAddress?: string | null
+    googleId?: string | null
+    twitterId?: string | null
     avatar?: string | null
     role?: string
     resetToken?: string | null
@@ -14127,6 +14199,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14143,6 +14217,8 @@ export namespace Prisma {
     password?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     walletAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    googleId?: NullableStringFieldUpdateOperationsInput | string | null
+    twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
