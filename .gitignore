@@ -1,6 +1,8 @@
 node_modules/
 dist/
 build/
+.next/
+out/
 .vite/
 .turbo/
 .cache/
@@ -12,3 +14,37 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+*.log
+*.pid
+*.seed
+*.tmp
+*.temp
+*.bak
+*.orig
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+prisma/.env
+
+# OS / package manager
+.nyc_output/
+.npm/
+.yarn/
+.pnp.*
+.cache/
+
+# Images/build artifacts
+*.coverage
+*.DS_Store

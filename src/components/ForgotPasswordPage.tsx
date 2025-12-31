@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateEmail } from '../utils/security';
 import { forgotPassword } from '../services/authService';
+import AuthContainer from './AuthContainer';
 
 interface ForgotPasswordPageProps {
   onBack: () => void;
@@ -48,21 +49,8 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
-       <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: "url('/ticketbooth.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(6px)',
-            opacity: 0.12,
-          }}
-        />
-      </div>
-
-      <div className="w-[320px] mx-auto relative z-10">
+    <AuthContainer>
+      <div className="w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
         </div>
@@ -124,6 +112,6 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
           )}
         </Card>
       </div>
-    </div>
+    </AuthContainer>
   );
 }

@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
+import AuthContainer from './AuthContainer';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
@@ -29,21 +30,8 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
-      <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: "url('/ticketbooth.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(6px)',
-            opacity: 0.12,
-          }}
-        />
-      </div>
-
-      <div className="w-[320px] mx-auto relative z-10">
+    <AuthContainer>
+      <div className="w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
         </div>
@@ -93,7 +81,7 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AuthContainer>
   );
 }
 

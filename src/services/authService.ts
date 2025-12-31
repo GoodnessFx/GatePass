@@ -1,24 +1,9 @@
 import axios from 'axios';
+import { RegisterData, RegisterResponse } from '../types/auth';
 
 const API_URL = 'http://localhost:8000/api';
 
-export interface RegisterData {
-  email: string;
-  password?: string;
-  firstName: string;
-  lastName: string;
-  country: string;
-  role: 'attendee' | 'organizer';
-  passwordHash?: string;
-}
-
-export interface RegisterResponse {
-  success: boolean;
-  user?: any;
-  token?: string;
-  error?: string;
-  message?: string;
-}
+// Types moved to src/types/auth.ts for clearer separation of concerns
 
 export const registerUser = async (data: RegisterData): Promise<RegisterResponse> => {
   try {

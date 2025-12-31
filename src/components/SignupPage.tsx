@@ -5,7 +5,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { countries } from '../utils/countries';
+import { countries } from '../constants';
+import AuthContainer from './AuthContainer';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { hashPassword, sanitizeInput, validateEmail, validatePassword, validateName, checkRateLimit } from '../utils/security';
@@ -154,21 +155,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   };
 
   return (
-    <div className="min-h-[100svh] bg-background relative flex items-center justify-center p-6">
-      <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: "url('/ticketbooth.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(6px)',
-            opacity: 0.12,
-          }}
-        />
-      </div>
-
-      <div className="w-[320px] mx-auto relative z-10">
+    <AuthContainer>
+      <div className="w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
           <p className="text-muted-foreground">Join the Revolution</p>
@@ -290,7 +278,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
               </Card>
             )}
       </div>
-    </div>
+    </AuthContainer>
   );
 }
 
