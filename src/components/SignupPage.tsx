@@ -261,11 +261,11 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                   )}
                 </Button>
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  <Button variant="outline" onClick={() => window.location.href = 'http://localhost:8000/api/auth/google'} className="flex items-center gap-2 justify-center">
+                  <Button variant="outline" onClick={() => window.location.href = 'http://localhost:8000/api/auth/google'} className="w-full flex items-center gap-2 justify-center">
                     <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.78 0 7.22 1.44 9.86 3.8l5.94-5.94C35.46 3.46 30.04 1 24 1 14.73 1 6.65 6.16 2.72 14.02l7.54 5.86C12.31 13.19 17.73 9.5 24 9.5z"/><path fill="#4285F4" d="M46.08 24.3c0-2.02-.18-3.98-.52-5.86H24v11.1h12.4c-.53 2.87-2.16 5.29-4.61 6.91l7.07 5.49c4.13-3.81 7.22-9.35 7.22-17.64z"/><path fill="#FBBC05" d="M10.26 28.14c-.48-1.41-.76-2.91-.76-4.46s.28-3.05.76-4.46l-7.54-5.86C1.63 16.06 1 19.01 1 22.06s.63 6 1.72 8.71l7.54-2.63z"/><path fill="#34A853" d="M24 46c6.05 0 11.18-1.99 14.9-5.41l-7.07-5.49c-2.01 1.36-4.58 2.15-7.83 2.15-6.68 0-12.35-4.51-14.39-10.66l-7.54 2.63C6.65 41.84 14.73 46 24 46z"/></svg>
                     <span>Google</span>
                   </Button>
-                  <Button variant="outline" onClick={() => window.location.href = 'http://localhost:8000/api/auth/twitter'} className="flex items-center gap-2 justify-center">
+                  <Button variant="outline" onClick={() => window.location.href = 'http://localhost:8000/api/auth/twitter'} className="w-full flex items-center gap-2 justify-center">
                     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.146 0H21.5L13.9 10.546 23 24h-7.109l-5.568-7.957L4.851 24H1.5l8.154-11.829L1 0h7.273l5.197 7.29L18.146 0Zm-1.246 21.545h1.961L7.18 2.367H5.1l11.8 19.178Z"/></svg>
                     <span>X</span>
                   </Button>
