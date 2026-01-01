@@ -3,13 +3,12 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { countries } from '../constants';
 import AuthContainer from './AuthContainer';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import { hashPassword, sanitizeInput, validateEmail, validatePassword, validateName, checkRateLimit } from '../utils/security';
+import { hashPassword, sanitizeInput } from '../utils/security';
 import { registerUser } from '../services/authService';
 
 interface SignupPageProps {
@@ -24,7 +23,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   const [country, setCountry] = React.useState('NG');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee' | 'organizer'>('attendee');
-  const [accepted, setAccepted] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
@@ -65,35 +63,12 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   const handleSignup = async () => {
     setError(null);
 
-    // Rate Limit Check
-    if (!checkRateLimit('signup_attempt', 5, 60000)) {
-      setError('Too many signup attempts. Please try again later.');
-      toast.error('Too many attempts', { description: 'Please try again in a minute.' });
-      return;
-    }
-
     const trimmedEmail = sanitizeInput(email.trim());
     const trimmedFirst = sanitizeInput(firstName.trim());
     const trimmedLast = sanitizeInput(lastName.trim());
 
-    if (!validateName(trimmedFirst) || !validateName(trimmedLast)) {
-      setError('Please enter valid first and last names (min 2 chars, letters only).');
-      toast.error('Invalid Name', { description: 'Names must contain only letters.' });
-      return;
-    }
-
-    if (!validateEmail(trimmedEmail)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setError('Password must be at least 8 characters and include both letters and numbers.');
-      return;
-    }
-
-    if (!accepted) {
-      setError('You must accept the terms and conditions.');
+    if (!trimmedEmail || !trimmedFirst || !trimmedLast || !password) {
+      setError('All fields are required.');
       return;
     }
 
@@ -118,8 +93,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         lastName: trimmedLast,
         country,
         role,
-        password: password.trim(), // Send raw password for real auth
-        passwordHash: hashedPassword // Keep hash for fallback/simulation
+        password: password.trim(), 
+        passwordHash: hashedPassword
       });
 
       setIsSending(false);
@@ -230,26 +205,15 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>I want to join as</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as 'attendee' | 'organizer')}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="attendee">Attendee</SelectItem>
-                      <SelectItem value="organizer">Organizer</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button className="w-full" variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
+                  <Button className="w-full" variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
                 </div>
                 <div className="space-y-2">
                   <Label>Password</Label>
                   <Input type="password" placeholder="At least 8 characters" value={password} onChange={(e)=>setPassword(e.target.value)} />
                 </div>
-                <div className="flex items-center gap-2 text-foreground">
-                  <Checkbox checked={accepted} onCheckedChange={(v: boolean)=>setAccepted(Boolean(v))} />
-                  <span className="text-sm">Accept Terms & Conditions</span>
-                </div>
+
                 <Button className="w-full" onClick={handleSignup} disabled={isSending}>
                   {isSending ? (
                     <>

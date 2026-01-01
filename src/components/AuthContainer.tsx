@@ -19,7 +19,7 @@ export function AuthContainer({ children }: AuthContainerProps) {
           }}
         />
       </div>
-      <div className="w-full max-w-sm mx-auto relative z-10">
+      <div className="w-full mx-auto relative z-10" style={{ maxWidth: '400px' }}>
         {children}
       </div>
     </div>

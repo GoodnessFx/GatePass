@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Ticket } from 'lucide-react';
+import { toast } from 'sonner';
 import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
 import AuthContainer from './AuthContainer';
 
@@ -20,7 +21,10 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
 
   const handleLogin = () => {
-    if (!email.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim()) {
+      toast.error('Please enter both email and password');
+      return;
+    }
     try {
       localStorage.setItem('gp_demo_loggedin', 'true');
       localStorage.setItem('gp_demo_role', role);
