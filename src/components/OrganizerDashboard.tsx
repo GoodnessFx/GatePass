@@ -198,9 +198,9 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Events List */}
-          <div className="lg:col-span-2">
+          <div>
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -455,7 +455,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="max-w-7xl mx-auto mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>VIP & Speaker Management</CardTitle>
