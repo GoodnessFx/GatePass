@@ -103,74 +103,70 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
           </div>
         </div>
       )}
-      {/* Hero */}
-      <section className="relative py-16 sm:py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border rounded-lg overflow-hidden">
-            <TicketScrollHero />
+      <section className="relative min-h-[80vh] sm:min-h-[85vh] bg-background flex items-center justify-center">
+        <style>{`
+          .gp-wrap{max-width:1200px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; align-items:center; gap:28px}
+          .gp-word em{display:block; font-style:italic; font-weight:500; margin-top:0; color:var(--muted-foreground); text-align:center; font-size:clamp(14px,2.2vw,18px)}
+          .gp-row{display:flex; justify-content:center; gap:28px}
+          .gp-phone{position:relative; width:270px; height:540px; border-radius:44px; background:#0f1117; box-shadow:0 16px 60px rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.08); overflow:hidden}
+          .gp-notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:28px; background:#0b0d13; border-radius:0 0 18px 18px}
+          .gp-screen{position:absolute; inset:16px; border-radius:32px; background:linear-gradient(180deg,#0d0f15,#0b0d13); padding:18px}
+          .gp-tickets{display:grid; gap:14px}
+          .gp-ticket{border:2px solid #8B2020; border-radius:16px; background:#1a1d26; color:#e9dec7; padding:16px}
+          .gp-ticket h4{font-family:Georgia, 'Times New Roman', serif; font-size:18px; color:#e9dec7}
+          .gp-ticket p{font-size:12px; opacity:.9}
+          .gp-cta{display:flex; gap:16px; justify-content:center}
+        `}</style>
+        <div className="gp-wrap">
+          <div className="gp-word"><em>Your gateway to seamless access</em></div>
+          <div className="gp-cta">
+            <Button size="lg" onClick={() => openNameDialog('attendee')}>Attendee</Button>
+            <Button size="lg" variant="outline" onClick={() => openNameDialog('organizer')}>Organizer</Button>
           </div>
-        </div>
-      </section>
-
-
-
-      {/* Hero Section */}
-      <section className="relative py-14 sm:py-20 bg-gradient-to-br from-[#0B0D17] via-[#13151F] to-[#0B0D17]">
-        <div className="absolute inset-0 -z-10 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 60%)' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-foreground">Ticket Anything. Beautifully.</h1>
-              <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl">Create museum‑quality digital tickets with fraud‑proof verification and instant settlement.</p>
-              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button size="lg" onClick={() => openNameDialog('organizer')} className="flex items-center space-x-2">
-                  <Ticket className="h-5 w-5" />
-                  <span>Create Event</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => openNameDialog('attendee')} className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>Find Events</span>
-                </Button>
-              </div>
-              <div className="mt-12 flex items-center gap-2 text-muted-foreground">
-                <div className="animate-bounce">
-                  <ArrowRight className="rotate-90 h-5 w-5" />
+          <div className="gp-row">
+            <div className="gp-phone" style={{ transform: 'translateY(36px) rotate(-6deg)' }}>
+              <div className="gp-notch" />
+              <div className="gp-screen">
+                <div className="gp-tickets">
+                  <div className="gp-ticket">
+                    <h4>Admit One</h4>
+                    <p>City Concert • Row A • Seat 12</p>
+                  </div>
+                  <div className="gp-ticket">
+                    <h4>VIP Access</h4>
+                    <p>Backstage • Meet & Greet</p>
+                  </div>
                 </div>
-                <span className="text-sm">Scroll to explore</span>
               </div>
-              {promo && (
-                <div className="mt-8 max-w-lg">
-                  <Card className="border-2 border-primary/40 bg-background/60 backdrop-blur">
-                    <CardHeader className="py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-primary">Seasonal Offer</Badge>
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      </div>
-                      <CardTitle className="text-xl md:text-2xl">{promo.name}: {promo.discountPercent}% off</CardTitle>
-                      <CardDescription className="text-base">
-                        {promo.description} — Use code <span className="font-semibold">{promo.code}</span> at checkout.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0 pb-4">
-                      <div className="flex items-center gap-3">
-                        <Button size="sm" onClick={() => onRoleSelect('attendee')} className="flex items-center gap-2">
-                          <Ticket className="h-4 w-4" />
-                          <span>Grab the Deal</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                        {suggestedCode && (
-                          <Badge variant="secondary" className="text-xs">Promo Code: {suggestedCode}</Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
             </div>
-            <div className="hidden lg:block">
-              <div className="border rounded-lg overflow-hidden">
-                <TicketScrollHero />
+            <div className="gp-phone">
+              <div className="gp-notch" />
+              <div className="gp-screen">
+                <div className="gp-tickets">
+                  <div className="gp-ticket">
+                    <h4>Conference Pass</h4>
+                    <p>Hall B • Seat 45</p>
+                  </div>
+                  <div className="gp-ticket">
+                    <h4>Afterparty</h4>
+                    <p>Admission • 9PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="gp-phone" style={{ transform: 'translateY(36px) rotate(6deg)' }}>
+              <div className="gp-notch" />
+              <div className="gp-screen">
+                <div className="gp-tickets">
+                  <div className="gp-ticket">
+                    <h4>Festival Entry</h4>
+                    <p>Day 1 • General Admission</p>
+                  </div>
+                  <div className="gp-ticket">
+                    <h4>Workshop</h4>
+                    <p>Blockchain in Events • 2PM</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
