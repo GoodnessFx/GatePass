@@ -85,7 +85,16 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       setIsSending(true);
 
-      const hashedPassword = await hashPassword(password.trim());
+      // Save user preferences locally for seamless experience
+      localStorage.setItem('gp_user_country', country);
+      localStorage.setItem('gp_user_email', trimmedEmail);
+      
+      // Infer and save default currency
+      let currency = 'NGN';
+      if (country === 'GH') currency = 'GHS';
+      if (country === 'KE') currency = 'KES';
+      if (country === 'ZA') currency = 'ZAR';
+      localStorage.setItem('gp_user_currency', currency);
 
       const { success, error: regError } = await registerUser({
         email: trimmedEmail,

@@ -20,7 +20,6 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { getOrganizerStats, getOrganizerEvents, DashboardStats, DashboardEvent } from '../services/dashboardService';
-import { useNavigate } from 'react-router-dom'; // Assuming react-router-dom is used, or just callbacks
 
 interface OrganizerDashboardProps {
   onCreateEvent: () => void;
@@ -34,15 +33,71 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [currency, setCurrency] = useState('USD');
+
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
+      const userCurrency = localStorage.getItem('gp_user_currency') || 'USD';
+      setCurrency(userCurrency);
+
       const [statsData, eventsData] = await Promise.all([
-        getOrganizerStats(),
-        getOrganizerEvents()
+        getOrganizerStats().catch(() => null),
+        getOrganizerEvents().catch(() => [])
       ]);
-      setStats(statsData);
-      setEvents(eventsData);
+
+      // Load local data
+      let localEvents: DashboardEvent[] = [];
+      let localSales: any[] = [];
+      try {
+        const localEvts = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
+        localSales = JSON.parse(localStorage.getItem('gatepass_sales') || '[]');
+        
+        localEvents = localEvts.map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          date: e.date,
+          time: e.time,
+          venue: e.venue,
+          status: e.status,
+          ticketsSold: localSales.filter((s: any) => s.eventId === e.id).reduce((sum: number, s: any) => sum + s.tickets, 0),
+          totalTickets: e.maxCapacity,
+          revenue: localSales.filter((s: any) => s.eventId === e.id).reduce((sum: number, s: any) => sum + s.amount, 0),
+          ticketPrice: e.ticketTiers?.[0]?.price || 0,
+          attendees: 0,
+          image: e.image
+        }));
+      } catch {}
+
+      const allEvents = [...(eventsData || []), ...localEvents];
+      
+      // Calculate total revenue including local sales
+      let totalRevenue = (statsData?.totalRevenue || 0) + localSales.reduce((sum, s) => sum + s.amount, 0);
+      let ticketsSold = (statsData?.ticketsSold || 0) + localSales.reduce((sum, s) => sum + s.tickets, 0);
+
+      // Adjust for currency (naive conversion for demo display if needed, or just assume 1:1 if matching)
+      // For now, we display the raw number but with the user's currency symbol preference
+      
+      setStats({
+        totalRevenue,
+        ticketsSold,
+        activeEvents: allEvents.filter(e => e.status === 'live').length,
+        totalEvents: allEvents.length,
+        revenueGrowth: statsData?.revenueGrowth || 0,
+        ticketsGrowth: statsData?.ticketsGrowth || 0,
+        recentSales: [
+          ...(statsData?.recentSales || []),
+          ...localSales.map(s => ({
+            id: s.id,
+            buyer: s.buyer,
+            amount: s.amount,
+            tickets: s.tickets,
+            timestamp: s.timestamp,
+            eventName: s.eventName
+          }))
+        ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5)
+      });
+      setEvents(allEvents);
     } catch (error) {
       toast.error('Failed to load dashboard data');
       console.error(error);
@@ -58,6 +113,15 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
     const interval = setInterval(() => fetchData(true), 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  const currencyMap: Record<string, string> = {
+    'NGN': '₦',
+    'GHS': '₵',
+    'KES': 'KSh ',
+    'ZAR': 'R ',
+    'USD': '$'
+  };
+  const currencySymbol = currencyMap[currency] || '$';
 
   if (loading && !stats) {
     return (
@@ -95,7 +159,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats?.totalRevenue.toLocaleString() ?? '0'}</div>
+              <div className="text-2xl font-bold">{currencySymbol}{stats?.totalRevenue.toLocaleString() ?? '0'}</div>
               <p className="text-xs text-muted-foreground">
                 {stats?.revenueGrowth && stats.revenueGrowth > 0 ? '+' : ''}{stats?.revenueGrowth.toFixed(1)}% from last month
               </p>
@@ -202,11 +266,11 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Revenue</p>
-                            <p className="font-semibold">${event.revenue.toLocaleString()}</p>
+                            <p className="font-semibold">{currencySymbol}{event.revenue.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Ticket Price</p>
-                            <p className="font-semibold">${event.ticketPrice}</p>
+                            <p className="font-semibold">{currencySymbol}{event.ticketPrice}</p>
                           </div>
                         </div>
 
@@ -266,7 +330,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                           <p className="text-xs text-muted-foreground">{new Date(sale.timestamp).toLocaleTimeString()} • {sale.eventName}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">${sale.amount.toLocaleString()}</p>
+                          <p className="font-medium">{currencySymbol}{sale.amount.toLocaleString()}</p>
                           <p className="text-xs text-muted-foreground">{sale.tickets} tix</p>
                         </div>
                       </div>

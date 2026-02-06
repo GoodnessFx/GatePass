@@ -61,10 +61,24 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [selectedTier, setSelectedTier] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'fiat'>('crypto');
-  const [paymentGateway, setPaymentGateway] = useState<'paystack' | 'flutterwave' | 'mpesa' | 'stripe' | 'none'>('none');
-  const [fiatCurrency, setFiatCurrency] = useState<'NGN' | 'GHS' | 'KES' | 'ZAR'>('NGN');
-  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [paymentGateway, setPaymentGateway] = useState<'paystack' | 'flutterwave' | 'mpesa' | 'stripe' | 'none'>('paystack');
+  const [fiatCurrency, setFiatCurrency] = useState<'NGN' | 'GHS' | 'KES' | 'ZAR'>(() => 
+    (localStorage.getItem('gp_user_currency') as any) || 'NGN'
+  );
+  const [customerEmail, setCustomerEmail] = useState<string>(() => 
+    localStorage.getItem('gp_user_email') || ''
+  );
   const [customerPhone, setCustomerPhone] = useState<string>('');
+
+  // Auto-select best gateway based on currency
+  useEffect(() => {
+    if (fiatCurrency === 'NGN') setPaymentGateway('paystack');
+    else if (fiatCurrency === 'KES') setPaymentGateway('flutterwave');
+    else if (fiatCurrency === 'GHS') setPaymentGateway('flutterwave');
+    else if (fiatCurrency === 'ZAR') setPaymentGateway('paystack');
+    else setPaymentGateway('paystack');
+  }, [fiatCurrency]);
+
   const [installmentsEnabled, setInstallmentsEnabled] = useState(false);
   const [donationAmount, setDonationAmount] = useState<number>(0);
   const [tipAmount, setTipAmount] = useState<number>(0);
@@ -336,6 +350,22 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
     try {
       // Server recording handled via order initialize/webhooks
+      
+      // Local fallback for demo dashboard
+      try {
+        const saleRecord = {
+          id: `sale-${Date.now()}`,
+          eventId: event.id,
+          eventName: event.title,
+          amount: selectedTierData ? selectedTierData.price * quantity : 0,
+          tickets: quantity,
+          timestamp: new Date().toISOString(),
+          buyer: customerEmail || 'Anonymous'
+        };
+        const existingSales = JSON.parse(localStorage.getItem('gatepass_sales') || '[]');
+        existingSales.push(saleRecord);
+        localStorage.setItem('gatepass_sales', JSON.stringify(existingSales));
+      } catch {}
 
       if (selectedTierData) {
         const input = {
@@ -388,7 +418,28 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const grandTotal = Math.max(0, grandTotalBase + donationAmount + tipAmount);
 
   return (
-    <div className="min-h-[100svh] bg-background p-4 sm:p-6">
+    <div className="min-h-[100svh] bg-background p-4 sm:p-6 relative">
+      {/* Processing Overlay */}
+      {isPurchasing && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center transition-all duration-300">
+          <div className="flex flex-col items-center space-y-6 bg-card p-8 rounded-2xl shadow-2xl border animate-in fade-in zoom-in duration-300">
+            <div className="relative h-20 w-20">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+              <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin duration-700"></div>
+              <Ticket className="absolute inset-0 m-auto h-8 w-8 text-primary animate-pulse" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
+                Processing Ticket
+              </h3>
+              <p className="text-muted-foreground">
+                Verifying payment & minting NFT...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-8">

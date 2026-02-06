@@ -35,20 +35,32 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
 
     setIsConnecting(true);
 
-    // Simulate wallet connection
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Direct connection without fake delay
+      // For now, we only support injected providers (MetaMask, Brave, etc.)
+      // In a full production app, we would use a library like @web3modal/react or @rainbow-me/rainbowkit
+      // to handle specific wallet protocols (WalletConnect, Coinbase Wallet SDK, etc.)
+      
+      if (walletName === 'WalletConnect' || walletName === 'Coinbase Wallet') {
+         // Fallback for demo: try injected first, if not warn user
+         // Ideally this would invoke specific SDKs
+         if (!(window as any).ethereum) {
+             const getWallet = confirm('Wallet not found. Would you like to install a crypto wallet?');
+             if (getWallet) {
+               window.open('https://metamask.io/download/', '_blank');
+             }
+             throw new Error('Wallet not found. Please install a crypto wallet.');
+         }
+      }
+      
+      await onConnect(); // This calls the parent's handleWalletConnect which uses window.ethereum
+      
       setIsConnecting(false);
       setShowWalletDialog(false);
-      onConnect();
-      toast.success(`Connected to ${walletName}`, {
-        description: 'Your wallet has been successfully connected.'
-      });
     } catch (error) {
+      console.error('Connection failed:', error);
       setIsConnecting(false);
-      toast.error('Failed to connect wallet', {
-        description: 'Please try again.'
-      });
+      // Parent component handles toast errors usually, but we can double check
     }
   };
 

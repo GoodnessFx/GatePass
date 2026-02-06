@@ -96,7 +96,17 @@ function App() {
 
   useEffect(() => {
     if (showSplash) return;
-    setCurrentView('login');
+    
+    // Check for persistent login
+    const isLoggedIn = localStorage.getItem('gp_demo_loggedin') === 'true';
+    const savedRole = localStorage.getItem('gp_demo_role');
+    
+    if (isLoggedIn && savedRole) {
+      setUserRole(savedRole as UserRole);
+      setCurrentView(savedRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+    } else {
+      setCurrentView('login');
+    }
   }, [showSplash]);
 
   // Accept an optional name; if not provided open a prompt fallback
@@ -172,6 +182,8 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('gp_demo_loggedin');
+    localStorage.removeItem('gp_demo_role');
     setUserRole(null);
     setCurrentView('landing');
     setSelectedEvent(null);
@@ -215,8 +227,6 @@ function App() {
               )}
             </div>
 
-
-
             {/* Right: Actions */}
             <div className="flex items-center gap-5 sm:gap-8 flex-shrink-0">
               {userRole && <NotificationCenter />}
@@ -228,14 +238,20 @@ function App() {
                 />
               )}
               {userRole ? (
-                <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2"
+                >
                   <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
               ) : (
-                <>
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentView('login')}>Sign In</Button>
-                  <Button size="sm" onClick={() => setCurrentView('signup')}>Sign Up</Button>
-                </>
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentView('login')}>Login</Button>
+                  <Button size="sm" onClick={() => setCurrentView('signup')}>Get Started</Button>
+                </div>
               )}
             </div>
           </div>
@@ -437,16 +453,21 @@ function App() {
 
 
   return (
-    <div className="flex flex-col min-h-[100svh] bg-background">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Back control moved to first ticket card overlay */}
-        <React.Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2"></div></div>}>
-          {renderCurrentView()}
-        </React.Suspense>
-      </main>
-      <Footer />
-      <Toaster position="top-right" />
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      {showSplash ? (
+        <SplashScreen onComplete={() => setShowSplash(false)} />
+      ) : (
+        <>
+          <Toaster position="top-center" />
+          <Header />
+          <main className="flex-grow flex flex-col">
+            <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+              {renderCurrentView()}
+            </React.Suspense>
+          </main>
+          <Footer />
+        </>
+      )}
     </div>
   );
 }

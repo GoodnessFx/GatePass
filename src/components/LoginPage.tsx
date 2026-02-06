@@ -19,6 +19,11 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
 
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('gp_user_email');
+    if (savedEmail) setEmail(savedEmail);
+  }, []);
+
   const handleLogin = () => {
     if (!email.trim() || !password.trim()) return;
     try {
