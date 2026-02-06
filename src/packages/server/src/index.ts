@@ -15,6 +15,7 @@ import { orderRoutes } from './routes/orders'
 import { ticketRoutes } from './routes/tickets'
 import { analyticsRoutes } from './routes/analytics'
 import { webhookRoutes } from './routes/webhooks'
+import { notificationRoutes } from './routes/notifications'
 import { healthRoutes } from './routes/health'
 
 import passport from 'passport'
@@ -116,6 +117,7 @@ app.use('/api/events', eventRoutes)
 app.use('/api/orders', orderRoutes)
 // app.use('/api/tickets', ticketRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/notifications', notificationRoutes)
 app.use('/api/webhooks', webhookRoutes)
 
 // 404 handler

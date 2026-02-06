@@ -32,8 +32,23 @@ model User {
   organizedEvents Event[]
   orders         Order[]
   checkIns       CheckIn[]
+  notifications  Notification[]
 
   @@map("users")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+  @@index([userId])
 }
 
 model Event {
@@ -46,6 +61,8 @@ model Event {
   country     String?
   latitude    Float?
   longitude   Float?
+  source      String   @default("gatepass")
+  externalUrl String?
   
   // Dates
   eventDate   DateTime

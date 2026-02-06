@@ -120,6 +120,16 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  message: 'message',
+  type: 'type',
+  read: 'read',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.EventScalarFieldEnum = {
   id: 'id',
   title: 'title',
@@ -130,6 +140,8 @@ exports.Prisma.EventScalarFieldEnum = {
   country: 'country',
   latitude: 'latitude',
   longitude: 'longitude',
+  source: 'source',
+  externalUrl: 'externalUrl',
   eventDate: 'eventDate',
   saleStart: 'saleStart',
   saleEnd: 'saleEnd',
@@ -249,6 +261,7 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Notification: 'Notification',
   Event: 'Event',
   Ticket: 'Ticket',
   Order: 'Order',

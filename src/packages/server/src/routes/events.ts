@@ -2,6 +2,7 @@ import { Router } from 'express'
 import axios from 'axios'
 import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
+import { authenticate, requireOrganizer, AuthenticatedRequest } from '../middleware/auth'
 import { readStoredEvents, writeStoredEvent } from '../storage/eventsStore'
 
 const router = Router()
@@ -80,6 +81,14 @@ router.get(
           isPublic: true,
           status: 'PUBLISHED',
           ...(q.category ? { category: q.category as any } : {}),
+          ...(q.q ? {
+            OR: [
+              { title: { contains: q.q, mode: 'insensitive' } },
+              { description: { contains: q.q, mode: 'insensitive' } },
+              { city: { contains: q.q, mode: 'insensitive' } },
+              { venue: { contains: q.q, mode: 'insensitive' } }
+            ]
+          } : {}),
           ...(startDate || endDate
             ? {
                 eventDate: {
@@ -187,9 +196,53 @@ router.get(
   })
 )
 
+router.get(
+  '/my-events',
+  authenticate,
+  requireOrganizer,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const events = await prisma.event.findMany({
+      where: { organizerId: req.user!.id },
+      include: { tiers: true },
+      orderBy: { createdAt: 'desc' }
+    })
+    
+    const eventsWithStats = await Promise.all(events.map(async (event) => {
+      const orders = await prisma.order.findMany({
+        where: { eventId: event.id, paymentStatus: 'COMPLETED' }
+      })
+      const ticketsSold = orders.reduce((sum, o) => sum + o.quantity, 0)
+      const revenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0)
+      
+      const lowestTier = event.tiers.length 
+        ? event.tiers.reduce((a, b) => (Number(a.price) < Number(b.price) ? a : b)) 
+        : null
+
+      return {
+        id: event.id,
+        title: event.title,
+        date: event.eventDate,
+        time: new Date(event.eventDate).toLocaleTimeString(),
+        venue: event.venue,
+        status: event.status.toLowerCase(),
+        ticketsSold,
+        totalTickets: event.totalSupply,
+        revenue,
+        ticketPrice: lowestTier ? Number(lowestTier.price) : Number(event.ticketPrice),
+        attendees: ticketsSold,
+        image: event.imageUrl
+      }
+    }))
+
+    res.json(eventsWithStats)
+  })
+)
+
 router.post(
   '/',
-  asyncHandler(async (req, res) => {
+  authenticate,
+  requireOrganizer,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const body = req.body as any
     const title: string = body?.title
     const description: string | undefined = body?.description
@@ -204,8 +257,6 @@ router.post(
     const categoryRaw: string | undefined = body?.category
     const tiers: Array<{ name: string; description?: string; price: number; quantity: number; maxPerPerson?: number }> =
       Array.isArray(body?.tiers) ? body.tiers : []
-    const organizerEmail: string = body?.organizerEmail || 'organizer@example.com'
-    const organizerName: string = body?.organizerName || 'Organizer'
 
     if (!title || !venue || !startDateIso) {
       throw createError('Missing required fields: title, venue, startDate', 400)
@@ -224,13 +275,6 @@ router.post(
       other: 'OTHER',
     }
     const category = (categoryMap[(categoryRaw || '').toLowerCase()] || 'OTHER') as any
-
-    // Ensure organizer exists
-    const organizer = await prisma.user.upsert({
-      where: { email: organizerEmail },
-      update: {},
-      create: { email: organizerEmail, name: organizerName, role: 'ORGANIZER' }
-    })
 
     const totalSupply = tiers.length ? tiers.reduce((sum, t) => sum + Number(t.quantity || 0), 0) : Number(body?.maxCapacity || 0) || 0
     const minPrice = tiers.length ? Math.min(...tiers.map((t) => Number(t.price || 0))) : Number(body?.ticketPrice || 0) || 0
@@ -262,7 +306,7 @@ router.post(
           allowTransfers: true,
           requireKYC: false,
           status: 'PUBLISHED',
-          organizerId: organizer.id
+          organizerId: req.user!.id
         }
       })
       for (const t of tiers) {
@@ -281,35 +325,7 @@ router.post(
       }
       return res.status(201).json({ event })
     } catch {
-      const id = `ev_${Date.now()}`
-      const storedEvent = {
-        id,
-        title,
-        description,
-        venue,
-        address,
-        city,
-        country,
-        latitude,
-        longitude,
-        eventDate: startDate.toISOString(),
-        imageUrl: body?.image || undefined,
-        category,
-        isPublic: true,
-        status: 'PUBLISHED',
-        tiers: tiers.map((t) => ({
-          id: `tier_${Math.random().toString(36).slice(2)}`,
-          name: t.name,
-          description: t.description,
-          price: t.price,
-          availableQuantity: t.quantity,
-          maxPerPerson: t.maxPerPerson || 5,
-          saleStart: startDate.toISOString(),
-          saleEnd: endDate.toISOString()
-        }))
-      }
-      writeStoredEvent(storedEvent)
-      return res.status(201).json({ event: storedEvent })
+      throw createError('Failed to create event', 500)
     }
   })
 )

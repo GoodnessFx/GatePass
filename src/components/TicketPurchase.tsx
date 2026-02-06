@@ -51,6 +51,7 @@ type AggregatedEvent = {
   longitude?: number;
   price?: number;
   source: 'gatepass' | 'ticketmaster' | string;
+  externalUrl?: string;
   tiers?: Array<{ id: string; name: string; price: number; available: number; description?: string }>;
 };
 
@@ -74,12 +75,14 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [nicheFilter, setNicheFilter] = useState('all');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(0);
+  const [cityFilter, setCityFilter] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
+    if (cityFilter) params.set('q', cityFilter); // Use q for city as well since backend supports it
     if (categoryFilter !== 'all') params.set('category', categoryFilter);
     if (userLocation && radiusKm > 0) {
       params.set('lat', String(userLocation.lat));
@@ -133,7 +136,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       }
     })();
     return () => controller.abort();
-  }, [searchTerm, categoryFilter, userLocation?.lat, userLocation?.lng, radiusKm]);
+  }, [searchTerm, cityFilter, categoryFilter, userLocation?.lat, userLocation?.lng, radiusKm]);
 
   const niches = Array.from(new Set(events.map(e => e.source))).sort();
 
@@ -151,15 +154,20 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   }
 
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (event.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const cityTerm = cityFilter.toLowerCase();
+    const matchesSearch = event.title.toLowerCase().includes(term) ||
+                         (event.description || '').toLowerCase().includes(term) ||
+                         (event.city || '').toLowerCase().includes(term) ||
+                         (event.venue || '').toLowerCase().includes(term);
+    const matchesCity = !cityTerm || (event.city || '').toLowerCase().includes(cityTerm) || (event.venue || '').toLowerCase().includes(cityTerm);
     const matchesCategory = true;
     const matchesNiche = nicheFilter === 'all' || event.source === nicheFilter;
     const matchesDistance = !userLocation || radiusKm === 0
       ? true
       : (event.latitude != null && event.longitude != null) &&
         distanceKm(userLocation, { lat: event.latitude!, lng: event.longitude! }) <= radiusKm;
-    return matchesSearch && matchesCategory && matchesNiche && matchesDistance;
+    return matchesSearch && matchesCity && matchesCategory && matchesNiche && matchesDistance;
   });
 
   const handlePurchase = async () => {
@@ -437,6 +445,15 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
         {/* Location Sync */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="City or Venue..."
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           <Button
             variant="outline"
             onClick={() => {
@@ -538,11 +555,19 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                     <p className="font-bold">${event.tiers && event.tiers.length ? Math.min(...event.tiers.map(t => t.price)) : (event.price || 0)}</p>
                   </div>
                   <Dialog>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => setSelectedEvent(event)}>
-                        Buy Tickets
+                    {event.source === 'gatepass' ? (
+                      <DialogTrigger asChild>
+                        <Button onClick={() => setSelectedEvent(event)}>
+                          Buy Tickets
+                        </Button>
+                      </DialogTrigger>
+                    ) : (
+                      <Button asChild onClick={() => window.open(event.externalUrl, '_blank')}>
+                        <a href={event.externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                          View on {event.source} <ExternalLink className="h-4 w-4" />
+                        </a>
                       </Button>
-                    </DialogTrigger>
+                    )}
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
                         <DialogTitle className="flex items-center space-x-2">

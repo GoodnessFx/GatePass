@@ -122,6 +122,7 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
           <div className="gp-cta">
             <Button size="lg" onClick={() => openNameDialog('attendee')}>Attendee</Button>
             <Button size="lg" variant="outline" onClick={() => openNameDialog('organizer')}>Organizer</Button>
+            <Button size="lg" variant="secondary" onClick={onBrowseEvents}>Browse Events</Button>
           </div>
           <div className="gp-row">
             <div className="gp-phone" style={{ transform: 'translateY(36px) rotate(-6deg)' }}>

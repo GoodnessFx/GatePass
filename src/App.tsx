@@ -27,6 +27,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+import { NotificationCenter } from './components/NotificationCenter';
+
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
 type UserRole = 'attendee' | 'organizer' | null;
 
@@ -217,7 +219,7 @@ function App() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-5 sm:gap-8 flex-shrink-0">
-
+              {userRole && <NotificationCenter />}
               {currentView !== 'landing' && (
                 <WalletConnection
                   isConnected={isWalletConnected}
@@ -251,9 +253,9 @@ function App() {
             onConnect={handleWalletConnect}
             isConnected={isWalletConnected}
           onBrowseEvents={() => {
-              setUserRole('attendee');
-              navigate('attendee-dashboard');
-            }}
+            setSelectedEvent('browse');
+            navigate('ticket-purchase');
+          }}
           />
         );
 
