@@ -116,21 +116,33 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
-  ReadUncommitted: 'ReadUncommitted',
-  ReadCommitted: 'ReadCommitted',
-  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
+  password: 'password',
   name: 'name',
   walletAddress: 'walletAddress',
+  googleId: 'googleId',
+  twitterId: 'twitterId',
   avatar: 'avatar',
   role: 'role',
+  resetToken: 'resetToken',
+  resetTokenExpiry: 'resetTokenExpiry',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  message: 'message',
+  type: 'type',
+  read: 'read',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.EventScalarFieldEnum = {
@@ -143,6 +155,8 @@ exports.Prisma.EventScalarFieldEnum = {
   country: 'country',
   latitude: 'latitude',
   longitude: 'longitude',
+  source: 'source',
+  externalUrl: 'externalUrl',
   eventDate: 'eventDate',
   saleStart: 'saleStart',
   saleEnd: 'saleEnd',
@@ -254,66 +268,15 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
 
-exports.Prisma.JsonNullValueFilter = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull,
-  AnyNull: Prisma.AnyNull
-};
-exports.UserRole = exports.$Enums.UserRole = {
-  USER: 'USER',
-  ORGANIZER: 'ORGANIZER',
-  ADMIN: 'ADMIN'
-};
-
-exports.EventCategory = exports.$Enums.EventCategory = {
-  MUSIC: 'MUSIC',
-  CONFERENCE: 'CONFERENCE',
-  SPORTS: 'SPORTS',
-  THEATER: 'THEATER',
-  FESTIVAL: 'FESTIVAL',
-  MEETUP: 'MEETUP',
-  WORKSHOP: 'WORKSHOP',
-  OTHER: 'OTHER'
-};
-
-exports.EventStatus = exports.$Enums.EventStatus = {
-  DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-  SOLD_OUT: 'SOLD_OUT',
-  CANCELLED: 'CANCELLED',
-  COMPLETED: 'COMPLETED'
-};
-
-exports.PaymentMethod = exports.$Enums.PaymentMethod = {
-  CRYPTO: 'CRYPTO',
-  CREDIT_CARD: 'CREDIT_CARD',
-  BANK_TRANSFER: 'BANK_TRANSFER'
-};
-
-exports.PaymentStatus = exports.$Enums.PaymentStatus = {
-  PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
-  REFUNDED: 'REFUNDED'
-};
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Notification: 'Notification',
   Event: 'Event',
   Ticket: 'Ticket',
   Order: 'Order',

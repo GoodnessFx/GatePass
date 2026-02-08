@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import {
@@ -20,6 +20,28 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { getOrganizerStats, getOrganizerEvents, DashboardStats, DashboardEvent } from '../services/dashboardService';
+
+interface LocalEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+  status: string;
+  maxCapacity: number;
+  ticketTiers?: { price: number }[];
+  image?: string;
+}
+
+interface LocalSale {
+  id: string;
+  eventId: string;
+  buyer: string;
+  amount: number;
+  tickets: number;
+  timestamp: string;
+  eventName: string;
+}
 
 interface OrganizerDashboardProps {
   onCreateEvent: () => void;
@@ -48,21 +70,21 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
 
       // Load local data
       let localEvents: DashboardEvent[] = [];
-      let localSales: any[] = [];
+      let localSales: LocalSale[] = [];
       try {
-        const localEvts = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
+        const localEvts: LocalEvent[] = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
         localSales = JSON.parse(localStorage.getItem('gatepass_sales') || '[]');
         
-        localEvents = localEvts.map((e: any) => ({
+        localEvents = localEvts.map((e) => ({
           id: e.id,
           title: e.title,
           date: e.date,
           time: e.time,
           venue: e.venue,
           status: e.status,
-          ticketsSold: localSales.filter((s: any) => s.eventId === e.id).reduce((sum: number, s: any) => sum + s.tickets, 0),
+          ticketsSold: localSales.filter((s) => s.eventId === e.id).reduce((sum, s) => sum + s.tickets, 0),
           totalTickets: e.maxCapacity,
-          revenue: localSales.filter((s: any) => s.eventId === e.id).reduce((sum: number, s: any) => sum + s.amount, 0),
+          revenue: localSales.filter((s) => s.eventId === e.id).reduce((sum, s) => sum + s.amount, 0),
           ticketPrice: e.ticketTiers?.[0]?.price || 0,
           attendees: 0,
           image: e.image
@@ -109,8 +131,8 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
 
   useEffect(() => {
     fetchData();
-    // Poll every 30 seconds for real-time updates
-    const interval = setInterval(() => fetchData(true), 30000);
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(() => fetchData(true), 5000);
     return () => clearInterval(interval);
   }, [fetchData]);
 

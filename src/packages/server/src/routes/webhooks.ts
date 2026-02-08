@@ -58,9 +58,25 @@ router.post(
       data: { paymentStatus: 'COMPLETED', paymentTxId: String(data.id), updatedAt: new Date() }
     })
 
+    const user = await prisma.user.findUnique({ where: { id: order.userId } })
+    const walletAddress = user?.walletAddress
+
+    if (!walletAddress) {
+       // Payment successful but no wallet connected
+       await prisma.notification.create({
+        data: {
+          userId: order.userId,
+          title: 'Payment Successful',
+          message: `You have successfully paid for ${order.quantity} ticket(s) for ${event.title}. Please connect your wallet to claim your tickets.`,
+          type: 'INFO'
+        }
+      })
+      return res.status(200).json({ ok: true })
+    }
+
     try {
       const abi = ['function mintFor(address to, uint256 quantity) external', 'function tokenCounter() view returns (uint256)']
-      const { txHash, tokenIds } = await mintTicketsFor(event.contractAddress, abi as any[], order.customerEmail, order.quantity)
+      const { txHash, tokenIds } = await mintTicketsFor(event.contractAddress, abi as any[], walletAddress, order.quantity)
       
       await prisma.order.update({
         where: { id: order.id },
@@ -142,9 +158,25 @@ router.post(
       data: { paymentStatus: 'COMPLETED', paymentTxId: String(body.id || body.data?.id), updatedAt: new Date() }
     })
 
+    const user = await prisma.user.findUnique({ where: { id: order.userId } })
+    const walletAddress = user?.walletAddress
+
+    if (!walletAddress) {
+       // Payment successful but no wallet connected
+       await prisma.notification.create({
+        data: {
+          userId: order.userId,
+          title: 'Payment Successful',
+          message: `You have successfully paid for ${order.quantity} ticket(s) for ${event.title}. Please connect your wallet to claim your tickets.`,
+          type: 'INFO'
+        }
+      })
+      return res.status(200).json({ ok: true })
+    }
+
     try {
       const abi = ['function mintFor(address to, uint256 quantity) external', 'function tokenCounter() view returns (uint256)']
-      const { txHash, tokenIds } = await mintTicketsFor(event.contractAddress, abi as any[], order.customerEmail, order.quantity)
+      const { txHash, tokenIds } = await mintTicketsFor(event.contractAddress, abi as any[], walletAddress, order.quantity)
       
       await prisma.order.update({
         where: { id: order.id },

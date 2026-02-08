@@ -9,6 +9,7 @@ import {
 } from './ui/popover';
 import { Badge } from './ui/badge';
 import { formatDistanceToNow } from 'date-fns';
+import { API_BASE_URL } from '../constants';
 
 type Notification = {
   id: string;
@@ -26,7 +27,14 @@ export function NotificationCenter() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      const res = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
@@ -45,7 +53,15 @@ export function NotificationCenter() {
 
   const markAllRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', { method: 'POST' });
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      await fetch(`${API_BASE_URL}/notifications/read-all`, { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (e) {
@@ -55,7 +71,15 @@ export function NotificationCenter() {
 
   const markRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      await fetch(`${API_BASE_URL}/notifications/${id}/read`, { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (e) {

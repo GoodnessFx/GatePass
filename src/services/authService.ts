@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { RegisterData, RegisterResponse } from '../types/auth';
 
-const API_URL = 'http://localhost:8000/api';
+import { API_BASE_URL } from '../constants';
 
 // Types moved to src/types/auth.ts for clearer separation of concerns
 
 export const registerUser = async (data: RegisterData): Promise<RegisterResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/auth/register`, {
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, {
       email: data.email,
       password: data.password || 'TemporaryPassword123!', // Fallback if not provided, but should be
       name: `${data.firstName} ${data.lastName}`,
@@ -29,7 +29,7 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
 
 export const forgotPassword = async (email: string): Promise<RegisterResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
     return { success: true, message: response.data.message };
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || 'Request failed';
@@ -39,7 +39,7 @@ export const forgotPassword = async (email: string): Promise<RegisterResponse> =
 
 export const resetPassword = async (token: string, password: string): Promise<RegisterResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/auth/reset-password`, { token, password });
+    const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, { token, password });
     return { success: true, message: response.data.message };
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || 'Reset failed';

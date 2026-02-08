@@ -91,6 +91,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [radiusKm, setRadiusKm] = useState<number>(0);
   const [cityFilter, setCityFilter] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -103,6 +104,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       params.set('lng', String(userLocation.lng));
       params.set('radiusKm', String(radiusKm));
     }
+    
+    setIsLoadingEvents(true);
     (async () => {
       try {
         const r = await fetch(`/api/events?${params.toString()}`, { signal: controller.signal });
@@ -147,6 +150,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           }));
           setEvents(localEvents);
         } catch {}
+      } finally {
+        setIsLoadingEvents(false);
       }
     })();
     return () => controller.abort();
@@ -416,6 +421,20 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
   const grandTotalBase = Math.max(0, subtotal + fee - discount - groupDiscount);
   const grandTotal = Math.max(0, grandTotalBase + donationAmount + tipAmount);
+
+  if (isLoadingEvents && events.length === 0) {
+    return (
+      <div className="min-h-[100svh] bg-background p-4 sm:p-6 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground animate-pulse">Finding events near you...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100svh] bg-background p-4 sm:p-6 relative">

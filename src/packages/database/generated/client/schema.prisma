@@ -12,27 +12,27 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String?
-  name      String?
+  id            String  @id @default(cuid())
+  email         String  @unique
+  password      String?
+  name          String?
   walletAddress String? @unique
   googleId      String? @unique
   twitterId     String? @unique
-  avatar    String?
-  role      String @default("USER")
-  
+  avatar        String?
+  role          String  @default("USER")
+
   resetToken       String?
   resetTokenExpiry DateTime?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   organizedEvents Event[]
-  orders         Order[]
-  checkIns       CheckIn[]
-  notifications  Notification[]
+  orders          Order[]
+  checkIns        CheckIn[]
+  notifications   Notification[]
 
   @@map("users")
 }
@@ -47,12 +47,12 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@map("notifications")
   @@index([userId])
+  @@map("notifications")
 }
 
 model Event {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
   venue       String
@@ -61,86 +61,86 @@ model Event {
   country     String?
   latitude    Float?
   longitude   Float?
-  source      String   @default("gatepass")
+  source      String  @default("gatepass")
   externalUrl String?
-  
+
   // Dates
-  eventDate   DateTime
-  saleStart   DateTime
-  saleEnd     DateTime
-  
+  eventDate DateTime
+  saleStart DateTime
+  saleEnd   DateTime
+
   // Ticket info
-  totalSupply    Int
-  ticketPrice    Float // Support crypto decimals
-  currency       String  @default("ETH")
-  maxPerWallet   Int     @default(5)
-  
+  totalSupply  Int
+  ticketPrice  Float // Support crypto decimals
+  currency     String @default("ETH")
+  maxPerWallet Int    @default(5)
+
   // Blockchain
   contractAddress String?
   chainId         Int     @default(137) // Polygon
-  
+
   // Metadata
-  imageUrl       String?
-  metadataUri    String?
-  category       String @default("MUSIC")
-  tags           String // Comma separated tags
-  
+  imageUrl    String?
+  metadataUri String?
+  category    String  @default("MUSIC")
+  tags        String // Comma separated tags
+
   // Settings
   isPublic       Boolean @default(true)
   allowTransfers Boolean @default(true)
   requireKYC     Boolean @default(false)
-  
+
   // Status
-  status         String @default("DRAFT")
-  
+  status String @default("DRAFT")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  organizer   User     @relation(fields: [organizerId], references: [id])
+  organizer   User   @relation(fields: [organizerId], references: [id])
   organizerId String
-  
-  orders      Order[]
-  tickets     Ticket[]
-  checkIns    CheckIn[]
-  analytics   EventAnalytics[]
-  tiers       TicketTier[]
 
-  @@map("events")
+  orders    Order[]
+  tickets   Ticket[]
+  checkIns  CheckIn[]
+  analytics EventAnalytics[]
+  tiers     TicketTier[]
+
   @@index([eventDate, category])
   @@index([latitude, longitude])
+  @@map("events")
 }
 
 model Ticket {
-  id       String @id @default(cuid())
-  tokenId  Int
-  
+  id      String @id @default(cuid())
+  tokenId Int
+
   // Blockchain data
   contractAddress String
   chainId         Int
   txHash          String?
   blockNumber     Int?
-  
+
   // Metadata
   metadataUri String?
   seatNumber  String?
   section     String?
   tier        String?
-  
+
   // Status
-  isUsed      Boolean @default(false)
-  usedAt      DateTime?
-  
+  isUsed Boolean   @default(false)
+  usedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   event   Event  @relation(fields: [eventId], references: [id])
   eventId String
-  
+
   order   Order  @relation(fields: [orderId], references: [id])
   orderId String
-  
+
   checkIn CheckIn?
 
   @@unique([contractAddress, tokenId])
@@ -148,52 +148,52 @@ model Ticket {
 }
 
 model Order {
-  id     String @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Payment info
-  totalAmount    Float
-  quantity       Int
-  currency       String
-  paymentMethod  String
-  paymentStatus  String @default("PENDING")
-  
+  totalAmount   Float
+  quantity      Int
+  currency      String
+  paymentMethod String
+  paymentStatus String @default("PENDING")
+
   // Payment processor data
-  stripePaymentId    String?
-  coinbaseChargeId   String?
-  blockchainTxHash   String?
-  paystackReference  String?
-  flutterwaveReference String?
+  stripePaymentId        String?
+  coinbaseChargeId       String?
+  blockchainTxHash       String?
+  paystackReference      String?
+  flutterwaveReference   String?
   mpesaCheckoutRequestId String?
-  paymentTxId        String?
-  
+  paymentTxId            String?
+
   // Customer info
   customerEmail  String
   customerName   String?
   billingAddress String? // JSON string
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  user    User   @relation(fields: [userId], references: [id])
-  userId  String
-  
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
   event   Event  @relation(fields: [eventId], references: [id])
   eventId String
-  
+
   tickets Ticket[]
 
-  @@map("orders")
   @@index([paymentStatus])
+  @@map("orders")
 }
 
 model CheckIn {
-  id        String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   checkedInAt DateTime @default(now())
   checkedInBy String? // Staff member who checked in
   location    String? // Check-in location/gate
-  
+
   // POA NFT info
   poaTokenId      Int?
   poaContractAddr String?
@@ -202,34 +202,34 @@ model CheckIn {
   // Relations
   ticket   Ticket @relation(fields: [ticketId], references: [id])
   ticketId String @unique
-  
-  event    Event  @relation(fields: [eventId], references: [id])
-  eventId  String
-  
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
   @@map("check_ins")
 }
 
 model EventAnalytics {
-  id        String   @id @default(cuid())
-  date      DateTime @default(now())
-  
+  id   String   @id @default(cuid())
+  date DateTime @default(now())
+
   // Sales metrics
-  ticketsSold    Int @default(0)
-  revenue        Float @default(0)
-  uniqueBuyers   Int @default(0)
-  
+  ticketsSold  Int   @default(0)
+  revenue      Float @default(0)
+  uniqueBuyers Int   @default(0)
+
   // Check-in metrics
-  checkIns       Int @default(0)
-  checkInRate    Float @default(0) // Percentage
-  noShows        Int @default(0)
-  
+  checkIns    Int   @default(0)
+  checkInRate Float @default(0) // Percentage
+  noShows     Int   @default(0)
+
   // Geographic data
-  topCountries   String? // JSON string: [{country: "US", count: 10}, ...]
-  topCities      String? // JSON string: [{city: "New York", count: 5}, ...]
-  
+  topCountries String? // JSON string: [{country: "US", count: 10}, ...]
+  topCities    String? // JSON string: [{city: "New York", count: 5}, ...]
+
   // Time-based data
   hourlyBreakdown String? // JSON string: Check-in patterns by hour
 
@@ -242,21 +242,21 @@ model EventAnalytics {
 }
 
 model TicketTier {
-  id               String   @id @default(cuid())
-  name             String
-  description      String?
-  price            Float
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  price             Float
   availableQuantity Int
-  maxPerPerson     Int      @default(5)
-  saleStart        DateTime
-  saleEnd          DateTime
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  maxPerPerson      Int      @default(5)
+  saleStart         DateTime
+  saleEnd           DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  event   Event   @relation(fields: [eventId], references: [id])
+  event   Event  @relation(fields: [eventId], references: [id])
   eventId String
 
-  @@map("ticket_tiers")
   @@index([eventId])
+  @@map("ticket_tiers")
 }
