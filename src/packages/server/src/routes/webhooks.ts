@@ -8,7 +8,7 @@ const router = Router()
 
 router.post(
   '/paystack',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const secret = process.env.PAYSTACK_SECRET_KEY
     if (!secret) {
       console.error('PAYSTACK_SECRET_KEY not set')
@@ -118,7 +118,7 @@ router.post(
 
 router.post(
   '/flutterwave',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const secretHash = process.env.FLUTTERWAVE_SECRET_HASH
     if (!secretHash) {
        console.error('FLUTTERWAVE_SECRET_HASH not set')

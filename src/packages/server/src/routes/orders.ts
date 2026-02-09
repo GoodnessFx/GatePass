@@ -17,7 +17,7 @@ function calcTotal(amount: number) {
 
 router.post(
   '/initialize',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const { eventId, tierId, quantity, paymentMethod, gateway, customerEmail } = req.body as {
       eventId: string
       tierId: string
@@ -89,7 +89,7 @@ router.post(
 
 router.post(
   '/confirm-crypto',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const { orderId, txHash, toAddress, quantity } = req.body as {
       orderId: string
       txHash: string
@@ -161,7 +161,7 @@ router.post(
 router.get(
   '/my-tickets',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const userId = req.user!.id
     
     // Get tickets from DB

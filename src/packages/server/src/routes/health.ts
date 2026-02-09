@@ -42,7 +42,6 @@ router.get('/', async (req, res) => {
       uptime: process.uptime(),
       services: {
         database: 'connected',
-        redis: 'connected', // TODO: Add Redis health check
       },
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development'
@@ -57,7 +56,6 @@ router.get('/', async (req, res) => {
       timestamp: new Date().toISOString(),
       services: {
         database: 'disconnected',
-        redis: 'unknown'
       },
       error: 'Service unhealthy'
     })

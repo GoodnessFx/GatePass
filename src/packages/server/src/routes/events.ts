@@ -64,7 +64,7 @@ async function fetchTicketmaster(params: { lat?: number; lng?: number; radiusKm?
 
 router.get(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const q = req.query as EventQuery
     const lat = q.lat ? parseFloat(q.lat) : undefined
     const lng = q.lng ? parseFloat(q.lng) : undefined
@@ -83,10 +83,10 @@ router.get(
           ...(q.category ? { category: q.category as any } : {}),
           ...(q.q ? {
             OR: [
-              { title: { contains: q.q, mode: 'insensitive' } },
-              { description: { contains: q.q, mode: 'insensitive' } },
-              { city: { contains: q.q, mode: 'insensitive' } },
-              { venue: { contains: q.q, mode: 'insensitive' } }
+              { title: { contains: q.q } },
+              { description: { contains: q.q } },
+              { city: { contains: q.q } },
+              { venue: { contains: q.q } }
             ]
           } : {}),
           ...(startDate || endDate

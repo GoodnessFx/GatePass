@@ -19,7 +19,7 @@ export function AuthContainer({ children }: AuthContainerProps) {
           }}
         />
       </div>
-      <div className="w-full max-w-[480px] mx-auto relative z-10">
+      <div className="w-full max-w-md mx-auto relative z-10">
         {children}
       </div>
     </div>

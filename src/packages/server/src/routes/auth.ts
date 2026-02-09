@@ -313,24 +313,13 @@ router.post('/forgot-password', [
     }
   })
 
-  // In a real production app, configure nodemailer transport
-  // const transporter = nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: process.env.EMAIL_USER,
-  //     pass: process.env.EMAIL_PASS
-  //   }
-  // })
-
-  // For development/demo, we'll just log the token
-  logger.info(`Password reset token for ${email}: ${resetToken}`)
+  // In production, send email with reset link
+  // For development, we log the token
+  if (process.env.NODE_ENV === 'production' && process.env.EMAIL_USER) {
+    // TODO: Implement email sending service
+  }
   
-  // NOTE: In a real app, you would send the email here:
-  // await transporter.sendMail({
-  //   to: email,
-  //   subject: 'Password Reset',
-  //   html: `<p>Click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password.</p>`
-  // })
+  logger.info(`Password reset token for ${email}: ${resetToken}`)
 
   res.json({ message: 'If an account with that email exists, a password reset link has been sent.' })
 }))

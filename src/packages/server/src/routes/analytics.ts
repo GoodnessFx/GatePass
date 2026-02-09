@@ -73,7 +73,7 @@ router.get(
 
 router.get(
   '/:eventId',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const { eventId } = req.params
     const event = await prisma.event.findUnique({
       where: { id: eventId },

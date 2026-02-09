@@ -9,7 +9,7 @@ const router = Router()
 router.get(
   '/',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const userId = req.user!.id
     const notifications = await prisma.notification.findMany({
       where: { userId },
@@ -29,7 +29,7 @@ router.get(
 router.post(
   '/:id/read',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const userId = req.user!.id
     const { id } = req.params
 
@@ -46,7 +46,7 @@ router.post(
 router.post(
   '/read-all',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const userId = req.user!.id
     
     await prisma.notification.updateMany({
