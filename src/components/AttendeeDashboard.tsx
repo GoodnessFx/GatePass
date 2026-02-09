@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Switch } from './ui/switch';
-import { Calendar as CalendarIcon, Ticket, MapPin, Clock, QrCode, Download, Share, TrendingUp, Trophy, Shield } from 'lucide-react';
+import { Calendar as CalendarIcon, Ticket, MapPin, Clock, QrCode, Download, Share, TrendingUp, Trophy, Shield, Search, Bell } from 'lucide-react';
 import { Calendar as UiCalendar } from './ui/calendar';
 
 interface AttendeeDashboardProps {
@@ -26,6 +27,8 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   const [poaBadges, setPoaBadges] = useState<any[]>([]);
   const [blurSensitive, setBlurSensitive] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isQrOpen, setIsQrOpen] = useState(false);
+  const [qrTicket, setQrTicket] = useState<any>(null);
   const [helpCategory, setHelpCategory] = useState<'pre'|'during'|'post'>('pre');
   const [helpMessage, setHelpMessage] = useState('');
   const [isResaleOpen, setIsResaleOpen] = useState(false);
@@ -37,6 +40,7 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   const [feedPosts, setFeedPosts] = useState<any[]>([]);
   const [friendName, setFriendName] = useState('');
   const [friends, setFriends] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     try {
@@ -47,10 +51,61 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
       const savedBadges = JSON.parse(localStorage.getItem('gatepass_poa_badges') || '[]');
       setPoaBadges(Array.isArray(savedBadges) ? savedBadges : []);
     } catch { setPoaBadges([]); }
+    
+    // Seed Gigs if empty
     try {
-      const savedPosts = JSON.parse(localStorage.getItem('gatepass_feed_posts') || '[]');
-      setFeedPosts(Array.isArray(savedPosts) ? savedPosts : []);
+      let savedGigs = JSON.parse(localStorage.getItem('gatepass_gigs') || '[]');
+      if (!Array.isArray(savedGigs) || savedGigs.length === 0) {
+         savedGigs = [
+          { id: 'g1', role: 'Security Guard', event: 'Afrobeats Festival', location: 'Lagos', date: '2024-12-15', pay: 25, type: 'Security' },
+          { id: 'g2', role: 'Bartender', event: 'Tech Mixer', location: 'Online', date: '2024-11-20', pay: 20, type: 'Hospitality' },
+          { id: 'g3', role: 'Stage Hand', event: 'Global Music Concert', location: 'London', date: '2025-01-10', pay: 30, type: 'Production' },
+          { id: 'g4', role: 'Usher', event: 'Comedy Night Live', location: 'Lagos', date: '2024-12-05', pay: 15, type: 'Hospitality' }
+        ];
+        localStorage.setItem('gatepass_gigs', JSON.stringify(savedGigs));
+      }
     } catch {}
+
+    try {
+      let savedPosts = JSON.parse(localStorage.getItem('gatepass_feed_posts') || '[]');
+      if (!Array.isArray(savedPosts) || savedPosts.length === 0) {
+        savedPosts = [
+          { 
+            id: 'p1', 
+            author: 'GatePass Official', 
+            avatar: 'https://github.com/shadcn.png', 
+            content: 'Welcome to the new community feed! Share your event experiences here.', 
+            createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+            likes: 12, 
+            comments: 4, 
+            image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30' 
+          },
+          { 
+            id: 'p2', 
+            author: 'John Doe', 
+            avatar: 'https://ui-avatars.com/api/?name=John+Doe', 
+            content: 'Just bought my tickets for Afrobeats Festival! Who else is going?', 
+            createdAt: new Date(Date.now() - 18000000).toISOString(), // 5 hours ago
+            likes: 8, 
+            comments: 2 
+          }
+        ];
+        localStorage.setItem('gatepass_feed_posts', JSON.stringify(savedPosts));
+      }
+      setFeedPosts(savedPosts);
+    } catch {}
+
+    try {
+      let savedChat = JSON.parse(localStorage.getItem('gatepass_chat_messages') || '[]');
+      if (!Array.isArray(savedChat) || savedChat.length === 0) {
+        savedChat = [
+          { id: 'm1', author: 'Sarah', text: 'Anyone going to the afterparty?', at: new Date(Date.now() - 3600000).toISOString() },
+          { id: 'm2', author: 'Mike', text: 'Does anyone know if we can bring water bottles?', at: new Date(Date.now() - 7200000).toISOString() }
+        ];
+        localStorage.setItem('gatepass_chat_messages', JSON.stringify(savedChat));
+      }
+    } catch {}
+
     try {
       const savedFriends = JSON.parse(localStorage.getItem('gatepass_friends_attending') || '[]');
       setFriends(Array.isArray(savedFriends) ? savedFriends : []);
@@ -76,16 +131,53 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
       return days > 0 ? `${days}d` : 'Today';
     } catch { return ''; }
   };
-  const openQr = (ticket:any) => { toast.success('QR ready'); };
-  const handleDownload = (ticket:any) => {
+  const openQr = (ticket:any) => { 
+    setQrTicket(ticket);
+    setIsQrOpen(true);
+  };
+  const handleDownload = async (ticket: any) => {
+    if (ticket.status !== 'confirmed') {
+      toast.error('Ticket not paid/confirmed. Cannot download.');
+      return;
+    }
     try {
-      const content = `Ticket ${ticket.id} - ${ticket.eventTitle}\nSeat ${ticket.seatNumber}\nPrice $${ticket.price}`;
-      const blob = new Blob([content], { type: 'text/plain' });
+      toast.info('Generating secure ticket...');
+      const { generateSecureTicketPDF } = await import('../utils/ticketing/pdfGenerator');
+      const input = {
+        eventId: ticket.eventId || ticket.id,
+        attendeeId: 'me',
+        ticketType: ticket.ticketType || 'General',
+        event: {
+          name: ticket.eventTitle,
+          dateISO: ticket.date,
+          time: ticket.time,
+          venue: ticket.venue,
+          bannerUrl: ticket.imageUrl
+        },
+        attendee: { name: displayName || 'Attendee' },
+        purchaseTimestamp: Date.now(),
+        secretSalt: 'secret',
+        theme: {
+          bg: [0.05, 0.05, 0.05] as [number, number, number],
+          accent: [0.95, 0.3, 0.3] as [number, number, number],
+          text: [1, 1, 1] as [number, number, number]
+        }
+      };
+      const { pdfBytes } = await generateSecureTicketPDF(input);
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `ticket-${ticket.id}.txt`; a.click();
+      a.href = url;
+      a.download = `GatePass_${ticket.eventTitle.replace(/\s+/g, '_')}_${ticket.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch { toast.error('Download failed'); }
+      toast.success('Ticket downloaded successfully');
+    } catch (e) {
+      console.error(e);
+      toast.error('Download failed');
+    }
   };
   const handleTransfer = (ticket:any) => { toast.success('Transfer initiated'); };
   const openHelp = (ticket:any) => { setSelectedTicket(ticket); setIsHelpOpen(true); };
@@ -94,74 +186,34 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
   return (
     <div className="min-h-[100svh] bg-background px-3 sm:px-6 py-4 sm:py-6 scroll-container">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Attendee Dashboard</h1>
-            <p className="text-muted-foreground">Manage your events and track tickets</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Welcome Back, {displayName || 'Attendee'}!</h1>
+            <p className="text-muted-foreground">Your events, community, and opportunities all in one place.</p>
           </div>
-          <div className="hidden sm:flex ml-auto sm:ml-0">
-            <Button onClick={() => onPurchaseTicket('browse')} className="items-center space-x-2">
-              <span>Browse Events</span>
+          <div className="flex items-center gap-3">
+            <div className="relative hidden md:block">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search events, gigs..." 
+                className="pl-9 w-64" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
             </Button>
+            {onBack && (
+              <Button variant="outline" onClick={onBack}>
+                Log Out
+              </Button>
+            )}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Tickets</CardTitle>
-              <Ticket className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeTickets.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Upcoming events
-              </p>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Events Attended</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{attendedEvents.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Past events
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">POA Badges</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{poaBadges.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Collected badges
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${userTickets.reduce((sum, ticket) => sum + ticket.price, 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                All time
-              </p>
-            </CardContent>
-          </Card>
-        </div >
-
-        <Tabs defaultValue="tickets" className="w-full">
+        <Tabs defaultValue="tickets" className="space-y-6">
           <div className="border-b mb-4">
             <TabsList className="w-full sm:w-auto flex">
               <TabsTrigger value="tickets" className="flex-1 sm:flex-none">My Tickets</TabsTrigger>
@@ -583,7 +635,45 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
             </div>
           </DialogContent>
         </Dialog>
-      </div >
-    </div >
+        
+        <Dialog open={isQrOpen} onOpenChange={setIsQrOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center">Ticket QR Code</DialogTitle>
+              <DialogDescription className="text-center">Show this at the gate for entry</DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center p-6 space-y-4">
+              <div className="bg-white p-4 rounded-xl shadow-lg">
+                {qrTicket && (
+                  <QRCodeCanvas 
+                    value={JSON.stringify({
+                      id: qrTicket.id,
+                      event: qrTicket.eventId,
+                      type: qrTicket.ticketType,
+                      hash: qrTicket.transactionHash
+                    })}
+                    size={250}
+                    level="H"
+                    includeMargin={true}
+                  />
+                )}
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-bold text-lg">{qrTicket?.eventTitle}</p>
+                <p className="text-sm text-muted-foreground">{qrTicket?.ticketType} • {qrTicket?.seatNumber}</p>
+                <p className="text-xs text-muted-foreground mt-2 font-mono">{qrTicket?.id}</p>
+              </div>
+              <div className="flex gap-2 w-full">
+                 <Button className="flex-1" onClick={() => setIsQrOpen(false)}>Close</Button>
+                 <Button variant="outline" className="flex-1" onClick={() => {
+                   handleDownload(qrTicket);
+                   setIsQrOpen(false);
+                 }}>Download PDF</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
   );
 }

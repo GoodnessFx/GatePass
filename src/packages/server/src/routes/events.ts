@@ -230,14 +230,17 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const events = await prisma.event.findMany({
       where: { organizerId: req.user!.id },
-      include: { tiers: true },
+      include: {
+        tiers: true,
+        orders: {
+          where: { paymentStatus: 'COMPLETED' }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     })
     
-    const eventsWithStats = await Promise.all(events.map(async (event) => {
-      const orders = await prisma.order.findMany({
-        where: { eventId: event.id, paymentStatus: 'COMPLETED' }
-      })
+    const eventsWithStats = events.map((event) => {
+      const orders = event.orders
       const ticketsSold = orders.reduce((sum, o) => sum + o.quantity, 0)
       const revenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0)
       
