@@ -51,8 +51,9 @@ type AggregatedEvent = {
   longitude?: number;
   price?: number;
   source: 'gatepass' | 'ticketmaster' | string;
+  category?: string;
+  status?: string;
   externalUrl?: string;
-  verified?: boolean;
   tiers?: Array<{ id: string; name: string; price: number; available: number; description?: string }>;
 };
 
@@ -92,7 +93,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const [radiusKm, setRadiusKm] = useState<number>(0);
   const [cityFilter, setCityFilter] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -105,8 +105,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       params.set('lng', String(userLocation.lng));
       params.set('radiusKm', String(radiusKm));
     }
-    
-    setIsLoadingEvents(true);
     (async () => {
       try {
         const r = await fetch(`/api/events?${params.toString()}`, { signal: controller.signal });
@@ -127,6 +125,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             longitude: undefined,
             price: Array.isArray(ev.ticketTiers) && ev.ticketTiers.length ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0)) : undefined,
             source: 'gatepass-local',
+            category: ev.category || 'Technology',
+            status: ev.status || 'PUBLISHED',
             tiers: Array.isArray(ev.ticketTiers) ? ev.ticketTiers.map((t: any) => ({ id: t.id, name: t.name, price: Number(t.price) || 0, available: Number(t.quantity) || 0, description: t.description })) : []
           }));
         } catch {}
@@ -147,12 +147,12 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             longitude: undefined,
             price: Array.isArray(ev.ticketTiers) && ev.ticketTiers.length ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0)) : undefined,
             source: 'gatepass-local',
+            category: ev.category || 'Technology',
+            status: ev.status || 'PUBLISHED',
             tiers: Array.isArray(ev.ticketTiers) ? ev.ticketTiers.map((t: any) => ({ id: t.id, name: t.name, price: Number(t.price) || 0, available: Number(t.quantity) || 0, description: t.description })) : []
           }));
           setEvents(localEvents);
         } catch {}
-      } finally {
-        setIsLoadingEvents(false);
       }
     })();
     return () => controller.abort();
@@ -181,7 +181,12 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                          (event.city || '').toLowerCase().includes(term) ||
                          (event.venue || '').toLowerCase().includes(term);
     const matchesCity = !cityTerm || (event.city || '').toLowerCase().includes(cityTerm) || (event.venue || '').toLowerCase().includes(cityTerm);
-    const matchesCategory = true;
+    const matchesCategory = categoryFilter === 'all' || 
+      (event.category && (
+        event.category.toLowerCase() === categoryFilter.toLowerCase() ||
+        (categoryFilter === 'Technology' && event.category === 'TECH') ||
+        (categoryFilter === 'Music' && event.category === 'MUSIC')
+      ));
     const matchesNiche = nicheFilter === 'all' || event.source === nicheFilter;
     const matchesDistance = !userLocation || radiusKm === 0
       ? true
@@ -201,11 +206,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
     const amountWithFees = Math.max(0, subtotal + fee - discount - groupDiscount + donationAmount + tipAmount);
 
-    if (!selectedTierData) {
-        toast.error('Please select a ticket tier');
-        return;
-    }
-
     try {
       if (paymentMethod === 'fiat') {
         if (paymentGateway === 'paystack') {
@@ -224,7 +224,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           if (!initRes.ok) {
             toast.info('Order init skipped (server offline). Proceeding with sandbox checkout.');
           }
-          const init = initRes.ok ? await initRes.json() : {};
+          const init = await initRes.json();
           const res = await paystackCheckout({
             email: customerEmail || 'buyer@example.com',
             amount: Number(amountWithFees.toFixed(2)),
@@ -379,7 +379,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       } catch {}
 
       if (selectedTierData) {
-        const input: any = {
+        const input = {
           eventId: String(event.id),
           attendeeId: 'demo-attendee',
           ticketType: selectedTierData.name,
@@ -387,7 +387,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             name: event.title,
             dateISO: event.eventDate,
             time: '',
-            venue: event.venue || '',
+            venue: event.venue,
             bannerUrl: undefined,
           },
           attendee: { name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee') },
@@ -397,7 +397,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         };
 
         const { ticketId, pdfBytes } = await generateSecureTicketPDF(input);
-        const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+        const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -427,20 +427,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
   const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
   const grandTotalBase = Math.max(0, subtotal + fee - discount - groupDiscount);
   const grandTotal = Math.max(0, grandTotalBase + donationAmount + tipAmount);
-
-  if (isLoadingEvents && events.length === 0) {
-    return (
-      <div className="min-h-[100svh] bg-background p-4 sm:p-6 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative h-12 w-12">
-            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-            <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin"></div>
-          </div>
-          <p className="text-muted-foreground animate-pulse">Finding events near you...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-[100svh] bg-background p-4 sm:p-6 relative">
@@ -651,7 +637,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                           <span>Purchase Tickets</span>
                         </DialogTitle>
                         <DialogDescription>
-                          {selectedEvent?.title} • {selectedEvent?.eventDate}
+                          {selectedEvent?.title} • {selectedEvent?.date}
                         </DialogDescription>
                       </DialogHeader>
                       

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express'
+import { Router } from 'express'
 import { prisma } from '../../../database/client'
 import { asyncHandler } from '../middleware/errorHandler'
 import { mintTicketsFor } from '../utils/blockchain'
@@ -8,7 +8,7 @@ const router = Router()
 
 router.post(
   '/paystack',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req, res) => {
     const secret = process.env.PAYSTACK_SECRET_KEY
     if (!secret) {
       console.error('PAYSTACK_SECRET_KEY not set')
@@ -118,7 +118,7 @@ router.post(
 
 router.post(
   '/flutterwave',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req, res) => {
     const secretHash = process.env.FLUTTERWAVE_SECRET_HASH
     if (!secretHash) {
        console.error('FLUTTERWAVE_SECRET_HASH not set')

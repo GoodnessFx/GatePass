@@ -19,6 +19,7 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
+import { API_BASE_URL } from '../constants';
 import { getOrganizerStats, getOrganizerEvents, DashboardStats, DashboardEvent } from '../services/dashboardService';
 
 interface LocalEvent {
@@ -96,15 +97,14 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
       // Calculate total revenue including local sales
       let totalRevenue = (statsData?.totalRevenue || 0) + localSales.reduce((sum, s) => sum + s.amount, 0);
       let ticketsSold = (statsData?.ticketsSold || 0) + localSales.reduce((sum, s) => sum + s.tickets, 0);
+      let activeEvents = (statsData?.activeEvents || 0) + localEvents.filter(e => e.status === 'live').length;
+      let totalEvents = (statsData?.totalEvents || 0) + localEvents.length;
 
-      // Adjust for currency (naive conversion for demo display if needed, or just assume 1:1 if matching)
-      // For now, we display the raw number but with the user's currency symbol preference
-      
       setStats({
         totalRevenue,
         ticketsSold,
-        activeEvents: allEvents.filter(e => e.status === 'live').length,
-        totalEvents: allEvents.length,
+        activeEvents,
+        totalEvents,
         revenueGrowth: statsData?.revenueGrowth || 0,
         ticketsGrowth: statsData?.ticketsGrowth || 0,
         recentSales: [

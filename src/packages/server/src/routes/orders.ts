@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express'
+import { Router } from 'express'
 import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
+import { authenticate, AuthenticatedRequest } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import crypto from 'crypto'
 import { mintTicketsFor } from '../utils/blockchain'
@@ -159,17 +160,30 @@ router.post(
 
 router.get(
   '/my-tickets',
-  asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.query as { email: string }
-    if (!email) {
-      return res.json({ tickets: [] })
-    }
+  authenticate,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const userId = req.user!.id
+    
+    // Get tickets from DB
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        order: {
+          userId: userId,
+          paymentStatus: 'COMPLETED'
+        }
+      },
+      include: {
+        event: true,
+        order: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
 
-    // Find all completed orders for this email
+    // Also get orders that are completed but maybe tickets not minted yet (off-chain or error)
     const orders = await prisma.order.findMany({
       where: {
-        customerEmail: email,
-        paymentStatus: { in: ['COMPLETED', 'paid'] } 
+        userId: userId,
+        paymentStatus: 'COMPLETED'
       },
       include: {
         event: true
@@ -177,27 +191,21 @@ router.get(
       orderBy: { createdAt: 'desc' }
     })
 
-    // Construct ticket objects similar to what frontend expects
-    const tickets = orders.flatMap(order => {
-      // If we have actual Ticket records in DB, we could fetch them.
-      // For now, we simulate tickets based on order quantity if specific Ticket records aren't queried.
-      // But let's check if we can include Tickets in the query.
-      return Array.from({ length: order.quantity }).map((_, i) => ({
-        id: `${order.id}-${i}`,
-        eventId: order.eventId,
-        eventTitle: order.event?.title || 'Unknown Event',
-        date: order.event?.eventDate || new Date().toISOString(),
-        time: order.event?.eventDate ? new Date(order.event.eventDate).toLocaleTimeString() : '',
-        venue: order.event?.venue || 'TBA',
-        imageUrl: order.event?.imageUrl,
-        ticketType: 'General', // We didn't store tier name in Order, might need to fetch Tier if critical
-        price: order.totalAmount / order.quantity,
-        status: 'confirmed',
-        purchaseDate: order.createdAt
-      }))
-    })
+    // Map to a unified format similar to frontend
+    const mappedTickets = orders.map(order => ({
+      id: order.id,
+      eventId: order.eventId,
+      eventTitle: order.event.title,
+      date: order.event.eventDate,
+      location: order.event.venue,
+      seatNumber: 'GA', // simplified
+      price: order.totalAmount,
+      status: 'confirmed',
+      ticketType: 'General Admission',
+      qrData: order.id
+    }))
 
-    res.json({ tickets })
+    res.json({ tickets: mappedTickets })
   })
 )
 
