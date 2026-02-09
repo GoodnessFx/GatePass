@@ -200,6 +200,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
     const amountWithFees = Math.max(0, subtotal + fee - discount - groupDiscount + donationAmount + tipAmount);
 
+    if (!selectedTierData) {
+        toast.error('Please select a ticket tier');
+        return;
+    }
+
     try {
       if (paymentMethod === 'fiat') {
         if (paymentGateway === 'paystack') {
@@ -218,7 +223,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           if (!initRes.ok) {
             toast.info('Order init skipped (server offline). Proceeding with sandbox checkout.');
           }
-          const init = await initRes.json();
+          const init = initRes.ok ? await initRes.json() : {};
           const res = await paystackCheckout({
             email: customerEmail || 'buyer@example.com',
             amount: Number(amountWithFees.toFixed(2)),
@@ -373,7 +378,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       } catch {}
 
       if (selectedTierData) {
-        const input = {
+        const input: any = {
           eventId: String(event.id),
           attendeeId: 'demo-attendee',
           ticketType: selectedTierData.name,
@@ -381,7 +386,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             name: event.title,
             dateISO: event.eventDate,
             time: '',
-            venue: event.venue,
+            venue: event.venue || '',
             bannerUrl: undefined,
           },
           attendee: { name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee') },
@@ -391,7 +396,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         };
 
         const { ticketId, pdfBytes } = await generateSecureTicketPDF(input);
-        const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+        const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

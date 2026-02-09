@@ -262,7 +262,7 @@ router.get(
         attendees: ticketsSold,
         image: event.imageUrl
       }
-    }))
+    })
 
     res.json(eventsWithStats)
   })
