@@ -97,6 +97,7 @@
      },
      "scripts": {
           "dev": "vite",
+          "server": "cd src/packages/server && npm run dev",
           "build": "vite build"
      }
 }
