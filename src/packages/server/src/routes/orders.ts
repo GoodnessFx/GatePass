@@ -157,4 +157,48 @@ router.post(
   })
 )
 
+router.get(
+  '/my-tickets',
+  asyncHandler(async (req, res) => {
+    const { email } = req.query as { email: string }
+    if (!email) {
+      return res.json({ tickets: [] })
+    }
+
+    // Find all completed orders for this email
+    const orders = await prisma.order.findMany({
+      where: {
+        customerEmail: email,
+        paymentStatus: { in: ['COMPLETED', 'paid'] } 
+      },
+      include: {
+        event: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    // Construct ticket objects similar to what frontend expects
+    const tickets = orders.flatMap(order => {
+      // If we have actual Ticket records in DB, we could fetch them.
+      // For now, we simulate tickets based on order quantity if specific Ticket records aren't queried.
+      // But let's check if we can include Tickets in the query.
+      return Array.from({ length: order.quantity }).map((_, i) => ({
+        id: `${order.id}-${i}`,
+        eventId: order.eventId,
+        eventTitle: order.event?.title || 'Unknown Event',
+        date: order.event?.eventDate || new Date().toISOString(),
+        time: order.event?.eventDate ? new Date(order.event.eventDate).toLocaleTimeString() : '',
+        venue: order.event?.venue || 'TBA',
+        imageUrl: order.event?.imageUrl,
+        ticketType: 'General', // We didn't store tier name in Order, might need to fetch Tier if critical
+        price: order.totalAmount / order.quantity,
+        status: 'confirmed',
+        purchaseDate: order.createdAt
+      }))
+    })
+
+    res.json({ tickets })
+  })
+)
+
 export { router as orderRoutes }

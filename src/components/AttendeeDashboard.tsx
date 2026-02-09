@@ -110,6 +110,39 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
       const savedFriends = JSON.parse(localStorage.getItem('gatepass_friends_attending') || '[]');
       setFriends(Array.isArray(savedFriends) ? savedFriends : []);
     } catch {}
+
+    // Fetch tickets from API
+    const fetchApiTickets = async () => {
+      const email = localStorage.getItem('gp_user_email');
+      if (!email) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/orders/my-tickets?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.tickets) && data.tickets.length > 0) {
+             setUserTickets(prev => {
+                const existingIds = new Set(prev.map(t => t.id));
+                const newTickets = data.tickets.filter((t: any) => !existingIds.has(t.id));
+                return [...prev, ...newTickets];
+             });
+             
+             // Update localStorage with new tickets
+             try {
+                const currentStored = JSON.parse(localStorage.getItem('gatepass_user_tickets') || '[]');
+                const storedIds = new Set(currentStored.map((t:any) => t.id));
+                const toStore = data.tickets.filter((t:any) => !storedIds.has(t.id));
+                if (toStore.length > 0) {
+                    localStorage.setItem('gatepass_user_tickets', JSON.stringify([...currentStored, ...toStore]));
+                }
+             } catch {}
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch tickets", e);
+      }
+    };
+    fetchApiTickets();
   }, []);
 
   useEffect(() => { if (onSetDisplayName) onSetDisplayName(displayName); }, [displayName]);
