@@ -52,6 +52,7 @@ type AggregatedEvent = {
   price?: number;
   source: 'gatepass' | 'ticketmaster' | string;
   externalUrl?: string;
+  verified?: boolean;
   tiers?: Array<{ id: string; name: string; price: number; available: number; description?: string }>;
 };
 
@@ -650,7 +651,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                           <span>Purchase Tickets</span>
                         </DialogTitle>
                         <DialogDescription>
-                          {selectedEvent?.title} • {selectedEvent?.date}
+                          {selectedEvent?.title} • {selectedEvent?.eventDate}
                         </DialogDescription>
                       </DialogHeader>
                       

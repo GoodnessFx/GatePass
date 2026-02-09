@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
 import { logger } from '../utils/logger'
@@ -159,7 +159,7 @@ router.post(
 
 router.get(
   '/my-tickets',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.query as { email: string }
     if (!email) {
       return res.json({ tickets: [] })

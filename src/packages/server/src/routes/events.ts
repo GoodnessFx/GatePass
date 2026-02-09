@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import axios from 'axios'
 import { prisma } from '../../../database/client'
 import { asyncHandler, createError } from '../middleware/errorHandler'
@@ -91,7 +91,7 @@ async function fetchTicketmaster(params: { lat?: number; lng?: number; radiusKm?
 
 router.get(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const q = req.query as EventQuery
     const lat = q.lat ? parseFloat(q.lat) : undefined
     const lng = q.lng ? parseFloat(q.lng) : undefined
@@ -110,10 +110,10 @@ router.get(
           ...(q.category ? { category: q.category as any } : {}),
           ...(q.q ? {
             OR: [
-              { title: { contains: q.q, mode: 'insensitive' } },
-              { description: { contains: q.q, mode: 'insensitive' } },
-              { city: { contains: q.q, mode: 'insensitive' } },
-              { venue: { contains: q.q, mode: 'insensitive' } }
+              { title: { contains: q.q } },
+              { description: { contains: q.q } },
+              { city: { contains: q.q } },
+              { venue: { contains: q.q } }
             ]
           } : {}),
           ...(startDate || endDate
@@ -133,8 +133,8 @@ router.get(
       internalEvents = []
     }
 
-    const internalMapped = internalEvents.map((e) => {
-      const lowestTier = e.tiers.length ? e.tiers.reduce((a, b) => (a.price < b.price ? a : b)) : null
+    const internalMapped = internalEvents.map((e: any) => {
+      const lowestTier = e.tiers.length ? e.tiers.reduce((a: any, b: any) => (a.price < b.price ? a : b)) : null
       return {
         id: e.id,
         title: e.title,
@@ -147,7 +147,7 @@ router.get(
         longitude: e.longitude,
         imageUrl: e.imageUrl,
         price: lowestTier ? Number(lowestTier.price) : Number(e.ticketPrice),
-        tiers: e.tiers.map(t => ({
+        tiers: e.tiers.map((t: any) => ({
           id: t.id,
           name: t.name,
           description: t.description,
@@ -272,7 +272,7 @@ router.post(
   '/',
   authenticate,
   requireOrganizer,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const body = req.body as any
     const title: string = body?.title
     const description: string | undefined = body?.description
