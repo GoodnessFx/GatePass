@@ -11,7 +11,7 @@ router.post(
   asyncHandler(async (req: any, res: any) => {
     const secret = process.env.PAYSTACK_SECRET_KEY
     if (!secret) {
-      console.error('PAYSTACK_SECRET_KEY not set')
+      logger.error('PAYSTACK_SECRET_KEY not set')
       return res.status(500).json({ error: 'Server configuration error' })
     }
 
@@ -107,8 +107,8 @@ router.post(
       })
       
     } catch (err) {
-      console.error('Minting failed for order:', order.id, err)
-      // We don't revert payment status here as money is already taken, 
+      logger.error('Minting failed for order:', { orderId: order.id, error: err })
+    }  // We don't revert payment status here as money is already taken, 
       // but we log it for manual intervention or retry mechanism
     }
 
@@ -121,7 +121,7 @@ router.post(
   asyncHandler(async (req: any, res: any) => {
     const secretHash = process.env.FLUTTERWAVE_SECRET_HASH
     if (!secretHash) {
-       console.error('FLUTTERWAVE_SECRET_HASH not set')
+       logger.error('FLUTTERWAVE_SECRET_HASH not set')
        return res.status(500).json({ error: 'Server configuration error' })
     }
 
@@ -207,7 +207,7 @@ router.post(
       })
 
     } catch (err) {
-      console.error('Minting failed for order:', order.id, err)
+      logger.error(`Minting failed for order: ${order.id}`, err)
     }
 
     res.json({ ok: true })

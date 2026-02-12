@@ -1,8 +1,15 @@
 const log = (level: string, message: any, ...meta: any[]) => {
   const ts = new Date().toISOString()
   const payload = typeof message === 'string' ? { message } : message
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ level, ts, ...payload, ...(meta?.[0] || {}) }))
+  const fullPayload = { level, ts, ...payload, ...(meta?.[0] || {}) }
+  
+  if (process.env.NODE_ENV === 'production') {
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(fullPayload))
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(`[${ts}] ${level.toUpperCase()}:`, message, meta.length ? meta : '')
+  }
 }
 
 export const logger = {

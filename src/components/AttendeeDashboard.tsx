@@ -63,7 +63,9 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
             });
           }
         }
-      } catch (e) { console.error('Failed to fetch tickets', e); }
+      } catch (e) {
+        // Silent failure for ticket fetch
+      }
     };
     fetchApiTickets();
 

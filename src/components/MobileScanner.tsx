@@ -45,48 +45,11 @@ interface ScanResult {
   walletAddress: string;
 }
 
-// Mock scan results for demonstration
-const mockScanResults: ScanResult[] = [
-  {
-    id: '1',
-    ticketId: 'TKT-001',
-    eventTitle: 'Tech Conference 2024',
-    attendeeName: 'Alice Johnson',
-    ticketType: 'VIP',
-    seatNumber: 'A-12',
-    status: 'valid',
-    scanTime: '10:15 AM',
-    walletAddress: '0x742d...35Da'
-  },
-  {
-    id: '2',
-    ticketId: 'TKT-002',
-    eventTitle: 'Tech Conference 2024',
-    attendeeName: 'Bob Smith',
-    ticketType: 'General',
-    seatNumber: 'B-8',
-    status: 'valid',
-    scanTime: '10:12 AM',
-    walletAddress: '0x8f3e...91Bc'
-  },
-  {
-    id: '3',
-    ticketId: 'TKT-003',
-    eventTitle: 'Tech Conference 2024',
-    attendeeName: 'Charlie Brown',
-    ticketType: 'General',
-    seatNumber: 'B-15',
-    status: 'used',
-    scanTime: '09:45 AM',
-    walletAddress: '0x1a2b...78Ef'
-  }
-];
-
 export function MobileScanner({ onBack }: MobileScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [flashlightOn, setFlashlightOn] = useState(false);
-  const [scanResults, setScanResults] = useState<ScanResult[]>(mockScanResults);
+  const [scanResults, setScanResults] = useState<ScanResult[]>([]);
   const [manualTicketId, setManualTicketId] = useState('');
   const [offlineQueue, setOfflineQueue] = useState<ScanResult[]>([]);
   const [currentEventId, setCurrentEventId] = useState<string>('1');
@@ -120,7 +83,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
       try {
         scannerRef.current.clear();
       } catch (error) {
-        console.log('Scanner cleanup error:', error);
+        // Ignore cleanup errors
       }
       scannerRef.current = null;
     }
