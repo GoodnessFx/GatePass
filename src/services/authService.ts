@@ -9,13 +9,15 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/register`, {
       email: data.email,
-      password: data.password || 'TemporaryPassword123!', // Fallback if not provided, but should be
+      password: data.password || 'TemporaryPassword123!', 
       name: `${data.firstName} ${data.lastName}`,
       role: data.role.toUpperCase(),
     });
 
     if (response.data && response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
+      localStorage.setItem('gp_demo_loggedin', 'true');
+      localStorage.setItem('gp_demo_role', response.data.user.role.toLowerCase());
       return { success: true, user: response.data.user, token: response.data.token };
     }
     

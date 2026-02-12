@@ -18,8 +18,8 @@ interface SignupPageProps {
 }
 
 export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
-  const [firstName, setFirstName] = React.useState('Goodness');
-  const [lastName, setLastName] = React.useState('Iyamah');
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [country, setCountry] = React.useState('NG');
   const [password, setPassword] = React.useState('');
@@ -96,6 +96,8 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       if (country === 'KE') currency = 'KES';
       if (country === 'ZA') currency = 'ZAR';
       localStorage.setItem('gp_user_currency', currency);
+
+      const hashedPassword = await hashPassword(password.trim());
 
       const { success, error: regError } = await registerUser({
         email: trimmedEmail,

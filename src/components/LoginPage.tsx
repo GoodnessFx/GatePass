@@ -25,14 +25,33 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
     if (savedEmail) setEmail(savedEmail);
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) return;
     try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('gp_demo_loggedin', 'true');
+        localStorage.setItem('gp_demo_role', data.user.role.toLowerCase());
+        localStorage.setItem('gp_user_email', data.user.email);
+        onLoginComplete();
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      // Fallback for demo if server is not running
       localStorage.setItem('gp_demo_loggedin', 'true');
       localStorage.setItem('gp_demo_role', role);
-      localStorage.setItem('gp_user_email', email.trim());
-    } catch {}
-    onLoginComplete();
+      onLoginComplete();
+    }
   };
 
   return (

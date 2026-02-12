@@ -127,7 +127,7 @@ router.post('/register', [
     throw createError('Validation failed: ' + errors.array().map(e => e.msg).join(', '), 400)
   }
 
-  const { email, password, name, walletAddress } = req.body
+  const { email, password, name, walletAddress, role } = req.body
 
   // Check if user already exists
   const existingUser = await prisma.user.findFirst({
@@ -153,7 +153,7 @@ router.post('/register', [
       password: hashedPassword,
       name,
       walletAddress,
-      role: 'USER' // Default role
+      role: role === 'ORGANIZER' ? 'ORGANIZER' : 'USER'
     },
     select: {
       id: true,

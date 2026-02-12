@@ -105,7 +105,10 @@ function App() {
       setUserRole(savedRole as UserRole);
       setCurrentView(savedRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
     } else {
-      setCurrentView('login');
+      // Don't force login if we're already on landing
+      if (currentView !== 'landing' && currentView !== 'signup') {
+        setCurrentView('login');
+      }
     }
   }, [showSplash]);
 
