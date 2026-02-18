@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { cn } from './ui/utils';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '../constants';
 
 interface EventCreationProps {
   onBack: () => void;
@@ -138,9 +139,13 @@ export function EventCreation({ onBack }: EventCreationProps) {
         organizerEmail: 'organizer@example.com',
         organizerName: 'Organizer'
       };
-      const res = await fetch('/api/events', {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE_URL}/events`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(payload)
       });
       if (!res.ok) {

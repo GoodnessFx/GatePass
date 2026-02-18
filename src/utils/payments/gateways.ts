@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../../constants';
+
 type CheckoutSuccess = (payload: unknown) => void;
 type CheckoutCancel = () => void;
 
@@ -90,7 +92,46 @@ export async function flutterwaveCheckout(opts: {
   return { ok: true };
 }
 
-// M-Pesa typically requires a server-side STK push for security.
-export async function mpesaStkPush(): Promise<{ ok: boolean; error?: string }> {
-  return { ok: false, error: 'M-Pesa STK Push requires a server endpoint. Configure server-side integration.' };
+// M-Pesa uses a secure server-side STK push. The client only calls our API.
+export async function mpesaStkPush(opts: {
+  amount: number;
+  phone: string;
+  orderId?: string;
+  currency?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/mpesa-stk-push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: opts.amount,
+        phone: opts.phone,
+        orderId: opts.orderId,
+        currency: opts.currency ?? 'KES',
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: (data as any)?.error || 'M-Pesa STK push failed on the server.',
+      };
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if ((data as any).ok) {
+      return { ok: true };
+    }
+
+    return {
+      ok: false,
+      error: (data as any).error || 'M-Pesa STK push failed.',
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: 'Network error while contacting M-Pesa server endpoint.',
+    };
+  }
 }

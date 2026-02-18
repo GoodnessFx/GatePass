@@ -21,6 +21,7 @@ import {
   Activity
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { API_BASE_URL } from '../constants';
 
 interface AnalyticsProps {
   onBack: () => void;
@@ -104,7 +105,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/events');
+        const res = await fetch(`${API_BASE_URL}/events`);
         if (res.ok) {
           const json = await res.json();
           const events = Array.isArray(json?.events) ? json.events : [];
@@ -122,7 +123,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
       if (selectedEvent === 'all') { setServerAnalytics(null); return; }
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/analytics/${selectedEvent}`);
+        const res = await fetch(`${API_BASE_URL}/analytics/${selectedEvent}`);
         if (res.ok) {
           const json = await res.json();
           setServerAnalytics(json);

@@ -93,10 +93,12 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
   const handleManualEntry = async () => {
     if (!manualTicketId.trim()) return;
     const qrString = manualTicketId.trim();
+    const parts = qrString.split('|');
+    const eventIdFromQr = parts[1] || currentEventId;
     const result = await verifyQr(
       qrString,
       'demo-salt',
-      currentEventId,
+      eventIdFromQr,
       (tid) => usedTicketsRef.current.has(tid),
       (tid) => usedTicketsRef.current.add(tid),
       Date.now() - 60 * 60 * 1000
@@ -154,10 +156,12 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
       const scanner = new Html5QrcodeScanner(containerId, { fps: 10, qrbox: 250 }, false);
       scanner.render(
         async (decodedText) => {
+          const parts = decodedText.split('|');
+          const eventIdFromQr = parts[1] || currentEventId;
           const result = await verifyQr(
             decodedText,
             'demo-salt',
-            currentEventId,
+            eventIdFromQr,
             (tid) => usedTicketsRef.current.has(tid),
             (tid) => usedTicketsRef.current.add(tid),
             Date.now() - 60 * 60 * 1000

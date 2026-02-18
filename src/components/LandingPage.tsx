@@ -17,9 +17,9 @@ import {
   Globe,
   ArrowRight,
   CheckCircle,
-  Briefcase,
-  ExternalLink
+  Briefcase
 } from 'lucide-react';
+import { StaggerTestimonials } from './ui/stagger-testimonials';
 
 interface LandingPageProps {
   onRoleSelect: (role: 'attendee' | 'organizer') => void;
@@ -41,6 +41,7 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
   const [tempNameInput, setTempNameInput] = React.useState('');
   const [messageVisible, setMessageVisible] = React.useState(false);
   const [messageText, setMessageText] = React.useState('');
+  const [isGuideOpen, setIsGuideOpen] = React.useState(false);
   React.useEffect(() => {
     const t = setInterval(() => setShowcaseIndex((i) => (i + 1) % 3), 3000);
     return () => clearInterval(t);
@@ -193,7 +194,6 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
         </DialogContent>
       </Dialog>
 
-      {/* Features Grid */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -390,6 +390,20 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
             </Card>
           </div>
 
+          <div className="mt-10">
+            <StaggerTestimonials />
+          </div>
+
+          <div className="mt-14">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-semibold mb-2">What people say about GatePass</h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Organizers and attendees using GatePass today to sell out shows, verify tickets, and avoid fraud.
+              </p>
+            </div>
+            <StaggerTestimonials />
+          </div>
+
           <div className="mt-8">
             <Card className="border-2 bg-background/60 backdrop-blur shadow-sm rounded-xl">
               <CardHeader>
@@ -398,8 +412,7 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  <Button size="sm" onClick={() => window.open('https://gatepass.guide/getting-started', '_blank')} className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
+                  <Button size="sm" onClick={() => setIsGuideOpen(true)} className="flex items-center gap-2">
                     <span>Open Beginner Guide</span>
                   </Button>
                 </div>
@@ -409,9 +422,122 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
         </div>
       </section>
 
+      <Dialog open={isGuideOpen} onOpenChange={setIsGuideOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>GatePass Beginner Guide</DialogTitle>
+            <DialogDescription>How to use GatePass as an organizer and as an attendee.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-8 mt-2">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Organizer flow</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</div>
+                    <div>
+                      <p className="font-medium">Create your event</p>
+                      <p className="text-muted-foreground">From the organizer dashboard, click Create Event and fill in title, date, venue, ticket tiers, and prices.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</div>
+                    <div>
+                      <p className="font-medium">Publish and share</p>
+                      <p className="text-muted-foreground">Save your event and share the event link. GatePass handles tickets, wallets, and confirmations.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</div>
+                    <div>
+                      <p className="font-medium">Track sales in real time</p>
+                      <p className="text-muted-foreground">Use the Analytics page to see sold tickets, revenue, and check-in progress before and during the event.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</div>
+                    <div>
+                      <p className="font-medium">Scan tickets at the gate</p>
+                      <p className="text-muted-foreground">On event day, open the Mobile Scanner, point the camera at each QR code, and GatePass verifies entries instantly.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Attendee flow</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</div>
+                    <div>
+                      <p className="font-medium">Discover an event</p>
+                      <p className="text-muted-foreground">On the landing page choose Browse Events or sign in to your attendee dashboard to see recommended events.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</div>
+                    <div>
+                      <p className="font-medium">Buy your ticket</p>
+                      <p className="text-muted-foreground">Select a ticket type, choose quantity, and pay with card, mobile money, or crypto depending on the organizer settings.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</div>
+                    <div>
+                      <p className="font-medium">Store and manage tickets</p>
+                      <p className="text-muted-foreground">Your tickets appear in My Tickets. From there you can download, view the QR code, or transfer if allowed.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</div>
+                    <div>
+                      <p className="font-medium">Check in and collect badges</p>
+                      <p className="text-muted-foreground">At the venue show your QR code. After the event you can unlock POA badges and see your event history.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-
-
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">End‑to‑end flow at a glance</h3>
+              <div className="rounded-xl border bg-muted/40 p-4 text-xs sm:text-sm">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Organizer creates event</span>
+                    <span>→</span>
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Event published</span>
+                    <span>→</span>
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Attendees purchase tickets</span>
+                    <span>→</span>
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Tickets stored with QR</span>
+                    <span>→</span>
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Gate scanning</span>
+                    <span>→</span>
+                    <span className="rounded-md bg-background px-3 py-1 font-medium">Analytics and payouts</span>
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border bg-background p-3">
+                      <p className="text-xs font-semibold mb-1">Before event</p>
+                      <p className="text-xs text-muted-foreground">Create events, configure tickets, promote, and watch early sales.</p>
+                    </div>
+                    <div className="rounded-lg border bg-background p-3">
+                      <p className="text-xs font-semibold mb-1">During event</p>
+                      <p className="text-xs text-muted-foreground">Scan QR codes, monitor entries, and resolve ticket issues on-site.</p>
+                    </div>
+                    <div className="rounded-lg border bg-background p-3">
+                      <p className="text-xs font-semibold mb-1">After event</p>
+                      <p className="text-xs text-muted-foreground">Review analytics, export reports, pay teams, and reward attendees.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGuideOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

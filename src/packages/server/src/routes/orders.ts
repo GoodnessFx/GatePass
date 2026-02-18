@@ -4,6 +4,7 @@ import { asyncHandler, createError } from '../middleware/errorHandler'
 import { authenticate, AuthenticatedRequest } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import crypto from 'crypto'
+import axios from 'axios'
 import { mintTicketsFor } from '../utils/blockchain'
 import { readStoredEvents } from '../storage/eventsStore'
 import { writeStoredOrder, updateStoredOrder, readStoredOrders } from '../storage/ordersStore'
@@ -84,6 +85,118 @@ router.post(
 
     logger.info(`Order initialized ${orderId} for event ${eventId} tier ${tierId} qty ${quantity}`)
     res.json({ ok: true, orderId, reference })
+  })
+)
+
+router.post(
+  '/mpesa-stk-push',
+  asyncHandler(async (req: any, res: any) => {
+    const { amount, phone, orderId, currency } = req.body as {
+      amount: number
+      phone: string
+      orderId?: string
+      currency?: string
+    }
+
+    if (!amount || !phone) {
+      throw createError('Missing M-Pesa parameters', 400)
+    }
+
+    const consumerKey = process.env.MPESA_CONSUMER_KEY
+    const consumerSecret = process.env.MPESA_CONSUMER_SECRET
+    const shortcode = process.env.MPESA_SHORTCODE
+    const passkey = process.env.MPESA_PASSKEY
+    const callbackUrl = process.env.MPESA_CALLBACK_URL || 'https://example.com/mpesa/callback'
+    const environment = process.env.MPESA_ENVIRONMENT || 'sandbox'
+
+    if (!consumerKey || !consumerSecret || !shortcode || !passkey) {
+      logger.warn('M-Pesa credentials missing. Returning demo success response.', { orderId })
+      return res.json({
+        ok: true,
+        demo: true,
+        message: 'M-Pesa STK push simulated. Configure MPESA_* env vars for live payments.'
+      })
+    }
+
+    const baseUrl =
+      environment === 'production'
+        ? 'https://api.safaricom.co.ke'
+        : 'https://sandbox.safaricom.co.ke'
+
+    const tokenRes = await axios
+      .get(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')}`
+        }
+      })
+      .catch((err) => {
+        logger.error('Failed to obtain M-Pesa access token', { error: err?.response?.data || err.message })
+        throw createError('Failed to obtain M-Pesa access token', 502)
+      })
+
+    const accessToken = (tokenRes.data as any)?.access_token
+    if (!accessToken) {
+      throw createError('Invalid M-Pesa access token response', 502)
+    }
+
+    const now = new Date()
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const timestamp =
+      now.getFullYear().toString() +
+      pad(now.getMonth() + 1) +
+      pad(now.getDate()) +
+      pad(now.getHours()) +
+      pad(now.getMinutes()) +
+      pad(now.getSeconds())
+
+    const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64')
+
+    const payload = {
+      BusinessShortCode: shortcode,
+      Password: password,
+      Timestamp: timestamp,
+      TransactionType: 'CustomerPayBillOnline',
+      Amount: Math.round(amount),
+      PartyA: phone,
+      PartyB: shortcode,
+      PhoneNumber: phone,
+      CallBackURL: callbackUrl,
+      AccountReference: orderId || 'GatePass',
+      TransactionDesc: `GatePass ticket purchase (${currency || 'KES'})`
+    }
+
+    const stkRes = await axios
+      .post(`${baseUrl}/mpesa/stkpush/v1/processrequest`, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      .catch((err) => {
+        logger.error('M-Pesa STK push request failed', { error: err?.response?.data || err.message, orderId })
+        throw createError('Failed to initiate M-Pesa STK push', 502)
+      })
+
+    const data = stkRes.data as any
+
+    if (data.ResponseCode !== '0') {
+      logger.error('M-Pesa STK push rejected', { response: data, orderId })
+      return res.status(502).json({
+        ok: false,
+        error: data.ResponseDescription || 'M-Pesa rejected the STK push request.'
+      })
+    }
+
+    logger.info('M-Pesa STK push initiated', {
+      orderId,
+      merchantRequestId: data.MerchantRequestID,
+      checkoutRequestId: data.CheckoutRequestID
+    })
+
+    res.json({
+      ok: true,
+      merchantRequestId: data.MerchantRequestID,
+      checkoutRequestId: data.CheckoutRequestID
+    })
   })
 )
 

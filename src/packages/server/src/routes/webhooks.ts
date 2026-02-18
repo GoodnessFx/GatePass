@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../../../database/client'
 import { asyncHandler } from '../middleware/errorHandler'
 import { mintTicketsFor } from '../utils/blockchain'
+import { logger } from '../utils/logger'
 import crypto from 'crypto'
 
 const router = Router()
@@ -18,20 +19,15 @@ router.post(
     const signature = req.headers['x-paystack-signature']
     if (!signature) return res.status(401).json({ error: 'No signature provided' })
 
-    // Verify signature
-    const hash = crypto.createHmac('sha512', secret)
-      .update(req.body)
-      .digest('hex')
-
+    const hash = crypto.createHmac('sha512', secret).update(req.body).digest('hex')
     if (hash !== signature) {
       return res.status(401).json({ error: 'Invalid signature' })
     }
 
-    // Parse body (it comes as Buffer due to express.raw in index.ts)
     let body
     try {
       body = JSON.parse(req.body.toString())
-    } catch (e) {
+    } catch {
       return res.status(400).json({ error: 'Invalid JSON' })
     }
 
@@ -42,17 +38,15 @@ router.post(
 
     const data = body.data
     const reference = data.reference
-    
     if (!reference) return res.status(200).json({ ok: true })
-    
+
     const order = await prisma.order.findFirst({ where: { paystackReference: reference } })
     if (!order) return res.status(200).json({ ok: true })
     if (order.paymentStatus === 'COMPLETED') return res.status(200).json({ ok: true })
-    
+
     const event = await prisma.event.findUnique({ where: { id: order.eventId } })
     if (!event?.contractAddress) return res.status(200).json({ ok: true })
 
-    // Update order status first to prevent race conditions
     await prisma.order.update({
       where: { id: order.id },
       data: { paymentStatus: 'COMPLETED', paymentTxId: String(data.id), updatedAt: new Date() }
@@ -62,8 +56,7 @@ router.post(
     const walletAddress = user?.walletAddress
 
     if (!walletAddress) {
-       // Payment successful but no wallet connected
-       await prisma.notification.create({
+      await prisma.notification.create({
         data: {
           userId: order.userId,
           title: 'Payment Successful',
@@ -77,7 +70,7 @@ router.post(
     try {
       const abi = ['function mintFor(address to, uint256 quantity) external', 'function tokenCounter() view returns (uint256)']
       const { txHash, tokenIds } = await mintTicketsFor(event.contractAddress, abi as any[], walletAddress, order.quantity)
-      
+
       await prisma.order.update({
         where: { id: order.id },
         data: { blockchainTxHash: txHash }
@@ -96,7 +89,6 @@ router.post(
         })
       }
 
-      // Create notification for user
       await prisma.notification.create({
         data: {
           userId: order.userId,
@@ -105,14 +97,11 @@ router.post(
           type: 'SUCCESS'
         }
       })
-      
     } catch (err) {
-      logger.error('Minting failed for order:', { orderId: order.id, error: err })
-    }  // We don't revert payment status here as money is already taken, 
-      // but we log it for manual intervention or retry mechanism
+      logger.error('Minting failed for order', { orderId: order.id, error: err })
     }
 
-    res.json({ ok: true })
+    return res.json({ ok: true })
   })
 )
 

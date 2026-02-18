@@ -32,6 +32,7 @@ import {
 import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
 import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
 import { getActivePromotion, getSuggestedPromoCode, calculateDiscount } from '../utils/promotions/seasonal';
+import { API_BASE_URL } from '../constants';
 
 interface TicketPurchaseProps {
   eventId: string;
@@ -107,7 +108,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     }
     (async () => {
       try {
-        const r = await fetch(`/api/events?${params.toString()}`, { signal: controller.signal });
+        const r = await fetch(`${API_BASE_URL}/events?${params.toString()}`, { signal: controller.signal });
         const json = await r.json().catch(() => ({}));
         const apiEvents: AggregatedEvent[] = Array.isArray(json?.events) ? json.events : [];
         let localEvents: AggregatedEvent[] = [];
@@ -209,7 +210,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     try {
       if (paymentMethod === 'fiat') {
         if (paymentGateway === 'paystack') {
-          const initRes = await fetch('/api/orders/initialize', {
+          const initRes = await fetch(`${API_BASE_URL}/orders/initialize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -246,7 +247,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           return;
         }
         if (paymentGateway === 'flutterwave') {
-          const initRes = await fetch('/api/orders/initialize', {
+          const initRes = await fetch(`${API_BASE_URL}/orders/initialize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -284,9 +285,43 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           return;
         }
         if (paymentGateway === 'mpesa') {
-          const res = await mpesaStkPush();
-          toast.error(res.error || 'M-Pesa not configured.');
-          setIsPurchasing(false);
+          if (!customerPhone) {
+            toast.error('Please enter your M-Pesa phone number.');
+            setIsPurchasing(false);
+            return;
+          }
+
+          const initRes = await fetch(`${API_BASE_URL}/orders/initialize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventId: String(selectedEvent.id),
+              tierId: String(selectedTierData?.id),
+              quantity,
+              paymentMethod: 'CREDIT_CARD',
+              gateway: 'mpesa',
+              customerEmail: customerEmail || 'buyer@example.com',
+            }),
+          });
+
+          if (!initRes.ok) {
+            toast.info('Order init skipped (server offline). Proceeding with M-Pesa sandbox checkout.');
+          }
+
+          const init = await initRes.json().catch(() => ({}));
+
+          const res = await mpesaStkPush({
+            amount: Number(amountWithFees.toFixed(2)),
+            phone: customerPhone,
+            orderId: init.orderId,
+            currency: fiatCurrency,
+          });
+
+          if (!res.ok) {
+            toast.info(res.error || 'M-Pesa unavailable. Issuing ticket in sandbox mode.');
+          }
+
+          await finalizeTicket(selectedEvent, selectedTierData);
           return;
         }
         if (paymentGateway === 'stripe') {
@@ -299,7 +334,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         return;
       }
 
-      const res = await fetch('/api/orders/confirm-crypto', {
+      const res = await fetch(`${API_BASE_URL}/orders/confirm-crypto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -364,6 +399,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       
       // Local fallback for demo dashboard
       try {
+        // Record sale for organizer dashboard
         const saleRecord = {
           id: `sale-${Date.now()}`,
           eventId: event.id,
@@ -376,6 +412,23 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         const existingSales = JSON.parse(localStorage.getItem('gatepass_sales') || '[]');
         existingSales.push(saleRecord);
         localStorage.setItem('gatepass_sales', JSON.stringify(existingSales));
+
+        // Record purchased ticket for attendee dashboard (local fallback)
+        const ticketRecord = {
+          id: `order-${Date.now()}`,
+          eventId: event.id,
+          eventTitle: event.title,
+          date: event.eventDate,
+          venue: event.venue || '',
+          seatNumber: 'GA',
+          price: selectedTierData ? selectedTierData.price : 0,
+          status: 'confirmed',
+          ticketType: selectedTierData ? selectedTierData.name : 'General Admission',
+          organizer: 'Organizer',
+        };
+        const existingTickets = JSON.parse(localStorage.getItem('gatepass_user_tickets') || '[]');
+        existingTickets.unshift(ticketRecord);
+        localStorage.setItem('gatepass_user_tickets', JSON.stringify(existingTickets));
       } catch {}
 
       if (selectedTierData) {
