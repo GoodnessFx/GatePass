@@ -75,7 +75,7 @@ export function ResetPasswordPage({ token, onSuccess, onBack }: ResetPasswordPag
 
       <div className="w-full max-w-md mx-auto relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
+          <h1 className="text-5xl font-semibold tracking-tight text-white mb-2">GatePass</h1>
         </div>
 
         <Card className="border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">

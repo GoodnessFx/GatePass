@@ -11,6 +11,7 @@ const TicketPurchase = React.lazy(() => import('./components/TicketPurchase').th
 const MobileScanner = React.lazy(() => import('./components/MobileScanner').then(m => ({ default: m.MobileScanner })));
 const Analytics = React.lazy(() => import('./components/Analytics').then(m => ({ default: m.Analytics })));
 const SplashScreen = React.lazy(() => import('./components/SplashScreen').then(m => ({ default: m.SplashScreen })));
+const BeginnerGuidePage = React.lazy(() => import('./components/BeginnerGuidePage').then(m => ({ default: m.BeginnerGuidePage })));
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { WalletConnection } from './components/WalletConnection';
@@ -28,9 +29,8 @@ import {
 } from 'lucide-react';
 
 import { NotificationCenter } from './components/NotificationCenter';
-import { LampBackground } from '@/components/ui/lamp-background';
 
-type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics';
+type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
@@ -272,10 +272,11 @@ function App() {
             onRoleSelect={handleRoleSelection}
             onConnect={handleWalletConnect}
             isConnected={isWalletConnected}
-          onBrowseEvents={() => {
-            setSelectedEvent('browse');
-            navigate('ticket-purchase');
-          }}
+            onBrowseEvents={() => {
+              setSelectedEvent('browse');
+              navigate('ticket-purchase');
+            }}
+            onOpenBeginnerGuide={() => setCurrentView('beginner-guide')}
           />
         );
 
@@ -369,6 +370,13 @@ function App() {
           />
         );
 
+      case 'beginner-guide':
+        return (
+          <BeginnerGuidePage
+            onBack={() => setCurrentView('landing')}
+          />
+        );
+
       default:
         return (
           <div className="min-h-screen flex items-center justify-center">
@@ -393,88 +401,73 @@ function App() {
 
   if (showSplash) {
     return (
-      <div className="relative min-h-screen">
-        <LampBackground />
-        <div className="relative z-10">
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-            <SplashScreen onComplete={() => setShowSplash(false)} />
-          </React.Suspense>
-        </div>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+          <SplashScreen onComplete={() => setShowSplash(false)} />
+        </React.Suspense>
       </div>
     );
   }
 
   if (currentView === 'login') {
     return (
-      <div className="relative min-h-screen">
-        <LampBackground />
-        <div className="relative z-10">
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-            <LoginPage
-              onLoginComplete={() => {
-                try {
-                  const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
-                  if (role) {
-                    setUserRole(role);
-                  }
-                } catch {
-                  // ignore
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+          <LoginPage
+            onLoginComplete={() => {
+              try {
+                const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+                if (role) {
+                  setUserRole(role);
                 }
-                setCurrentView('landing');
-              }}
-              onShowSignup={() => setCurrentView('signup')}
-              onForgotPassword={() => setCurrentView('forgot-password')}
-            />
-          </React.Suspense>
-        </div>
+              } catch {
+                // ignore
+              }
+              setCurrentView('landing');
+            }}
+            onShowSignup={() => setCurrentView('signup')}
+            onForgotPassword={() => setCurrentView('forgot-password')}
+          />
+        </React.Suspense>
       </div>
     );
   }
 
   if (currentView === 'signup') {
     return (
-      <div className="relative min-h-screen">
-        <LampBackground />
-        <div className="relative z-10">
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-            <SignupPage
-              onSignupComplete={() => setCurrentView('landing')}
-              onShowLogin={() => setCurrentView('login')}
-            />
-          </React.Suspense>
-        </div>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+          <SignupPage
+            onSignupComplete={() => setCurrentView('landing')}
+            onShowLogin={() => setCurrentView('login')}
+          />
+        </React.Suspense>
       </div>
     );
   }
 
   if (currentView === 'forgot-password') {
     return (
-      <div className="relative min-h-screen">
-        <LampBackground />
-        <div className="relative z-10">
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-            <ForgotPasswordPage
-              onBack={() => setCurrentView('login')}
-            />
-          </React.Suspense>
-        </div>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+          <ForgotPasswordPage
+            onBack={() => setCurrentView('login')}
+          />
+        </React.Suspense>
       </div>
     );
   }
 
   if (currentView === 'reset-password' && resetToken) {
     return (
-      <div className="relative min-h-screen">
-        <LampBackground />
-        <div className="relative z-10">
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-            <ResetPasswordPage
-              token={resetToken}
-              onSuccess={() => setCurrentView('login')}
-              onBack={() => setCurrentView('login')}
-            />
-          </React.Suspense>
-        </div>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
+          <ResetPasswordPage
+            token={resetToken}
+            onSuccess={() => setCurrentView('login')}
+            onBack={() => setCurrentView('login')}
+          />
+        </React.Suspense>
       </div>
     );
   }
@@ -482,10 +475,9 @@ function App() {
 
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-slate-950 text-slate-100">
-      <LampBackground />
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       {showSplash ? (
-        <div className="relative z-10">
+        <div>
           <SplashScreen onComplete={() => setShowSplash(false)} />
         </div>
       ) : (

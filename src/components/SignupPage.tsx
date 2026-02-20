@@ -145,7 +145,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     <AuthContainer>
       <div className="w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
+          <h1 className="text-5xl font-semibold tracking-tight text-white mb-2">GatePass</h1>
           <p className="text-muted-foreground">Join the Revolution</p>
         </div>
 

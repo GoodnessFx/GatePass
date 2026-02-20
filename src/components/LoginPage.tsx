@@ -58,7 +58,7 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
     <AuthContainer>
       <div className="w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-calligraphy text-primary mb-2">GatePass</h1>
+          <h1 className="text-5xl font-semibold tracking-tight text-white mb-2">GatePass</h1>
         </div>
 
         <Card className="w-full border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">

@@ -1,17 +1,21 @@
 import * as React from "react";
 
 import { cn } from "./utils";
+import { GlowingEffect } from "./glowing-effect";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      data-slot="card"
-      className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border",
-        className,
-      )}
-      {...props}
-    />
+    <div className="relative group rounded-[26px] bg-slate-950/95">
+      <GlowingEffect glow variant="default" borderWidth={1} />
+      <div
+        data-slot="card"
+        className={cn(
+          "bg-card/98 text-card-foreground flex flex-col gap-6 rounded-[22px] border border-slate-800/80 min-h-[190px] sm:min-h-[210px]",
+          className,
+        )}
+        {...props}
+      />
+    </div>
   );
 }
 
