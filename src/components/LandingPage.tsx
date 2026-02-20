@@ -32,29 +32,29 @@ interface LandingPageProps {
 
 const heroTeam = [
   {
-    initials: 'AO',
-    name: 'Alex Organizer',
-    src: 'https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a1.jpg'
+    initials: 'CN',
+    name: 'Chinenye – Festival Lead',
+    src: 'https://images.unsplash.com/photo-1524230572899-a752b3835840?auto=format&fit=crop&w=256&q=80'
   },
   {
-    initials: 'LS',
-    name: 'Lena Stage Lead',
-    src: 'https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a2.jpg'
+    initials: 'TO',
+    name: 'Tobi – Gate Operations',
+    src: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=256&q=80'
   },
   {
-    initials: 'TM',
-    name: 'Tunde Marketer',
-    src: 'https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a3.jpg'
+    initials: 'AK',
+    name: 'Ada – Artist Liaison',
+    src: 'https://images.unsplash.com/photo-1521146764736-56c929d59c82?auto=format&fit=crop&w=256&q=80'
   },
   {
-    initials: 'KC',
-    name: 'Kemi Check‑in',
-    src: 'https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a4.jpg'
+    initials: 'SM',
+    name: 'Sola – Security Lead',
+    src: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=256&q=80'
   },
   {
-    initials: 'RV',
-    name: 'Ravi Vendor Lead',
-    src: 'https://res.cloudinary.com/doonkheo8/image/upload/v1770279333/a5.jpg'
+    initials: 'IK',
+    name: 'Ike – Vendor Manager',
+    src: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=256&q=80'
   }
 ];
 

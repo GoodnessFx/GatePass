@@ -117,14 +117,14 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {mockWallets.map((wallet) => (
             <Card
               key={wallet.name}
-              className="cursor-pointer transition-colors hover:bg-muted/50"
+              className="cursor-pointer transition-colors hover:bg-muted/50 !min-h-0"
               onClick={() => handleWalletConnect(wallet.name)}
             >
-              <CardContent className="flex items-center justify-between p-4">
+              <CardContent className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">{wallet.icon}</span>
                   <div>

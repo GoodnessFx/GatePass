@@ -189,13 +189,40 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
 
         <Tabs defaultValue="tickets" className="w-full">
           <div className="border-b mb-4">
-            <TabsList className="w-full sm:w-auto flex">
-              <TabsTrigger value="tickets" className="flex-1 sm:flex-none">My Tickets</TabsTrigger>
-              <TabsTrigger value="badges" className="flex-1 sm:flex-none">POA Badges</TabsTrigger>
-              <TabsTrigger value="history" className="flex-1 sm:flex-none">History</TabsTrigger>
-              <TabsTrigger value="gigs" className="flex-1 sm:flex-none">Gigs</TabsTrigger>
-              <TabsTrigger value="community" className="flex-1 sm:flex-none">Community</TabsTrigger>
-            </TabsList>
+            <div className="rounded-full bg-slate-900/70 border border-slate-800 px-2 py-1">
+              <TabsList className="w-full flex overflow-x-auto scrollbar-none gap-1 sm:gap-2">
+                <TabsTrigger
+                  value="tickets"
+                  className="flex-1 sm:flex-none rounded-full px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  My Tickets
+                </TabsTrigger>
+                <TabsTrigger
+                  value="badges"
+                  className="flex-1 sm:flex-none rounded-full px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  POA Badges
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  className="flex-1 sm:flex-none rounded-full px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  History
+                </TabsTrigger>
+                <TabsTrigger
+                  value="gigs"
+                  className="flex-1 sm:flex-none rounded-full px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  Gigs
+                </TabsTrigger>
+                <TabsTrigger
+                  value="community"
+                  className="flex-1 sm:flex-none rounded-full px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  Community
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <TabsContent value="tickets" className="space-y-6">

@@ -51,6 +51,7 @@ interface TicketTier {
 export function EventCreation({ onBack }: EventCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [ticketCurrency, setTicketCurrency] = useState<'USD' | 'NGN' | 'GHS' | 'KES' | 'ZAR' | 'EUR' | 'GBP'>('USD');
   
   // Form state
   const [eventData, setEventData] = useState({
@@ -90,6 +91,16 @@ export function EventCreation({ onBack }: EventCreationProps) {
     refundDeadline: 24,
     privateEvent: false
   });
+
+  const currencySymbols: Record<string, string> = {
+    USD: '$',
+    NGN: '₦',
+    GHS: '₵',
+    KES: 'KSh',
+    ZAR: 'R',
+    EUR: '€',
+    GBP: '£'
+  };
 
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
@@ -192,9 +203,9 @@ export function EventCreation({ onBack }: EventCreationProps) {
               <p className="text-muted-foreground">Tell us about your event</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="space-y-1.5">
                   <Label htmlFor="title">Event Title</Label>
                   <Input
                     id="title"
@@ -204,7 +215,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="category">Category</Label>
                   <Select onValueChange={(value: string) => setEventData({...eventData, category: value})}>
                     <SelectTrigger>
@@ -221,7 +232,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   </Select>
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
@@ -232,7 +243,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="website">Website (Optional)</Label>
                   <Input
                     id="website"
@@ -243,8 +254,8 @@ export function EventCreation({ onBack }: EventCreationProps) {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
+              <div className="space-y-6">
+                <div className="space-y-1.5">
                   <Label htmlFor="venue">Venue Name</Label>
                   <Input
                     id="venue"
@@ -254,7 +265,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
@@ -264,7 +275,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="capacity">Max Capacity</Label>
                   <Input
                     id="capacity"
@@ -275,7 +286,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-1.5">
                   <Label>Event Image</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                     {eventData.image ? (
@@ -445,108 +456,222 @@ export function EventCreation({ onBack }: EventCreationProps) {
       case 3:
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap justify-between items-center gap-3">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Ticket Tiers</h2>
                 <p className="text-muted-foreground">Configure your ticket types and pricing</p>
               </div>
-              <Button onClick={addTicketTier} className="flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Add Tier</span>
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Currency</Label>
+                  <Select
+                    value={ticketCurrency}
+                    onValueChange={(value) =>
+                      setTicketCurrency(value as 'USD' | 'NGN' | 'GHS' | 'KES' | 'ZAR' | 'EUR' | 'GBP')
+                    }
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="NGN">NGN</SelectItem>
+                      <SelectItem value="GHS">GHS</SelectItem>
+                      <SelectItem value="KES">KES</SelectItem>
+                      <SelectItem value="ZAR">ZAR</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={addTicketTier} className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Add Tier</span>
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {ticketTiers.map((tier, index) => (
-                <Card key={tier.id}>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+              <div className="space-y-4">
+                {ticketTiers.map((tier, index) => (
+                  <Card key={tier.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg">Tier {index + 1}</CardTitle>
+                        {ticketTiers.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeTicketTier(tier.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <Label>Tier Name</Label>
+                          <Input
+                            placeholder="General Admission"
+                            value={tier.name}
+                            onChange={(e) => updateTicketTier(tier.id, { name: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <Label>Price ({ticketCurrency})</Label>
+                          <Input
+                            type="number"
+                            placeholder="50"
+                            value={tier.price}
+                            onChange={(e) =>
+                              updateTicketTier(tier.id, { price: parseFloat(e.target.value) || 0 })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Quantity</Label>
+                          <Input
+                            type="number"
+                            placeholder="500"
+                            value={tier.quantity}
+                            onChange={(e) =>
+                              updateTicketTier(tier.id, { quantity: parseInt(e.target.value) || 0 })
+                            }
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label>Description</Label>
+                          <Input
+                            placeholder="Standard entry to the event"
+                            value={tier.description}
+                            onChange={(e) =>
+                              updateTicketTier(tier.id, { description: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Max Per Person</Label>
+                          <Input
+                            type="number"
+                            placeholder="4"
+                            value={tier.maxPerPerson}
+                            onChange={(e) =>
+                              updateTicketTier(tier.id, {
+                                maxPerPerson: parseInt(e.target.value) || 1
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                <Card>
                   <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg">Tier {index + 1}</CardTitle>
-                      {ticketTiers.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeTicketTier(tier.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <CardTitle>Pricing Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <Label>Tier Name</Label>
-                        <Input
-                          placeholder="General Admission"
-                          value={tier.name}
-                          onChange={(e) => updateTicketTier(tier.id, { name: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Price (USD)</Label>
-                        <Input
-                          type="number"
-                          placeholder="50"
-                          value={tier.price}
-                          onChange={(e) => updateTicketTier(tier.id, { price: parseFloat(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Quantity</Label>
-                        <Input
-                          type="number"
-                          placeholder="500"
-                          value={tier.quantity}
-                          onChange={(e) => updateTicketTier(tier.id, { quantity: parseInt(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label>Description</Label>
-                        <Input
-                          placeholder="Standard entry to the event"
-                          value={tier.description}
-                          onChange={(e) => updateTicketTier(tier.id, { description: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Max Per Person</Label>
-                        <Input
-                          type="number"
-                          placeholder="4"
-                          value={tier.maxPerPerson}
-                          onChange={(e) => updateTicketTier(tier.id, { maxPerPerson: parseInt(e.target.value) || 1 })}
-                        />
+                    <div className="space-y-2">
+                      {ticketTiers.map((tier, index) => (
+                        <div key={tier.id} className="flex justify-between items-center">
+                          <span>
+                            {tier.name || `Tier ${index + 1}`} ({tier.quantity} tickets)
+                          </span>
+                          <span className="font-medium">
+                            {currencySymbols[ticketCurrency] ?? ticketCurrency}
+                            {tier.price} each
+                          </span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-2 mt-4">
+                        <div className="flex justify-between items-center font-semibold">
+                          <span>Total Potential Revenue</span>
+                          <span>
+                            {currencySymbols[ticketCurrency] ?? ticketCurrency}
+                            {ticketTiers
+                              .reduce((sum, tier) => sum + tier.price * tier.quantity, 0)
+                              .toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {ticketTiers.map((tier, index) => (
-                    <div key={tier.id} className="flex justify-between items-center">
-                      <span>{tier.name || `Tier ${index + 1}`} ({tier.quantity} tickets)</span>
-                      <span className="font-medium">${tier.price} each</span>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ticket className="h-4 w-4" />
+                    <span>Ticket Preview</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Live preview of how your primary ticket could look to attendees.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5">
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          GatePass ticket
+                        </p>
+                        <p className="text-lg font-semibold truncate">
+                          {eventData.title || 'Event title'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {eventData.venue || 'Event venue'}
+                        </p>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <p className="text-xs text-muted-foreground">From</p>
+                        <p className="text-base font-semibold">
+                          {currencySymbols[ticketCurrency] ?? ticketCurrency}
+                          {(ticketTiers[0]?.price || 0).toLocaleString()}
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            {ticketCurrency}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                  <div className="border-t pt-2 mt-4">
-                    <div className="flex justify-between items-center font-semibold">
-                      <span>Total Potential Revenue</span>
-                      <span>
-                        ${ticketTiers.reduce((sum, tier) => sum + (tier.price * tier.quantity), 0).toLocaleString()}
-                      </span>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Date</p>
+                        <p className="font-medium">
+                          {eventData.startDate
+                            ? format(eventData.startDate, 'MMM d, yyyy')
+                            : 'Not set'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Time</p>
+                        <p className="font-medium">
+                          {eventData.startTime || 'Not set'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Ticket type</p>
+                        <p className="font-medium">
+                          {ticketTiers[0]?.name || 'General Admission'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Quantity per order</p>
+                        <p className="font-medium">
+                          Up to {ticketTiers[0]?.maxPerPerson || 4}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <p className="text-xs text-muted-foreground">
+                    This is a visual preview. Final ticket layout may adapt for mobile and web.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         );
 

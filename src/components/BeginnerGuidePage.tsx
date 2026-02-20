@@ -9,6 +9,52 @@ interface BeginnerGuidePageProps {
 }
 
 export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
+  const organizerSteps = [
+    {
+      title: 'Create your event',
+      description:
+        'From the organizer dashboard, choose Create Event. Add title, venue, date, ticket tiers, and pricing.',
+    },
+    {
+      title: 'Publish and share',
+      description:
+        'Save your event and share the event link. GatePass issues tickets and sends confirmations automatically.',
+    },
+    {
+      title: 'Track sales in real time',
+      description:
+        'Use the Analytics page to monitor sold tickets, revenue, and check-in progress before and during the event.',
+    },
+    {
+      title: 'Scan at the gate',
+      description:
+        'On event day, open the Mobile Scanner and scan each QR code. GatePass confirms valid tickets instantly.',
+    },
+  ];
+
+  const attendeeSteps = [
+    {
+      title: 'Discover an event',
+      description:
+        'On the landing page, choose Browse Events or sign in to your attendee dashboard to see recommended events.',
+    },
+    {
+      title: 'Buy your ticket',
+      description:
+        'Select a ticket type, choose quantity, and pay with card, mobile money, or crypto depending on the organizer settings.',
+    },
+    {
+      title: 'Store and manage tickets',
+      description:
+        'Your tickets appear in My Tickets. From there you can download, view the QR code, or transfer if the organizer allows it.',
+    },
+    {
+      title: 'Check in and collect badges',
+      description:
+        'At the venue, show your QR code at the gate. After the event you can unlock badges and view your full event history.',
+    },
+  ];
+
   return (
     <div className="min-h-[100svh] bg-slate-950 text-slate-100">
       <div
@@ -18,8 +64,8 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
         <div className="w-full h-full bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)] opacity-80" />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="flex items-start justify-between gap-4 mb-10">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="flex items-start justify-between gap-6 mb-12">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70 mb-2">
               Product docs
@@ -45,45 +91,45 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[240px,1fr] items-start">
-          <nav className="space-y-2 text-sm">
+        <div className="grid gap-12 lg:grid-cols-[240px,minmax(0,1fr)] items-start">
+          <nav className="space-y-2 text-sm text-slate-400">
             <a
               href="#overview"
-              className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-slate-50"
+              className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-slate-50"
             >
               <span>Overview</span>
               <BookOpen className="h-4 w-4 opacity-80" />
             </a>
             <a
               href="#organizer"
-              className="block rounded-lg border border-transparent px-3 py-2 text-slate-300 hover:border-slate-600 hover:bg-slate-900/70"
+              className="block rounded-lg border border-transparent px-3 py-2.5 hover:border-slate-600 hover:bg-slate-900/70"
             >
               Organizer guide
             </a>
             <a
               href="#attendee"
-              className="block rounded-lg border border-transparent px-3 py-2 text-slate-300 hover:border-slate-600 hover:bg-slate-900/70"
+              className="block rounded-lg border border-transparent px-3 py-2.5 hover:border-slate-600 hover:bg-slate-900/70"
             >
               Attendee guide
             </a>
             <a
               href="#flow"
-              className="block rounded-lg border border-transparent px-3 py-2 text-slate-300 hover:border-slate-600 hover:bg-slate-900/70"
+              className="block rounded-lg border border-transparent px-3 py-2.5 hover:border-slate-600 hover:bg-slate-900/70"
             >
               End-to-end flow
             </a>
             <a
               href="#realtime"
-              className="block rounded-lg border border-transparent px-3 py-2 text-slate-300 hover:border-slate-600 hover:bg-slate-900/70"
+              className="block rounded-lg border border-transparent px-3 py-2.5 hover:border-slate-600 hover:bg-slate-900/70"
             >
               Real-time data
             </a>
           </nav>
 
-          <div className="space-y-10">
-            <section id="overview" className="space-y-4">
-              <Card className="border-slate-700 bg-slate-950/80">
-                <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-14">
+            <section id="overview" className="space-y-6">
+              <Card className="border-slate-700 bg-slate-950/80 shadow-sm">
+                <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle className="text-xl sm:text-2xl">What is GatePass?</CardTitle>
                     <CardDescription>
@@ -95,7 +141,7 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
                     For organizers and attendees
                   </Badge>
                 </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-3">
+                <CardContent className="grid gap-6 md:grid-cols-3 py-6">
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Ticket className="h-4 w-4 text-primary" />
@@ -128,62 +174,30 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
               </Card>
             </section>
 
-            <section id="organizer" className="space-y-4">
+            <section id="organizer" className="space-y-6 scroll-mt-28">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-semibold">Organizer guide</h2>
                 <Badge variant="outline">For event owners and teams</Badge>
               </div>
-              <Card className="border-slate-700 bg-slate-950/80">
-                <CardContent className="grid gap-6 md:grid-cols-2 pt-6">
-                  <div className="space-y-4 text-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        1
+              <Card className="border-slate-700 bg-slate-950/80 shadow-sm">
+                <CardContent className="grid gap-8 md:grid-cols-2 pt-6 pb-6">
+                  <div className="space-y-6 text-sm">
+                    {organizerSteps.map((step, index) => (
+                      <div key={step.title} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            {index + 1}
+                          </div>
+                          {index < organizerSteps.length - 1 && (
+                            <div className="mt-1 h-full w-px bg-slate-700" />
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-medium">{step.title}</p>
+                          <p className="text-muted-foreground">{step.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">Create your event</p>
-                        <p className="text-muted-foreground">
-                          From the organizer dashboard, choose Create Event. Add title, venue, date,
-                          ticket tiers, and pricing.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        2
-                      </div>
-                      <div>
-                        <p className="font-medium">Publish and share</p>
-                        <p className="text-muted-foreground">
-                          Save your event and share the event link. GatePass issues tickets and sends
-                          confirmations automatically.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        3
-                      </div>
-                      <div>
-                        <p className="font-medium">Track sales in real time</p>
-                        <p className="text-muted-foreground">
-                          Use the Analytics page to monitor sold tickets, revenue, and check-in progress
-                          before and during the event.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        4
-                      </div>
-                      <div>
-                        <p className="font-medium">Scan at the gate</p>
-                        <p className="text-muted-foreground">
-                          On event day, open the Mobile Scanner and scan each QR code. GatePass confirms
-                          valid tickets instantly.
-                        </p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
                   <div className="space-y-4 text-sm">
@@ -211,62 +225,30 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
               </Card>
             </section>
 
-            <section id="attendee" className="space-y-4">
+            <section id="attendee" className="space-y-6 scroll-mt-28">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-semibold">Attendee guide</h2>
                 <Badge variant="outline">For ticket buyers</Badge>
               </div>
-              <Card className="border-slate-700 bg-slate-950/80">
-                <CardContent className="grid gap-6 md:grid-cols-2 pt-6">
-                  <div className="space-y-4 text-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        1
+              <Card className="border-slate-700 bg-slate-950/80 shadow-sm">
+                <CardContent className="grid gap-8 md:grid-cols-2 pt-6 pb-6">
+                  <div className="space-y-6 text-sm">
+                    {attendeeSteps.map((step, index) => (
+                      <div key={step.title} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            {index + 1}
+                          </div>
+                          {index < attendeeSteps.length - 1 && (
+                            <div className="mt-1 h-full w-px bg-slate-700" />
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-medium">{step.title}</p>
+                          <p className="text-muted-foreground">{step.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">Discover an event</p>
-                        <p className="text-muted-foreground">
-                          On the landing page, choose Browse Events or sign in to your attendee dashboard
-                          to see recommended events.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        2
-                      </div>
-                      <div>
-                        <p className="font-medium">Buy your ticket</p>
-                        <p className="text-muted-foreground">
-                          Select a ticket type, choose quantity, and pay with card, mobile money, or
-                          crypto depending on the organizer settings.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        3
-                      </div>
-                      <div>
-                        <p className="font-medium">Store and manage tickets</p>
-                        <p className="text-muted-foreground">
-                          Your tickets appear in My Tickets. From there you can download, view the QR
-                          code, or transfer if the organizer allows it.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        4
-                      </div>
-                      <div>
-                        <p className="font-medium">Check in and collect badges</p>
-                        <p className="text-muted-foreground">
-                          At the venue, show your QR code at the gate. After the event you can unlock
-                          badges and view your full event history.
-                        </p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                   <div className="space-y-4 text-sm">
                     <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
@@ -291,12 +273,12 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
               </Card>
             </section>
 
-            <section id="flow" className="space-y-4">
+            <section id="flow" className="space-y-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-semibold">End-to-end flow at a glance</h2>
               </div>
-              <Card className="border-slate-700 bg-slate-950/80">
-                <CardContent className="space-y-4 pt-6 text-xs sm:text-sm">
+              <Card className="border-slate-700 bg-slate-950/80 shadow-sm">
+                <CardContent className="space-y-5 pt-6 pb-6 text-xs sm:text-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-md bg-background px-3 py-1 font-medium">Organizer creates event</span>
                     <span>→</span>
@@ -310,7 +292,7 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
                     <span>→</span>
                     <span className="rounded-md bg-background px-3 py-1 font-medium">Analytics and payouts</span>
                   </div>
-                  <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-3 grid gap-4 sm:grid-cols-3">
                     <div className="rounded-lg border border-slate-800 bg-background/80 p-3">
                       <p className="text-xs font-semibold mb-1">Before event</p>
                       <p className="text-xs text-muted-foreground">
@@ -334,12 +316,12 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
               </Card>
             </section>
 
-            <section id="realtime" className="space-y-4">
+            <section id="realtime" className="space-y-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-semibold">Real-time data and security</h2>
               </div>
-              <Card className="border-slate-700 bg-slate-950/80">
-                <CardContent className="grid gap-6 md:grid-cols-2 pt-6 text-sm">
+              <Card className="border-slate-700 bg-slate-950/80 shadow-sm">
+                <CardContent className="grid gap-8 md:grid-cols-2 pt-6 pb-6 text-sm">
                   <div className="space-y-3">
                     <p className="font-medium">Live dashboards</p>
                     <p className="text-muted-foreground">
@@ -387,4 +369,3 @@ export function BeginnerGuidePage({ onBack }: BeginnerGuidePageProps) {
 }
 
 export default BeginnerGuidePage;
-

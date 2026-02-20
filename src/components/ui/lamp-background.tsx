@@ -52,14 +52,16 @@ export function LampBackground({
           transition={{ delay: 0.2, duration: 0.9, ease: "easeInOut" }}
           className="absolute inset-auto z-10 h-0.5 w-[34rem] -translate-y-[7rem] bg-cyan-400 left-1/2 -translate-x-1/2"
         />
-        <motion.h1
-          initial={{ opacity: 0.0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.8, ease: "easeInOut" }}
-          className="absolute top-28 left-1/2 -translate-x-1/2 z-10 text-center text-5xl md:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-cyan-100 via-cyan-200 to-cyan-500/50 drop-shadow-[0_10px_25px_rgba(34,211,238,0.35)]"
-        >
-          {brandText}
-        </motion.h1>
+        {brandText && brandText.trim().length > 0 && (
+          <motion.h1
+            initial={{ opacity: 0.0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.8, ease: "easeInOut" }}
+            className="absolute top-28 left-1/2 -translate-x-1/2 z-10 text-center text-5xl md:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-cyan-100 via-cyan-200 to-cyan-500/50 drop-shadow-[0_10px_25px_rgba(34,211,238,0.35)]"
+          >
+            {brandText}
+          </motion.h1>
+        )}
       </div>
     </div>
   );
