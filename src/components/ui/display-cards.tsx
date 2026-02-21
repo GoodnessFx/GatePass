@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { Sparkles } from "lucide-react";
 
 interface DisplayCardProps {
@@ -115,4 +115,3 @@ export function DisplayCardsDemo() {
     </div>
   );
 }
-

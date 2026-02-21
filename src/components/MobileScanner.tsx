@@ -123,7 +123,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
     const newScan: ScanResult = {
       id: Date.now().toString(),
       ticketId,
-      eventTitle: selectedEvent,
+      eventTitle: selectedEventTitle,
       attendeeName,
       ticketType: 'General',
       seatNumber: 'N/A',
@@ -246,7 +246,10 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
         <div className="mb-6">
           <Label className="text-sm">Select Event</Label>
           <div className="mt-2 max-w-xs">
-            <Select onValueChange={(val) => setCurrentEventId(val)} defaultValue={currentEventId}>
+            <Select
+              onValueChange={(val: string) => setCurrentEventId(val)}
+              defaultValue={currentEventId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Choose Event" />
               </SelectTrigger>

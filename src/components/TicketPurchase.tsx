@@ -55,6 +55,8 @@ type AggregatedEvent = {
   category?: string;
   status?: string;
   externalUrl?: string;
+  verified?: boolean;
+  date?: string;
   tiers?: Array<{ id: string; name: string; price: number; available: number; description?: string }>;
 };
 
@@ -200,12 +202,22 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     if (!selectedEvent || !selectedTier) return;
     setIsPurchasing(true);
 
-    const selectedTierData = selectedEvent.tiers?.find(tier => String(tier.id) === selectedTier);
+    const selectedTierData = selectedEvent.tiers?.find(
+      (tier) => String(tier.id) === selectedTier,
+    );
+    if (!selectedTierData) {
+      toast.error('Please select a ticket tier');
+      setIsPurchasing(false);
+      return;
+    }
     const subtotal = totalPrice;
     const fee = subtotal * 0.025;
     const discount = calculateDiscount(subtotal, activePromo, promoCode);
-    const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
-    const amountWithFees = Math.max(0, subtotal + fee - discount - groupDiscount + donationAmount + tipAmount);
+    const groupDiscount = quantity >= 10 ? selectedTierData.price * 2 : 0;
+    const amountWithFees = Math.max(
+      0,
+      subtotal + fee - discount - groupDiscount + donationAmount + tipAmount,
+    );
 
     try {
       if (paymentMethod === 'fiat') {
@@ -440,17 +452,21 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             name: event.title,
             dateISO: event.eventDate,
             time: '',
-            venue: event.venue,
+            venue: event.venue ?? '',
             bannerUrl: undefined,
           },
-          attendee: { name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee') },
+          attendee: {
+            name: customerEmail ? customerEmail.split('@')[0] : 'Attendee',
+          },
           purchaseTimestamp: Date.now(),
           blockchain: { chain: 'polygon', txHash: '0xDEMO' },
           secretSalt: 'demo-salt',
         };
 
         const { ticketId, pdfBytes } = await generateSecureTicketPDF(input);
-        const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+        const blob = new Blob([new Uint8Array(pdfBytes)], {
+          type: 'application/pdf',
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -690,7 +706,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                           <span>Purchase Tickets</span>
                         </DialogTitle>
                         <DialogDescription>
-                          {selectedEvent?.title} • {selectedEvent?.date}
+                          {selectedEvent?.title}{' '}
+                          •{' '}
+                          {selectedEvent
+                            ? new Date(selectedEvent.eventDate).toLocaleString()
+                            : ''}
                         </DialogDescription>
                       </DialogHeader>
                       

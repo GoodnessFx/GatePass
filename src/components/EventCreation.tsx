@@ -466,9 +466,9 @@ export function EventCreation({ onBack }: EventCreationProps) {
                   <Label className="text-sm">Currency</Label>
                   <Select
                     value={ticketCurrency}
-                    onValueChange={(value) =>
-                      setTicketCurrency(value as 'USD' | 'NGN' | 'GHS' | 'KES' | 'ZAR' | 'EUR' | 'GBP')
-                    }
+                    onValueChange={(
+                      value: 'USD' | 'NGN' | 'GHS' | 'KES' | 'ZAR' | 'EUR' | 'GBP',
+                    ) => setTicketCurrency(value)}
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue />
