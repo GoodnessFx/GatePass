@@ -110,11 +110,10 @@ router.post(
     const environment = process.env.MPESA_ENVIRONMENT || 'sandbox'
 
     if (!consumerKey || !consumerSecret || !shortcode || !passkey) {
-      logger.warn('M-Pesa credentials missing. Returning demo success response.', { orderId })
-      return res.json({
-        ok: true,
-        demo: true,
-        message: 'M-Pesa STK push simulated. Configure MPESA_* env vars for live payments.'
+      logger.error('M-Pesa credentials missing. Cannot initiate STK push.', { orderId })
+      return res.status(500).json({
+        ok: false,
+        error: 'M-Pesa is not configured on the server. Please contact the organizer.'
       })
     }
 

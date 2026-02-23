@@ -42,7 +42,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
       // to handle specific wallet protocols (WalletConnect, Coinbase Wallet SDK, etc.)
       
       if (walletName === 'WalletConnect' || walletName === 'Coinbase Wallet') {
-         // Fallback for demo: try injected first, if not warn user
+         // Fallback: try injected first, if not warn user
          // Ideally this would invoke specific SDKs
          if (!(window as any).ethereum) {
              const getWallet = confirm('Wallet not found. Would you like to install a crypto wallet?');

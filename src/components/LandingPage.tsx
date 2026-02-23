@@ -171,8 +171,6 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
       localStorage.setItem('gp_user_email', email.trim());
       if (name.trim()) localStorage.setItem('gp_display_name', name.trim());
       if (avatar) localStorage.setItem('gp_avatar', avatar);
-      localStorage.setItem('gp_demo_loggedin', 'true');
-      localStorage.setItem('gp_demo_role', 'attendee');
     } catch { }
     onRoleSelect('attendee');
   };

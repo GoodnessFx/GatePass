@@ -74,7 +74,7 @@ function DisplayCards({ cards }: DisplayCardsProps) {
 
 export default DisplayCards;
 
-const demoCards: DisplayCardProps[] = [
+const sampleCards: DisplayCardProps[] = [
   {
     icon: <Sparkles className="size-4 text-blue-300" />,
     title: "Featured",
@@ -106,11 +106,11 @@ const demoCards: DisplayCardProps[] = [
   },
 ];
 
-export function DisplayCardsDemo() {
+export function DisplayCardsShowcase() {
   return (
     <div className="flex min-h-[400px] w-full items-center justify-center py-20">
       <div className="w-full max-w-3xl">
-        <DisplayCards cards={demoCards} />
+        <DisplayCards cards={sampleCards} />
       </div>
     </div>
   );

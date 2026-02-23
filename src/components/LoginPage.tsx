@@ -38,19 +38,21 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
       
       if (response.ok) {
         localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('gp_demo_loggedin', 'true');
-        localStorage.setItem('gp_demo_role', data.user.role.toLowerCase());
-        localStorage.setItem('gp_user_email', data.user.email);
+        if (data.user?.role) {
+          localStorage.setItem('gp_user_role', String(data.user.role).toLowerCase());
+        }
+        if (data.user?.email) {
+          localStorage.setItem('gp_user_email', data.user.email);
+        } else {
+          localStorage.setItem('gp_user_email', email.trim());
+        }
         onLoginComplete();
       } else {
         alert(data.message || 'Login failed');
       }
     } catch (err) {
       console.error('Login error:', err);
-      // Fallback for demo if server is not running
-      localStorage.setItem('gp_demo_loggedin', 'true');
-      localStorage.setItem('gp_demo_role', role);
-      onLoginComplete();
+      alert('Unable to reach server. Please check your connection and try again.');
     }
   };
 

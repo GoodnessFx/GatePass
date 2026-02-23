@@ -4,44 +4,16 @@ import { logger } from '../utils/logger'
 
 const router = Router()
 
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check endpoint
- *     tags: [Health]
- *     responses:
- *       200:
- *         description: Service is healthy
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 services:
- *                   type: object
- *                   properties:
- *                     database:
- *                       type: string
- *                       example: connected
- */
 router.get('/', async (req, res) => {
   try {
-    // Check database connection
     await prisma.$queryRaw`SELECT 1`
-    
+
     const healthData = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       services: {
-        database: 'connected',
+        database: 'connected'
       },
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development'
@@ -50,33 +22,22 @@ router.get('/', async (req, res) => {
     res.json(healthData)
   } catch (error) {
     logger.error('Health check failed:', error)
-    
+
     res.status(503).json({
       status: 'error',
       timestamp: new Date().toISOString(),
       services: {
-        database: 'disconnected',
+        database: 'disconnected'
       },
       error: 'Service unhealthy'
     })
   }
 })
 
-/**
- * @swagger
- * /api/health/ready:
- *   get:
- *     summary: Readiness check endpoint
- *     tags: [Health]
- *     responses:
- *       200:
- *         description: Service is ready to accept traffic
- */
 router.get('/ready', async (req, res) => {
   try {
-    // More thorough checks for readiness
     await prisma.$queryRaw`SELECT 1`
-    
+
     res.json({
       status: 'ready',
       timestamp: new Date().toISOString()
@@ -88,6 +49,44 @@ router.get('/ready', async (req, res) => {
       timestamp: new Date().toISOString()
     })
   }
+})
+
+router.get('/payments', async (req, res) => {
+  const paystackConfigured = !!process.env.PAYSTACK_SECRET_KEY
+  const flutterwaveConfigured = !!process.env.FLUTTERWAVE_SECRET_HASH
+  const mpesaConfigured =
+    !!process.env.MPESA_CONSUMER_KEY &&
+    !!process.env.MPESA_CONSUMER_SECRET &&
+    !!process.env.MPESA_SHORTCODE &&
+    !!process.env.MPESA_PASSKEY
+
+  const gateways = {
+    paystack: {
+      configured: paystackConfigured,
+      status: paystackConfigured ? 'ok' : 'not_configured'
+    },
+    flutterwave: {
+      configured: flutterwaveConfigured,
+      status: flutterwaveConfigured ? 'ok' : 'not_configured'
+    },
+    mpesa: {
+      configured: mpesaConfigured,
+      status: mpesaConfigured ? 'ok' : 'not_configured'
+    },
+    stripe: {
+      configured: false,
+      status: 'not_configured'
+    }
+  }
+
+  const anyConfigured =
+    paystackConfigured || flutterwaveConfigured || mpesaConfigured
+
+  res.json({
+    status: anyConfigured ? 'ok' : 'not_configured',
+    timestamp: new Date().toISOString(),
+    gateways
+  })
 })
 
 export { router as healthRoutes }

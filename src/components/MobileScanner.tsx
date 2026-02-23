@@ -27,7 +27,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { verifyQr } from '../utils/ticketing/security';
+import { verifyQr, DEFAULT_QR_SECRET_SALT } from '../utils/ticketing/security';
 
 interface MobileScannerProps {
   onBack: () => void;
@@ -97,7 +97,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
     const eventIdFromQr = parts[1] || currentEventId;
     const result = await verifyQr(
       qrString,
-      'demo-salt',
+      DEFAULT_QR_SECRET_SALT,
       eventIdFromQr,
       (tid) => usedTicketsRef.current.has(tid),
       (tid) => usedTicketsRef.current.add(tid),
@@ -160,7 +160,7 @@ export function MobileScanner({ onBack }: MobileScannerProps) {
           const eventIdFromQr = parts[1] || currentEventId;
           const result = await verifyQr(
             decodedText,
-            'demo-salt',
+            DEFAULT_QR_SECRET_SALT,
             eventIdFromQr,
             (tid) => usedTicketsRef.current.has(tid),
             (tid) => usedTicketsRef.current.add(tid),

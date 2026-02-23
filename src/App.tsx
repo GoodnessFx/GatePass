@@ -52,23 +52,9 @@ function App() {
     const pathname = window.location.pathname;
 
     if (pathname === '/auth/callback' && authTokenParam) {
-        // Handle Social Login Callback
         localStorage.setItem('auth_token', authTokenParam);
-        localStorage.setItem('gp_demo_loggedin', 'true'); // Keep legacy for now
-        
-        // Decode token to get user info if possible, or fetch profile
-        // For now, default to attendee dashboard or landing
-        setIsWalletConnected(false); // Reset wallet state
-        
-        // Fetch user profile to determine role/name (mocking for now or needs API call)
-        // We'll just set a default and let them choose or fetch real data later
-        // Ideally we should call an API /me to get user details
-        
-        // Clean URL
+        setIsWalletConnected(false);
         window.history.replaceState({}, document.title, '/');
-        
-        // For simple flow, just set view to landing or dashboard if we knew role
-        // Let's assume attendee for safety
         setCurrentView('landing'); 
         toast.success('Successfully logged in via social media');
     } else if (resetTokenParam && !pathname.includes('/auth/callback')) {
@@ -97,16 +83,16 @@ function App() {
 
   useEffect(() => {
     if (showSplash) return;
-    
-    // Check for persistent login
-    const isLoggedIn = localStorage.getItem('gp_demo_loggedin') === 'true';
-    const savedRole = localStorage.getItem('gp_demo_role');
-    
-    if (isLoggedIn && savedRole) {
-      setUserRole(savedRole as UserRole);
+
+    const token = localStorage.getItem('auth_token');
+    const savedRole = (localStorage.getItem('gp_user_role') as UserRole) || null;
+
+    if (token && savedRole) {
+      setUserRole(savedRole);
       setCurrentView(savedRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+    } else if (token && !savedRole) {
+      setCurrentView('landing');
     } else {
-      // Don't force login if we're already on landing
       if (currentView !== 'landing' && currentView !== 'signup') {
         setCurrentView('login');
       }
@@ -186,8 +172,9 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('gp_demo_loggedin');
-    localStorage.removeItem('gp_demo_role');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('gp_user_role');
+    localStorage.removeItem('gp_user_email');
     setUserRole(null);
     setCurrentView('landing');
     setSelectedEvent(null);
@@ -197,11 +184,9 @@ function App() {
 
   useEffect(() => {
     try {
-      const loggedIn = localStorage.getItem('gp_demo_loggedin') === 'true';
-      const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
-      if (loggedIn && role) {
-        setUserRole(role);
-      }
+      const token = localStorage.getItem('auth_token');
+      const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+      if (token && role) setUserRole(role);
     } catch { }
   }, []);
 
@@ -285,7 +270,7 @@ function App() {
           <LoginPage
             onLoginComplete={() => {
               try {
-                const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
                 if (role) {
                   setUserRole(role);
                 }
@@ -416,7 +401,7 @@ function App() {
           <LoginPage
             onLoginComplete={() => {
               try {
-                const role = (localStorage.getItem('gp_demo_role') as UserRole) || null;
+                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
                 if (role) {
                   setUserRole(role);
                 }

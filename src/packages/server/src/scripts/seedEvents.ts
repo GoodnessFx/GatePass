@@ -92,6 +92,42 @@ async function main() {
       category: 'Technology',
       tags: 'dev,crypto,workshop',
       imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=2000'
+    },
+    {
+      title: 'NYC Web3 Summit',
+      description: 'Founders, developers, and VCs discussing the future of decentralized tech.',
+      venue: 'Chelsea Industrial',
+      city: 'New York',
+      eventDate: new Date(Date.now() + 86400000 * 15),
+      saleStart: new Date(),
+      saleEnd: new Date(Date.now() + 86400000 * 14),
+      totalSupply: 2000,
+      ticketPrice: 120,
+      currency: 'USD',
+      source: 'gatepass',
+      organizerId: organizer.id,
+      status: 'PUBLISHED',
+      category: 'Technology',
+      tags: 'web3,conference,usa',
+      imageUrl: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=2000'
+    },
+    {
+      title: 'Lagos Startup Nights',
+      description: 'Pitch battles, investor meetups, and networking for founders in Lagos.',
+      venue: 'Landmark Event Centre',
+      city: 'Lagos',
+      eventDate: new Date(Date.now() + 86400000 * 10),
+      saleStart: new Date(),
+      saleEnd: new Date(Date.now() + 86400000 * 9),
+      totalSupply: 800,
+      ticketPrice: 8000,
+      currency: 'NGN',
+      source: 'gatepass',
+      organizerId: organizer.id,
+      status: 'PUBLISHED',
+      category: 'Business',
+      tags: 'startup,networking,africa',
+      imageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=2000'
     }
   ]
 

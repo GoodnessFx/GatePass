@@ -1,3 +1,5 @@
+export const DEFAULT_QR_SECRET_SALT = 'gatepass-qr-secret-salt-v1'
+
 export type ParsedQr = {
   ticketId: string
   eventId: string

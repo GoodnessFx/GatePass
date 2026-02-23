@@ -16,8 +16,12 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
 
     if (response.data && response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
-      localStorage.setItem('gp_demo_loggedin', 'true');
-      localStorage.setItem('gp_demo_role', response.data.user.role.toLowerCase());
+      if (response.data.user?.role) {
+        localStorage.setItem('gp_user_role', String(response.data.user.role).toLowerCase());
+      }
+      if (response.data.user?.email) {
+        localStorage.setItem('gp_user_email', String(response.data.user.email));
+      }
       return { success: true, user: response.data.user, token: response.data.token };
     }
     

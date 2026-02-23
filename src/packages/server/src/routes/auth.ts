@@ -8,6 +8,7 @@ import { authenticate, AuthenticatedRequest } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
+import { ethers } from 'ethers'
 
 import passport from 'passport'
 const router = Router()
@@ -431,9 +432,17 @@ router.post('/wallet-connect', [
 
   const { walletAddress, signature, message, email, name } = req.body
 
-  // TODO: Verify signature against message and wallet address
-  // This would involve checking that the signature was created by the wallet
-  // For demo purposes, we'll skip this verification
+  let recoveredAddress: string
+  try {
+    recoveredAddress = ethers.verifyMessage(message, signature)
+  } catch (err: any) {
+    logger.warn('Wallet signature verification failed', { error: err?.message })
+    throw createError('Invalid wallet signature', 400)
+  }
+
+  if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+    throw createError('Signature does not match wallet address', 400)
+  }
 
   // Check if wallet is already connected
   let user = await prisma.user.findUnique({

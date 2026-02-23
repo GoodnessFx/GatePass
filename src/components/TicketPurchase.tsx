@@ -30,6 +30,7 @@ import {
   Info
 } from 'lucide-react';
 import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
+import { DEFAULT_QR_SECRET_SALT } from '../utils/ticketing/security';
 import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
 import { getActivePromotion, getSuggestedPromoCode, calculateDiscount } from '../utils/promotions/seasonal';
 import { API_BASE_URL } from '../constants';
@@ -235,7 +236,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             })
           });
           if (!initRes.ok) {
-            toast.info('Order init skipped (server offline). Proceeding with sandbox checkout.');
+            toast.error('Unable to initialize Paystack order. Please try again later.');
+            setIsPurchasing(false);
+            return;
           }
           const init = await initRes.json();
           const res = await paystackCheckout({
@@ -253,8 +256,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             },
           });
           if (!res.ok) {
-            toast.info('Paystack unavailable. Issuing ticket in sandbox mode.');
-            await finalizeTicket(selectedEvent, selectedTierData);
+            toast.error(res.error || 'Unable to start Paystack checkout. Please try again.');
+            setIsPurchasing(false);
           }
           return;
         }
@@ -272,7 +275,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             })
           });
           if (!initRes.ok) {
-            toast.info('Order init skipped (server offline). Proceeding with sandbox checkout.');
+            toast.error('Unable to initialize Flutterwave order. Please try again later.');
+            setIsPurchasing(false);
+            return;
           }
           const init = await initRes.json();
           const res = await flutterwaveCheckout({
@@ -291,8 +296,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             },
           });
           if (!res.ok) {
-            toast.info('Flutterwave unavailable. Issuing ticket in sandbox mode.');
-            await finalizeTicket(selectedEvent, selectedTierData);
+            toast.error(res.error || 'Unable to start Flutterwave checkout. Please try again.');
+            setIsPurchasing(false);
           }
           return;
         }
@@ -317,7 +322,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           });
 
           if (!initRes.ok) {
-            toast.info('Order init skipped (server offline). Proceeding with M-Pesa sandbox checkout.');
+            toast.error('Unable to initialize M-Pesa order. Please try again later.');
+            setIsPurchasing(false);
+            return;
           }
 
           const init = await initRes.json().catch(() => ({}));
@@ -330,9 +337,12 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           });
 
           if (!res.ok) {
-            toast.info(res.error || 'M-Pesa unavailable. Issuing ticket in sandbox mode.');
+            toast.error(res.error || 'M-Pesa STK push failed. Please try again.');
+            setIsPurchasing(false);
+            return;
           }
 
+          toast.info('M-Pesa STK push initiated. Approve the prompt on your phone to complete payment.');
           await finalizeTicket(selectedEvent, selectedTierData);
           return;
         }
@@ -346,22 +356,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/orders/confirm-crypto`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: `GP-${selectedEvent.id}-${Date.now()}`,
-          txHash: '0xDEMO',
-          toAddress: '0x0000000000000000000000000000000000000000',
-          quantity
-        })
-      });
-      if (res.ok) {
-        await finalizeTicket(selectedEvent, selectedTierData);
-      } else {
-        toast.info('Crypto server offline. Simulating mint and issuing ticket.');
-        await finalizeTicket(selectedEvent, selectedTierData);
-      }
+      toast.error('Crypto payments are not configured yet. Please use a card or mobile money option.');
+      setIsPurchasing(false);
+      return;
     } catch (err) {
       console.error('Purchase error:', err);
       toast.error('Purchase failed. Please try again.');
@@ -371,7 +368,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
   async function finalizeTicket(event: AggregatedEvent, selectedTierData?: { id: any; name: string; price: number }) {
     toast.success('Ticket purchased successfully!', {
-      description: `Your NFT ticket has been minted to your wallet.`
+      description: `Your ticket has been recorded.`
     });
 
     try {
@@ -409,7 +406,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     try {
       // Server recording handled via order initialize/webhooks
       
-      // Local fallback for demo dashboard
+      // Local fallback for offline dashboards
       try {
         // Record sale for organizer dashboard
         const saleRecord = {
@@ -446,7 +443,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
       if (selectedTierData) {
         const input = {
           eventId: String(event.id),
-          attendeeId: 'demo-attendee',
+          attendeeId: customerEmail || 'attendee',
           ticketType: selectedTierData.name,
           event: {
             name: event.title,
@@ -459,8 +456,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             name: customerEmail ? customerEmail.split('@')[0] : 'Attendee',
           },
           purchaseTimestamp: Date.now(),
-          blockchain: { chain: 'polygon', txHash: '0xDEMO' },
-          secretSalt: 'demo-salt',
+          blockchain: undefined,
+          secretSalt: DEFAULT_QR_SECRET_SALT,
         };
 
         const { ticketId, pdfBytes } = await generateSecureTicketPDF(input);

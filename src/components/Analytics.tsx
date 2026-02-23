@@ -4,12 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { 
-  ArrowLeft, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
+import {
+  ArrowLeft,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
   Calendar,
   Download,
   RefreshCw,
@@ -20,74 +20,41 @@ import {
   PieChart,
   Activity
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts';
 import { API_BASE_URL } from '../constants';
 
 interface AnalyticsProps {
   onBack: () => void;
 }
 
-// Mock analytics data
-const salesData = [
-  { date: '2024-01-01', sales: 45, revenue: 6750 },
-  { date: '2024-01-02', sales: 52, revenue: 7800 },
-  { date: '2024-01-03', sales: 38, revenue: 5700 },
-  { date: '2024-01-04', sales: 67, revenue: 10050 },
-  { date: '2024-01-05', sales: 84, revenue: 12600 },
-  { date: '2024-01-06', sales: 91, revenue: 13650 },
-  { date: '2024-01-07', sales: 78, revenue: 11700 },
-];
+type SalesByDayPoint = { date: string; sales: number };
+type SalesByTierPoint = { name: string; sold: number; total: number };
+type AttendancePoint = { hour: string; checkIns: number };
+type PeakHour = { hour: string; count: number };
+type CityStat = { city: string; count: number; percentage: number };
+type CountryStat = { country: string; count: number; percentage: number };
 
-const hourlyData = [
-  { hour: '00:00', checkins: 2 },
-  { hour: '01:00', checkins: 1 },
-  { hour: '02:00', checkins: 0 },
-  { hour: '03:00', checkins: 0 },
-  { hour: '04:00', checkins: 0 },
-  { hour: '05:00', checkins: 1 },
-  { hour: '06:00', checkins: 3 },
-  { hour: '07:00', checkins: 8 },
-  { hour: '08:00', checkins: 25 },
-  { hour: '09:00', checkins: 45 },
-  { hour: '10:00', checkins: 32 },
-  { hour: '11:00', checkins: 28 },
-  { hour: '12:00', checkins: 35 },
-  { hour: '13:00', checkins: 42 },
-  { hour: '14:00', checkins: 38 },
-  { hour: '15:00', checkins: 29 },
-  { hour: '16:00', checkins: 22 },
-  { hour: '17:00', checkins: 18 },
-  { hour: '18:00', checkins: 15 },
-  { hour: '19:00', checkins: 12 },
-  { hour: '20:00', checkins: 8 },
-  { hour: '21:00', checkins: 5 },
-  { hour: '22:00', checkins: 3 },
-  { hour: '23:00', checkins: 1 },
-];
-
-const ticketTypeData = [
-  { name: 'General', value: 300, color: '#8884d8' },
-  { name: 'VIP', value: 120, color: '#82ca9d' },
-  { name: 'Student', value: 80, color: '#ffc658' },
-  { name: 'Early Bird', value: 50, color: '#ff7300' },
-];
-
-const geographicData = [
-  { city: 'San Francisco', count: 165, percentage: 33 },
-  { city: 'Los Angeles', count: 98, percentage: 19.6 },
-  { city: 'Seattle', count: 72, percentage: 14.4 },
-  { city: 'Portland', count: 45, percentage: 9 },
-  { city: 'San Diego', count: 38, percentage: 7.6 },
-  { city: 'Other', count: 82, percentage: 16.4 },
-];
-
-const recentTransactions = [
-  { id: 1, buyer: '0x742d...35Da', amount: '0.05 ETH', tickets: 2, timestamp: '2 mins ago', type: 'crypto' },
-  { id: 2, buyer: '0x8f3e...91Bc', amount: '$150.00', tickets: 1, timestamp: '5 mins ago', type: 'fiat' },
-  { id: 3, buyer: '0x1a2b...78Ef', amount: '0.1 ETH', tickets: 4, timestamp: '12 mins ago', type: 'crypto' },
-  { id: 4, buyer: '0x9d7c...43Fa', amount: '$30.00', tickets: 1, timestamp: '18 mins ago', type: 'fiat' },
-  { id: 5, buyer: '0x5e8f...29Cd', amount: '0.075 ETH', tickets: 3, timestamp: '25 mins ago', type: 'crypto' },
-];
+type PaymentGatewayHealth = {
+  id: string;
+  name: string;
+  configured: boolean;
+  status: string;
+};
 
 export function Analytics({ onBack }: AnalyticsProps) {
   const [selectedEvent, setSelectedEvent] = useState('all');
@@ -97,10 +64,22 @@ export function Analytics({ onBack }: AnalyticsProps) {
     totalRevenue: number;
     ticketsSold: number;
     totalTickets: number;
-    salesByDay: Array<{ date: string; sales: number }>;
-    salesByTier: Array<{ name: string; sold: number; total: number }>;
+    salesByDay: SalesByDayPoint[];
+    salesByTier: SalesByTierPoint[];
+    attendance?: {
+      checkIns: number;
+      noShows: number;
+      checkInRate: number;
+      hourlyBreakdown: AttendancePoint[];
+      peakHours: PeakHour[];
+    };
+    geography?: {
+      cities: CityStat[];
+      countries: CountryStat[];
+    };
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentHealth, setPaymentHealth] = useState<PaymentGatewayHealth[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -118,30 +97,63 @@ export function Analytics({ onBack }: AnalyticsProps) {
   }, []);
 
   useEffect(() => {
-    // Fetch analytics for selected event when available
     (async () => {
-      if (selectedEvent === 'all') { setServerAnalytics(null); return; }
+      if (selectedEvent === 'all') {
+        setServerAnalytics(null);
+        return;
+      }
       setIsLoading(true);
       try {
         const res = await fetch(`${API_BASE_URL}/analytics/${selectedEvent}`);
         if (res.ok) {
           const json = await res.json();
           setServerAnalytics(json);
+        } else {
+          setServerAnalytics(null);
         }
       } catch (e) {
         console.warn('Failed to fetch analytics:', e);
+        setServerAnalytics(null);
       } finally {
         setIsLoading(false);
       }
     })();
   }, [selectedEvent]);
 
-  const totalRevenue = serverAnalytics
-    ? serverAnalytics.totalRevenue
-    : salesData.reduce((sum, day) => sum + day.revenue, 0);
-  const totalSales = serverAnalytics
-    ? serverAnalytics.ticketsSold
-    : salesData.reduce((sum, day) => sum + day.sales, 0);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/health/payments`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json && json.gateways) {
+          const gateways: PaymentGatewayHealth[] = Object.entries(json.gateways).map(
+            ([id, value]: [string, any]) => ({
+              id,
+              name:
+                id === 'paystack'
+                  ? 'Paystack'
+                  : id === 'flutterwave'
+                  ? 'Flutterwave'
+                  : id === 'mpesa'
+                  ? 'M-Pesa'
+                  : id === 'stripe'
+                  ? 'Stripe'
+                  : id,
+              configured: !!value.configured,
+              status: String(value.status || 'unknown')
+            })
+          );
+          setPaymentHealth(gateways);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch payment health:', e);
+      }
+    })();
+  }, []);
+
+  const totalRevenue = serverAnalytics ? serverAnalytics.totalRevenue : 0;
+  const totalSales = serverAnalytics ? serverAnalytics.ticketsSold : 0;
   const conversionRate = 3.2;
   const avgOrderValue = totalSales ? totalRevenue / totalSales : 0;
 
@@ -276,14 +288,12 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={serverAnalytics?.salesByDay || salesData}>
+                    <AreaChart data={serverAnalytics?.salesByDay || []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
-                      <YAxis yAxisId="left" />
-                      <YAxis yAxisId="right" orientation="right" />
+                      <YAxis />
                       <Tooltip />
-                      <Area yAxisId="right" type="monotone" dataKey="revenue" stackId="1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
-                      <Area yAxisId="left" type="monotone" dataKey="sales" stackId="2" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                      <Area type="monotone" dataKey="sales" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -299,7 +309,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <ResponsiveContainer width="100%" height={250}>
                     <RechartsPieChart>
                       <Pie
-                        data={serverAnalytics?.salesByTier?.map(t => ({ name: t.name, value: t.sold, color: '#8884d8' })) || ticketTypeData}
+                        data={serverAnalytics?.salesByTier?.map(t => ({ name: t.name, value: t.sold, color: '#8884d8' })) || []}
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
@@ -307,7 +317,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                         dataKey="value"
                         label={({ name, percent }: { name: string; percent: number }) => `${name} ${Math.round((percent || 0) * 100)}%`}
                       >
-                        {(serverAnalytics?.salesByTier || ticketTypeData).map((entry: any, index: number) => (
+                        {(serverAnalytics?.salesByTier || []).map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -358,12 +368,12 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={hourlyData}>
+                    <BarChart data={serverAnalytics?.attendance?.hourlyBreakdown || []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="hour" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="checkins" fill="#8884d8" />
+                      <Bar dataKey="checkIns" fill="#8884d8" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -376,21 +386,56 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Checked In</span>
-                      <span className="font-medium">387 / 450</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">No Shows</span>
-                      <span className="font-medium">63</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Check-in Rate</span>
-                      <span className="font-medium">86%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '86%' }}></div>
-                    </div>
+                    {serverAnalytics && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Checked In</span>
+                          <span className="font-medium">
+                            {serverAnalytics.attendance?.checkIns ?? 0} / {serverAnalytics.totalTickets}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">No Shows</span>
+                          <span className="font-medium">
+                            {serverAnalytics.attendance?.noShows ??
+                              Math.max(
+                                0,
+                                (serverAnalytics.ticketsSold || 0) -
+                                  (serverAnalytics.attendance?.checkIns || 0)
+                              )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Check-in Rate</span>
+                          <span className="font-medium">
+                            {(
+                              serverAnalytics.attendance?.checkInRate ??
+                              (serverAnalytics.ticketsSold > 0
+                                ? ((serverAnalytics.attendance?.checkIns || 0) /
+                                    serverAnalytics.ticketsSold) *
+                                  100
+                                : 0)
+                            ).toFixed(1)}
+                            %
+                          </span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{
+                              width: `${
+                                serverAnalytics.attendance?.checkInRate ??
+                                (serverAnalytics.ticketsSold > 0
+                                  ? ((serverAnalytics.attendance?.checkIns || 0) /
+                                      serverAnalytics.ticketsSold) *
+                                    100
+                                  : 0)
+                              }%`
+                            }}
+                          ></div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -402,22 +447,12 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">09:00 AM</span>
-                      <Badge variant="secondary">45 people</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">01:00 PM</span>
-                      <Badge variant="secondary">42 people</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">02:00 PM</span>
-                      <Badge variant="secondary">38 people</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">12:00 PM</span>
-                      <Badge variant="secondary">35 people</Badge>
-                    </div>
+                    {(serverAnalytics?.attendance?.peakHours || []).map((slot) => (
+                      <div key={slot.hour} className="flex justify-between items-center">
+                        <span className="text-sm">{slot.hour}</span>
+                        <Badge variant="secondary">{slot.count} people</Badge>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -511,7 +546,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {geographicData.map((city, index) => (
+                    {(serverAnalytics?.geography?.cities || []).map((city, index) => (
                       <div key={city.city} className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
@@ -519,7 +554,9 @@ export function Analytics({ onBack }: AnalyticsProps) {
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium">{city.count}</span>
-                          <span className="text-sm text-muted-foreground">({city.percentage}%)</span>
+                          <span className="text-sm text-muted-foreground">
+                            ({city.percentage.toFixed(1)}%)
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -533,26 +570,14 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">🇺🇸 United States</span>
-                      <span className="text-sm font-medium">412</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">🇨🇦 Canada</span>
-                      <span className="text-sm font-medium">23</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">🇬🇧 United Kingdom</span>
-                      <span className="text-sm font-medium">8</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">🇩🇪 Germany</span>
-                      <span className="text-sm font-medium">5</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">🌍 Others</span>
-                      <span className="text-sm font-medium">2</span>
-                    </div>
+                    {(serverAnalytics?.geography?.countries || []).map((country) => (
+                      <div key={country.country} className="flex justify-between items-center">
+                        <span className="text-sm">{country.country}</span>
+                        <span className="text-sm font-medium">
+                          {country.count} ({country.percentage.toFixed(1)}%)
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -572,7 +597,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {recentTransactions.map((transaction) => (
+                    {[].map((transaction) => (
                       <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0">
@@ -632,6 +657,28 @@ export function Analytics({ onBack }: AnalyticsProps) {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Revenue Last Hour</span>
                       <span className="font-medium">$1,800</span>
+                    </div>
+                    <div className="pt-2 border-t mt-4">
+                      <p className="text-xs text-muted-foreground mb-2">Payment gateways</p>
+                      <div className="space-y-2">
+                        {(paymentHealth || []).map((gateway) => (
+                          <div
+                            key={gateway.id}
+                            className="flex justify-between items-center text-xs"
+                          >
+                            <span className="text-muted-foreground">{gateway.name}</span>
+                            <span
+                              className={
+                                gateway.configured
+                                  ? 'text-green-500 font-medium'
+                                  : 'text-yellow-500 font-medium'
+                              }
+                            >
+                              {gateway.configured ? 'Configured' : 'Not configured'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
