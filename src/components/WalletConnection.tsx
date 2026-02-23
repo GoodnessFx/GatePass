@@ -19,7 +19,7 @@ interface WalletConnectionProps {
   onConnect: () => void;
 }
 
-const mockWallets = [
+const wallets = [
   { name: 'MetaMask', icon: '🦊', popular: true },
   { name: 'WalletConnect', icon: '🔗', popular: true },
   { name: 'Coinbase Wallet', icon: '🟦', popular: false },
@@ -118,7 +118,7 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
         </DialogHeader>
 
         <div className="space-y-2">
-          {mockWallets.map((wallet) => (
+          {wallets.map((wallet) => (
             <Card
               key={wallet.name}
               className="cursor-pointer transition-colors hover:bg-muted/50 !min-h-0"

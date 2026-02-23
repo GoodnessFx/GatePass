@@ -50,11 +50,7 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
         users.push(localUser);
         localStorage.setItem('gp_users', JSON.stringify(users));
 
-        localStorage.setItem('auth_token', 'gp-demo-register-token');
-        localStorage.setItem('gp_user_role', data.role);
-        localStorage.setItem('gp_user_email', data.email);
-
-        return { success: true, user: localUser, token: 'gp-demo-register-token' };
+        return { success: true, user: localUser, token: undefined };
       } catch {
         return { success: false, error: 'Registration failed in offline mode.' };
       }

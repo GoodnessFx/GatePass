@@ -30,6 +30,7 @@ import {
 
 import { NotificationCenter } from './components/NotificationCenter';
 import { API_BASE_URL } from './constants';
+import { clearSession, getSession, setSession } from './utils/session';
 
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
@@ -49,7 +50,10 @@ function App() {
     let role: UserRole | null = roleOverride ?? null;
     try {
       if (!role) {
-        role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+        const session = getSession();
+        if (session.role === 'organizer' || session.role === 'attendee') {
+          role = session.role as UserRole;
+        }
       }
     } catch {}
     if (role) {
@@ -64,12 +68,10 @@ function App() {
     // Check for reset token in URL
     const params = new URLSearchParams(window.location.search);
     const resetTokenParam = params.get('token');
-    const authTokenParam = params.get('auth_token') || params.get('token'); // Handle both for now, but context matters
+      const authTokenParam = params.get('auth_token') || params.get('token');
     const pathname = window.location.pathname;
 
     if (pathname === '/auth/callback' && authTokenParam) {
-      localStorage.setItem('auth_token', authTokenParam);
-
       const loadProfileAndRedirect = async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -85,15 +87,12 @@ function App() {
               rawRole && String(rawRole).toUpperCase() === 'ORGANIZER'
                 ? 'organizer'
                 : 'attendee';
-            if (normalizedRole) {
-              localStorage.setItem('gp_user_role', normalizedRole);
-            }
-            if (email) {
-              localStorage.setItem('gp_user_email', email);
-            }
-            goToDashboardAfterAuth(
-              (localStorage.getItem('gp_user_role') as UserRole) || null
-            );
+            setSession({
+              token: authTokenParam || undefined,
+              role: normalizedRole || 'attendee',
+              email: email || null
+            });
+            goToDashboardAfterAuth(normalizedRole === 'organizer' ? 'organizer' : 'attendee');
           } else {
             goToDashboardAfterAuth(null);
           }
@@ -133,15 +132,19 @@ function App() {
 
   useEffect(() => {
     if (showSplash) return;
-
-    const token = localStorage.getItem('auth_token');
-    const savedRole = (localStorage.getItem('gp_user_role') as UserRole) || null;
-
-    if (token && savedRole) {
-      setUserRole(savedRole);
-      setCurrentView(savedRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
-    } else if (!token && currentView !== 'landing' && currentView !== 'signup') {
-      setCurrentView('login');
+    try {
+      const session = getSession();
+      const role = session.role as UserRole | null;
+      if (session.token && role) {
+        setUserRole(role);
+        setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+      } else if (!session.token && currentView !== 'landing' && currentView !== 'signup') {
+        setCurrentView('login');
+      }
+    } catch {
+      if (currentView !== 'landing' && currentView !== 'signup') {
+        setCurrentView('login');
+      }
     }
   }, [showSplash]);
 
@@ -218,23 +221,13 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('gp_user_role');
-    localStorage.removeItem('gp_user_email');
+    clearSession();
     setUserRole(null);
     setCurrentView('landing');
     setSelectedEvent(null);
     setIsWalletConnected(false);
     setWalletAddress(null);
   };
-
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-      if (token && role) setUserRole(role);
-    } catch { }
-  }, []);
 
   const handleEventPurchase = (eventId: string) => {
     setSelectedEvent(eventId);

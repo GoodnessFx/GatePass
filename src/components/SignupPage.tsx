@@ -131,11 +131,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
 
       setIsSuccess(true);
       toast.success('Registration successful!', { 
-        description: 'Verification email sent.',
-        action: {
-          label: 'Verify (Sim)',
-          onClick: () => handleVerify()
-        }
+        description: 'Verification email sent.'
       });
 
     } catch (e) {
@@ -147,10 +143,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   };
 
   const handleVerify = () => {
-    toast.success('Email Verified Successfully!', { description: 'Redirecting...' });
-    setTimeout(() => {
-      onSignupComplete();
-    }, 1500);
+    onSignupComplete();
   };
 
   return (
@@ -179,9 +172,6 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
                   </div>
                   
                   <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                    <p className="text-xs text-center text-muted-foreground mb-3">
-                      (Simulation: Click below to verify)
-                    </p>
                     <Button onClick={handleVerify} className="w-full" variant="default">
                       Verify Email
                     </Button>

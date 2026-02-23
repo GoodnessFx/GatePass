@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Check } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import {
@@ -9,7 +9,6 @@ import {
 } from './ui/popover';
 import { Badge } from './ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { API_BASE_URL } from '../constants';
 
 type Notification = {
   id: string;
@@ -25,66 +24,47 @@ export function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
-  const fetchNotifications = async () => {
+  const loadLocalNotifications = () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
-
-      const res = await fetch(`${API_BASE_URL}/notifications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch (e) {
-      console.error('Failed to fetch notifications');
+      const raw = localStorage.getItem('gp_notifications');
+      const parsed = raw ? JSON.parse(raw) : [];
+      const list: Notification[] = Array.isArray(parsed) ? parsed : [];
+      setNotifications(list);
+      setUnreadCount(list.filter((n) => !n.read).length);
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    loadLocalNotifications();
+    const interval = setInterval(loadLocalNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const markAllRead = async () => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
-
-      await fetch(`${API_BASE_URL}/notifications/read-all`, { 
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (e) {
-      console.error('Failed to mark all read');
-    }
+  const markAllRead = () => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, read: true }));
+      try {
+        localStorage.setItem('gp_notifications', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    setUnreadCount(0);
   };
 
-  const markRead = async (id: string) => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
-
-      await fetch(`${API_BASE_URL}/notifications/${id}/read`, { 
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (e) {
-      console.error('Failed to mark read');
-    }
+  const markRead = (id: string) => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      );
+      try {
+        localStorage.setItem('gp_notifications', JSON.stringify(updated));
+      } catch {}
+      setUnreadCount(updated.filter((n) => !n.read).length);
+      return updated;
+    });
   };
 
   return (

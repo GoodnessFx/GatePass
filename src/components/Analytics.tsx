@@ -80,6 +80,8 @@ export function Analytics({ onBack }: AnalyticsProps) {
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentHealth, setPaymentHealth] = useState<PaymentGatewayHealth[] | null>(null);
+  const [localSales, setLocalSales] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -94,7 +96,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
         console.warn('Failed to fetch organizer events:', e);
       }
     })();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     (async () => {
@@ -118,7 +120,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
         setIsLoading(false);
       }
     })();
-  }, [selectedEvent]);
+  }, [selectedEvent, refreshKey]);
 
   useEffect(() => {
     (async () => {
@@ -150,11 +152,140 @@ export function Analytics({ onBack }: AnalyticsProps) {
         console.warn('Failed to fetch payment health:', e);
       }
     })();
-  }, []);
+  }, [refreshKey]);
 
-  const totalRevenue = serverAnalytics ? serverAnalytics.totalRevenue : 0;
-  const totalSales = serverAnalytics ? serverAnalytics.ticketsSold : 0;
-  const conversionRate = 3.2;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('gatepass_sales');
+      const parsed = raw ? JSON.parse(raw) : [];
+      setLocalSales(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setLocalSales([]);
+    }
+  }, [refreshKey]);
+
+  const totals = React.useMemo(
+    () => {
+      if (serverAnalytics) {
+        return {
+          totalRevenue: serverAnalytics.totalRevenue,
+          ticketsSold: serverAnalytics.ticketsSold
+        };
+      }
+      const sales = Array.isArray(localSales) ? localSales : [];
+      const totalRevenueLocal = sales.reduce(
+        (sum, sale) => sum + (Number(sale.amount) || 0),
+        0
+      );
+      const ticketsSoldLocal = sales.reduce(
+        (sum, sale) => sum + (Number(sale.tickets) || 0),
+        0
+      );
+      return { totalRevenue: totalRevenueLocal, ticketsSold: ticketsSoldLocal };
+    },
+    [serverAnalytics, localSales]
+  );
+
+  const salesByDay = React.useMemo<SalesByDayPoint[]>(
+    () => {
+      if (serverAnalytics?.salesByDay?.length) {
+        return serverAnalytics.salesByDay;
+      }
+      const sales = Array.isArray(localSales) ? localSales : [];
+      const map: Record<string, number> = {};
+      for (const sale of sales) {
+        if (!sale.timestamp) continue;
+        const key = new Date(sale.timestamp).toISOString().slice(0, 10);
+        const amount = Number(sale.amount) || 0;
+        map[key] = (map[key] || 0) + amount;
+      }
+      return Object.entries(map)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([date, amount]) => ({ date, sales: amount }));
+    },
+    [serverAnalytics, localSales]
+  );
+
+  const salesByTier = React.useMemo<SalesByTierPoint[]>(
+    () => {
+      if (serverAnalytics?.salesByTier?.length) {
+        return serverAnalytics.salesByTier;
+      }
+      const sales = Array.isArray(localSales) ? localSales : [];
+      const map: Record<string, { sold: number; total: number }> = {};
+      for (const sale of sales) {
+        const name =
+          typeof sale.ticketType === 'string' && sale.ticketType.trim()
+            ? sale.ticketType
+            : 'General Admission';
+        const tickets = Number(sale.tickets) || 0;
+        if (!map[name]) {
+          map[name] = { sold: 0, total: 0 };
+        }
+        map[name].sold += tickets;
+        map[name].total += tickets;
+      }
+      return Object.entries(map).map(([name, value]) => ({
+        name,
+        sold: value.sold,
+        total: value.total
+      }));
+    },
+    [serverAnalytics, localSales]
+  );
+
+  const paymentBreakdown = React.useMemo(
+    () => {
+      const sales = Array.isArray(localSales) ? localSales : [];
+      if (!sales.length) {
+        return { cryptoPct: 0, fiatPct: 0 };
+      }
+      let cryptoCount = 0;
+      let fiatCount = 0;
+      for (const sale of sales) {
+        const method = String(sale.paymentMethod || '').toLowerCase();
+        if (method === 'crypto') {
+          cryptoCount += 1;
+        } else {
+          fiatCount += 1;
+        }
+      }
+      const total = cryptoCount + fiatCount || 1;
+      const cryptoPct = (cryptoCount / total) * 100;
+      const fiatPct = (fiatCount / total) * 100;
+      return { cryptoPct, fiatPct };
+    },
+    [localSales]
+  );
+
+  const realTimeStats = React.useMemo(
+    () => {
+      const sales = Array.isArray(localSales) ? localSales : [];
+      const now = Date.now();
+      const oneHourAgo = now - 60 * 60 * 1000;
+      let salesLastHour = 0;
+      let revenueLastHour = 0;
+      for (const sale of sales) {
+        if (!sale.timestamp) continue;
+        const ts = new Date(sale.timestamp).getTime();
+        if (Number.isNaN(ts) || ts < oneHourAgo) continue;
+        salesLastHour += Number(sale.tickets) || 0;
+        revenueLastHour += Number(sale.amount) || 0;
+      }
+      return {
+        activeSessions: sales.length,
+        ticketsInCart: 0,
+        pendingPayments: 0,
+        salesLastHour,
+        revenueLastHour
+      };
+    },
+    [localSales]
+  );
+
+  const totalRevenue = totals.totalRevenue;
+  const totalSales = totals.ticketsSold;
+  const conversionRate = 0;
   const avgOrderValue = totalSales ? totalRevenue / totalSales : 0;
 
   return (
@@ -198,12 +329,42 @@ export function Analytics({ onBack }: AnalyticsProps) {
               </SelectContent>
             </Select>
             
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRefreshKey((v) => v + 1)}
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
             
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                try {
+                  const rows: string[] = [];
+                  rows.push('metric,value');
+                  rows.push(`totalRevenue,${totalRevenue}`);
+                  rows.push(`ticketsSold,${totalSales}`);
+                  (salesByDay || []).forEach((point) => {
+                    rows.push(`salesByDay_${point.date},${point.sales}`);
+                  });
+                  const csv = rows.join('\n');
+                  const blob = new Blob([csv], {
+                    type: 'text/csv;charset=utf-8;'
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'gatepass_analytics.csv';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                } catch {}
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -288,7 +449,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={serverAnalytics?.salesByDay || []}>
+                    <AreaChart data={salesByDay}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis />
@@ -309,15 +470,21 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <ResponsiveContainer width="100%" height={250}>
                     <RechartsPieChart>
                       <Pie
-                        data={serverAnalytics?.salesByTier?.map(t => ({ name: t.name, value: t.sold, color: '#8884d8' })) || []}
+                        data={salesByTier.map((t) => ({
+                          name: t.name,
+                          value: t.sold,
+                          color: '#8884d8'
+                        }))}
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percent }: { name: string; percent: number }) => `${name} ${Math.round((percent || 0) * 100)}%`}
+                        label={({ name, percent }: { name: string; percent: number }) =>
+                          `${name} ${Math.round((percent || 0) * 100)}%`
+                        }
                       >
-                        {(serverAnalytics?.salesByTier || []).map((entry: any, index: number) => (
+                        {salesByTier.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -340,17 +507,24 @@ export function Analytics({ onBack }: AnalyticsProps) {
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                         <span className="text-sm">Cryptocurrency</span>
                       </div>
-                      <span className="text-sm font-medium">68%</span>
+                  <span className="text-sm font-medium">
+                    {paymentBreakdown.cryptoPct.toFixed(0)}%
+                  </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                         <span className="text-sm">Credit Card</span>
                       </div>
-                      <span className="text-sm font-medium">32%</span>
+                  <span className="text-sm font-medium">
+                    {paymentBreakdown.fiatPct.toFixed(0)}%
+                  </span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '68%' }}></div>
+                  <div
+                    className="bg-blue-500 h-2 rounded-full"
+                    style={{ width: `${paymentBreakdown.cryptoPct}%` }}
+                  ></div>
                     </div>
                   </div>
                 </CardContent>
@@ -466,28 +640,10 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <CardTitle>Age Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">18-24</span>
-                      <span className="text-sm font-medium">15%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">25-34</span>
-                      <span className="text-sm font-medium">42%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">35-44</span>
-                      <span className="text-sm font-medium">28%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">45-54</span>
-                      <span className="text-sm font-medium">12%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">55+</span>
-                      <span className="text-sm font-medium">3%</span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Age distribution will appear here once attendee profiles
+                    include demographics instead of placeholder values.
+                  </p>
                 </CardContent>
               </Card>
 
@@ -496,24 +652,10 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <CardTitle>Gender Split</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Male</span>
-                      <span className="text-sm font-medium">58%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Female</span>
-                      <span className="text-sm font-medium">41%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Other</span>
-                      <span className="text-sm font-medium">1%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-l-full" style={{ width: '58%' }}></div>
-                      <div className="bg-pink-500 h-2" style={{ width: '41%' }}></div>
-                    </div>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Gender insights will be calculated from real attendee data
+                    rather than static percentages.
+                  </p>
                 </CardContent>
               </Card>
 
@@ -522,16 +664,10 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <CardTitle>Attendee Type</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">First-time</span>
-                      <span className="text-sm font-medium">65%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Returning</span>
-                      <span className="text-sm font-medium">35%</span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    First‑time versus returning attendee metrics will populate
+                    as more events are hosted.
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -640,23 +776,36 @@ export function Analytics({ onBack }: AnalyticsProps) {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Active Sessions</span>
-                      <span className="font-medium">127</span>
+                      <span className="font-medium">
+                        {realTimeStats.activeSessions}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Tickets in Cart</span>
-                      <span className="font-medium">34</span>
+                      <span className="font-medium">
+                        {realTimeStats.ticketsInCart}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Pending Payments</span>
-                      <span className="font-medium">8</span>
+                      <span className="font-medium">
+                        {realTimeStats.pendingPayments}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Sales Last Hour</span>
-                      <span className="font-medium">12</span>
+                      <span className="font-medium">
+                        {realTimeStats.salesLastHour}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Revenue Last Hour</span>
-                      <span className="font-medium">$1,800</span>
+                      <span className="font-medium">
+                        $
+                        {realTimeStats.revenueLastHour.toLocaleString(undefined, {
+                          maximumFractionDigits: 2
+                        })}
+                      </span>
                     </div>
                     <div className="pt-2 border-t mt-4">
                       <p className="text-xs text-muted-foreground mb-2">Payment gateways</p>
