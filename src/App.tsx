@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 
 import { NotificationCenter } from './components/NotificationCenter';
+import { API_BASE_URL } from './constants';
 
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
@@ -44,6 +45,21 @@ function App() {
   const [viewHistory, setViewHistory] = useState<AppView[]>([]);
   const [resetToken, setResetToken] = useState<string | null>(null);
 
+  function goToDashboardAfterAuth(roleOverride?: UserRole | null) {
+    let role: UserRole | null = roleOverride ?? null;
+    try {
+      if (!role) {
+        role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+      }
+    } catch {}
+    if (role) {
+      setUserRole(role);
+      setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+    } else {
+      setCurrentView('landing');
+    }
+  }
+
   useEffect(() => {
     // Check for reset token in URL
     const params = new URLSearchParams(window.location.search);
@@ -52,11 +68,45 @@ function App() {
     const pathname = window.location.pathname;
 
     if (pathname === '/auth/callback' && authTokenParam) {
-        localStorage.setItem('auth_token', authTokenParam);
-        setIsWalletConnected(false);
-        window.history.replaceState({}, document.title, '/');
-        setCurrentView('landing'); 
-        toast.success('Successfully logged in via social media');
+      localStorage.setItem('auth_token', authTokenParam);
+
+      const loadProfileAndRedirect = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${authTokenParam}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const rawRole = data.role as string | undefined;
+            const email = data.email as string | undefined;
+            const normalizedRole =
+              rawRole && String(rawRole).toUpperCase() === 'ORGANIZER'
+                ? 'organizer'
+                : 'attendee';
+            if (normalizedRole) {
+              localStorage.setItem('gp_user_role', normalizedRole);
+            }
+            if (email) {
+              localStorage.setItem('gp_user_email', email);
+            }
+            goToDashboardAfterAuth(
+              (localStorage.getItem('gp_user_role') as UserRole) || null
+            );
+          } else {
+            goToDashboardAfterAuth(null);
+          }
+        } catch {
+          goToDashboardAfterAuth(null);
+        } finally {
+          setIsWalletConnected(false);
+          window.history.replaceState({}, document.title, '/');
+          toast.success('Successfully logged in via social media');
+        }
+      };
+
+      loadProfileAndRedirect();
     } else if (resetTokenParam && !pathname.includes('/auth/callback')) {
       // Handle Password Reset
       setResetToken(resetTokenParam);
@@ -90,12 +140,8 @@ function App() {
     if (token && savedRole) {
       setUserRole(savedRole);
       setCurrentView(savedRole === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
-    } else if (token && !savedRole) {
-      setCurrentView('landing');
-    } else {
-      if (currentView !== 'landing' && currentView !== 'signup') {
-        setCurrentView('login');
-      }
+    } else if (!token && currentView !== 'landing' && currentView !== 'signup') {
+      setCurrentView('login');
     }
   }, [showSplash]);
 
@@ -271,12 +317,10 @@ function App() {
             onLoginComplete={() => {
               try {
                 const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                if (role) {
-                  setUserRole(role);
-                }
+                goToDashboardAfterAuth(role);
               } catch {
+                goToDashboardAfterAuth(null);
               }
-              setCurrentView('landing');
             }}
             onShowSignup={() => setCurrentView('signup')}
             onForgotPassword={() => setCurrentView('forgot-password')}
@@ -301,7 +345,14 @@ function App() {
       case 'signup':
         return (
           <SignupPage
-            onSignupComplete={() => setCurrentView('landing')}
+            onSignupComplete={() => {
+              try {
+                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+                goToDashboardAfterAuth(role);
+              } catch {
+                goToDashboardAfterAuth(null);
+              }
+            }}
             onShowLogin={() => setCurrentView('login')}
           />
         );
@@ -402,13 +453,10 @@ function App() {
             onLoginComplete={() => {
               try {
                 const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                if (role) {
-                  setUserRole(role);
-                }
+                goToDashboardAfterAuth(role);
               } catch {
-                // ignore
+                goToDashboardAfterAuth(null);
               }
-              setCurrentView('landing');
             }}
             onShowSignup={() => setCurrentView('signup')}
             onForgotPassword={() => setCurrentView('forgot-password')}
@@ -423,7 +471,14 @@ function App() {
       <div className="min-h-screen bg-slate-950 text-slate-100">
         <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
           <SignupPage
-            onSignupComplete={() => setCurrentView('landing')}
+            onSignupComplete={() => {
+              try {
+                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+                goToDashboardAfterAuth(role);
+              } catch {
+                goToDashboardAfterAuth(null);
+              }
+            }}
             onShowLogin={() => setCurrentView('login')}
           />
         </React.Suspense>

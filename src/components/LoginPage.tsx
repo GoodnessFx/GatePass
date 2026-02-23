@@ -26,12 +26,24 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword }: L
   }, []);
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) return;
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      alert('Email and password are required.');
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      alert('Password must be at least 8 characters long.');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })
       });
       
       const data = await response.json();

@@ -67,9 +67,21 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
     const trimmedEmail = sanitizeInput(email.trim());
     const trimmedFirst = sanitizeInput(firstName.trim());
     const trimmedLast = sanitizeInput(lastName.trim());
+    const trimmedPassword = password.trim();
 
-    if (!trimmedEmail || !trimmedFirst || !trimmedLast || !password) {
+    if (!trimmedEmail || !trimmedFirst || !trimmedLast || !trimmedPassword) {
       setError('All fields are required.');
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+    if (!passwordPattern.test(trimmedPassword)) {
+      setError('Password must include upper, lower case letters and a number.');
       return;
     }
 
@@ -97,7 +109,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
       if (country === 'ZA') currency = 'ZAR';
       localStorage.setItem('gp_user_currency', currency);
 
-      const hashedPassword = await hashPassword(password.trim());
+      const hashedPassword = await hashPassword(trimmedPassword);
 
       const { success, error: regError } = await registerUser({
         email: trimmedEmail,
@@ -105,7 +117,7 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
         lastName: trimmedLast,
         country,
         role,
-        password: password.trim(), 
+        password: trimmedPassword, 
         passwordHash: hashedPassword
       });
 
@@ -135,9 +147,9 @@ export function SignupPage({ onSignupComplete, onShowLogin }: SignupPageProps) {
   };
 
   const handleVerify = () => {
-    toast.success('Email Verified Successfully!', { description: 'Redirecting to login...' });
+    toast.success('Email Verified Successfully!', { description: 'Redirecting...' });
     setTimeout(() => {
-      onShowLogin();
+      onSignupComplete();
     }, 1500);
   };
 

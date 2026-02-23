@@ -119,7 +119,9 @@ router.get(
  */
 router.post('/register', [
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/),
   body('name').trim().notEmpty(),
   body('walletAddress').optional().isEthereumAddress()
 ], asyncHandler(async (req, res) => {
@@ -352,7 +354,9 @@ router.post('/forgot-password', [
  */
 router.post('/reset-password', [
   body('token').notEmpty(),
-  body('password').isLength({ min: 6 })
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
 ], asyncHandler(async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
