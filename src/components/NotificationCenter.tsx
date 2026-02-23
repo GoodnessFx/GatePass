@@ -43,6 +43,12 @@ export function NotificationCenter() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      loadLocalNotifications();
+    }
+  }, [isOpen]);
+
   const markAllRead = () => {
     setNotifications((prev) => {
       const updated = prev.map((n) => ({ ...n, read: true }));

@@ -837,10 +837,10 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
                                   <div className="bg-muted/30 rounded-lg p-4">
                                     <div className="flex items-center space-x-2 mb-2">
                                       <Info className="h-4 w-4 text-blue-500" />
-                                      <span className="font-medium">Local Currency Payment</span>
+                                  <span className="font-medium">Local Currency Payment (Nigeria & Africa)</span>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                      Pay with Paystack or Flutterwave in NGN, GHS, KES, or ZAR. If M-Pesa is selected, a server configuration is required.
+                                      Pay with Paystack or Flutterwave in NGN, GHS, KES, or ZAR. In Nigeria this supports local banks and fintech (including Opay, GTBank, Zenith, etc). If M-Pesa is selected, a server configuration is required.
                                     </p>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                                       <div>
