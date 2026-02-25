@@ -31,12 +31,14 @@ import {
 import { NotificationCenter } from './components/NotificationCenter';
 import { API_BASE_URL } from './constants';
 import { clearSession, getSession, setSession } from './utils/session';
+import LoadingTransition from './components/ui/LoadingTransition';
 
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [globalLoading, setGlobalLoading] = useState(false);
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
@@ -176,21 +178,33 @@ function App() {
 
 
   const navigate = (next: AppView) => {
-    setViewHistory((h) => [...h, currentView]);
-    setCurrentView(next);
+    setGlobalLoading(true);
+    setTimeout(() => {
+      setViewHistory((h) => [...h, currentView]);
+      setCurrentView(next);
+      setGlobalLoading(false);
+    }, 800);
   };
 
   const goBack = () => {
-    setViewHistory((h) => {
-      if (h.length === 0) return h;
-      const prev = h[h.length - 1];
-      setCurrentView(prev);
-      return h.slice(0, -1);
-    });
+    setGlobalLoading(true);
+    setTimeout(() => {
+      setViewHistory((h) => {
+        if (h.length === 0) {
+          setGlobalLoading(false);
+          return h;
+        }
+        const prev = h[h.length - 1];
+        setCurrentView(prev);
+        setGlobalLoading(false);
+        return h.slice(0, -1);
+      });
+    }, 600);
   };
 
   const handleRoleSelection = (role: 'attendee' | 'organizer') => {
     setUserRole(role);
+    localStorage.setItem('gp_user_role', role);
     navigate(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
   };
 
@@ -277,8 +291,8 @@ function App() {
                 </Button>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentView('login')}>Login</Button>
-                  <Button size="sm" onClick={() => setCurrentView('signup')}>Get Started</Button>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('login')}>Login</Button>
+                  <Button size="sm" onClick={() => navigate('signup')}>Get Started</Button>
                 </div>
               )}
             </div>
@@ -300,13 +314,14 @@ function App() {
               setSelectedEvent('browse');
               navigate('ticket-purchase');
             }}
-            onOpenBeginnerGuide={() => setCurrentView('beginner-guide')}
+            onOpenBeginnerGuide={() => navigate('beginner-guide')}
           />
         );
 
       case 'login':
         return (
           <LoginPage
+            setGlobalLoading={setGlobalLoading}
             onLoginComplete={() => {
               try {
                 const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
@@ -315,15 +330,15 @@ function App() {
                 goToDashboardAfterAuth(null);
               }
             }}
-            onShowSignup={() => setCurrentView('signup')}
-            onForgotPassword={() => setCurrentView('forgot-password')}
+            onShowSignup={() => navigate('signup')}
+            onForgotPassword={() => navigate('forgot-password')}
           />
         );
 
       case 'forgot-password':
         return (
           <ForgotPasswordPage
-            onBack={() => setCurrentView('login')}
+            onBack={() => navigate('login')}
           />
         );
 
@@ -331,13 +346,14 @@ function App() {
         return (
           <ResetPasswordPage
             token={resetToken || ''}
-            onSuccess={() => setCurrentView('login')}
+            onSuccess={() => navigate('login')}
           />
         );
 
       case 'signup':
         return (
           <SignupPage
+            setGlobalLoading={setGlobalLoading}
             onSignupComplete={() => {
               try {
                 const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
@@ -346,7 +362,7 @@ function App() {
                 goToDashboardAfterAuth(null);
               }
             }}
-            onShowLogin={() => setCurrentView('login')}
+            onShowLogin={() => navigate('login')}
           />
         );
 
@@ -402,7 +418,7 @@ function App() {
       case 'beginner-guide':
         return (
           <BeginnerGuidePage
-            onBack={() => setCurrentView('landing')}
+            onBack={() => navigate('landing')}
           />
         );
 
@@ -417,7 +433,7 @@ function App() {
                 <p>The requested page could not be found.</p>
                 <Button
                   className="mt-4"
-                  onClick={() => setCurrentView('landing')}
+                  onClick={() => navigate('landing')}
                 >
                   Go Home
                 </Button>
@@ -428,85 +444,6 @@ function App() {
     }
   };
 
-  if (showSplash) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-          <SplashScreen onComplete={() => setShowSplash(false)} />
-        </React.Suspense>
-      </div>
-    );
-  }
-
-  if (currentView === 'login') {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-          <LoginPage
-            onLoginComplete={() => {
-              try {
-                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                goToDashboardAfterAuth(role);
-              } catch {
-                goToDashboardAfterAuth(null);
-              }
-            }}
-            onShowSignup={() => setCurrentView('signup')}
-            onForgotPassword={() => setCurrentView('forgot-password')}
-          />
-        </React.Suspense>
-      </div>
-    );
-  }
-
-  if (currentView === 'signup') {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-          <SignupPage
-            onSignupComplete={() => {
-              try {
-                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                goToDashboardAfterAuth(role);
-              } catch {
-                goToDashboardAfterAuth(null);
-              }
-            }}
-            onShowLogin={() => setCurrentView('login')}
-          />
-        </React.Suspense>
-      </div>
-    );
-  }
-
-  if (currentView === 'forgot-password') {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-          <ForgotPasswordPage
-            onBack={() => setCurrentView('login')}
-          />
-        </React.Suspense>
-      </div>
-    );
-  }
-
-  if (currentView === 'reset-password' && resetToken) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2"></div></div>}>
-          <ResetPasswordPage
-            token={resetToken}
-            onSuccess={() => setCurrentView('login')}
-            onBack={() => setCurrentView('login')}
-          />
-        </React.Suspense>
-      </div>
-    );
-  }
-
-
-
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       {showSplash ? (
@@ -514,15 +451,17 @@ function App() {
           <SplashScreen onComplete={() => setShowSplash(false)} />
         </div>
       ) : (
-        <div className="relative z-10">
+        <div className="relative z-10 min-h-screen flex flex-col">
           <Toaster position="top-center" />
-          <Header />
-          <main className="flex-grow flex flex-col">
+          {globalLoading && <LoadingTransition />}
+          
+          {!globalLoading && (currentView !== 'login' && currentView !== 'signup' && currentView !== 'forgot-password' && currentView !== 'reset-password') && <Header />}
+          <main className={`flex-grow flex flex-col ${globalLoading ? 'hidden' : ''}`}>
             <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
               {renderCurrentView()}
             </React.Suspense>
           </main>
-          <Footer />
+          {!globalLoading && (currentView !== 'login' && currentView !== 'signup' && currentView !== 'forgot-password' && currentView !== 'reset-password') && <Footer />}
         </div>
       )}
     </div>
