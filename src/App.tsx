@@ -31,6 +31,7 @@ import {
 import { NotificationCenter } from './components/NotificationCenter';
 import { API_BASE_URL } from './constants';
 import { clearSession, getSession, setSession } from './utils/session';
+import { logoutUser } from './services/authService';
 import LoadingTransition from './components/ui/LoadingTransition';
 
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
@@ -234,13 +235,22 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    clearSession();
-    setUserRole(null);
-    setCurrentView('landing');
-    setSelectedEvent(null);
-    setIsWalletConnected(false);
-    setWalletAddress(null);
+  const handleLogout = async () => {
+    setGlobalLoading(true);
+    try {
+      await logoutUser();
+      clearSession();
+      setUserRole(null);
+      setCurrentView('landing');
+      setSelectedEvent(null);
+      setIsWalletConnected(false);
+      setWalletAddress(null);
+      toast.success('Logged out successfully');
+    } catch (err) {
+      toast.error('Logout failed');
+    } finally {
+      setGlobalLoading(false);
+    }
   };
 
   const handleEventPurchase = (eventId: string) => {

@@ -271,41 +271,36 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           return;
         }
         if (paymentGateway === 'flutterwave') {
+          const token = localStorage.getItem('auth_token');
           const initRes = await fetch(`${API_BASE_URL}/orders/initialize`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({
               eventId: String(selectedEvent.id),
               tierId: String(selectedTierData.id),
               quantity,
-              paymentMethod: 'CREDIT_CARD',
+              paymentMethod: 'FIAT',
               gateway: 'flutterwave',
               customerEmail: customerEmail || 'buyer@example.com'
             })
           });
+          
           if (!initRes.ok) {
-            toast.error('Unable to initialize Flutterwave order. Please try again later.');
+            const err = await initRes.json().catch(() => ({}));
+            toast.error(err.message || 'Unable to initialize Flutterwave order.');
             setIsPurchasing(false);
             return;
           }
+          
           const init = await initRes.json();
-          const res = await flutterwaveCheckout({
-            email: customerEmail || 'buyer@example.com',
-            amount: Number(amountWithFees.toFixed(2)),
-            currency: fiatCurrency,
-            phone: customerPhone || undefined,
-            name: (customerEmail ? customerEmail.split('@')[0] : 'Attendee'),
-            reference: init.reference,
-            onSuccess: async () => {
-              await finalizeTicket(selectedEvent, selectedTierData);
-            },
-            onCancel: () => {
-              toast.info('Payment canceled.');
-              setIsPurchasing(false);
-            },
-          });
-          if (!res.ok) {
-            toast.error(res.error || 'Unable to start Flutterwave checkout. Please try again.');
+          if (init.checkoutUrl) {
+            // Production ready: redirect to secure checkout page
+            window.location.href = init.checkoutUrl;
+          } else {
+            toast.error('Payment initialization failed: No checkout URL.');
             setIsPurchasing(false);
           }
           return;

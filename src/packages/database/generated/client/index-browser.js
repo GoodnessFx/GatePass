@@ -129,6 +129,7 @@ exports.Prisma.UserScalarFieldEnum = {
   twitterId: 'twitterId',
   avatar: 'avatar',
   role: 'role',
+  refreshToken: 'refreshToken',
   resetToken: 'resetToken',
   resetTokenExpiry: 'resetTokenExpiry',
   createdAt: 'createdAt',

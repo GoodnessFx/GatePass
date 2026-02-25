@@ -1620,6 +1620,7 @@ export namespace Prisma {
     twitterId: string | null
     avatar: string | null
     role: string | null
+    refreshToken: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     createdAt: Date | null
@@ -1636,6 +1637,7 @@ export namespace Prisma {
     twitterId: string | null
     avatar: string | null
     role: string | null
+    refreshToken: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     createdAt: Date | null
@@ -1652,6 +1654,7 @@ export namespace Prisma {
     twitterId: number
     avatar: number
     role: number
+    refreshToken: number
     resetToken: number
     resetTokenExpiry: number
     createdAt: number
@@ -1670,6 +1673,7 @@ export namespace Prisma {
     twitterId?: true
     avatar?: true
     role?: true
+    refreshToken?: true
     resetToken?: true
     resetTokenExpiry?: true
     createdAt?: true
@@ -1686,6 +1690,7 @@ export namespace Prisma {
     twitterId?: true
     avatar?: true
     role?: true
+    refreshToken?: true
     resetToken?: true
     resetTokenExpiry?: true
     createdAt?: true
@@ -1702,6 +1707,7 @@ export namespace Prisma {
     twitterId?: true
     avatar?: true
     role?: true
+    refreshToken?: true
     resetToken?: true
     resetTokenExpiry?: true
     createdAt?: true
@@ -1791,6 +1797,7 @@ export namespace Prisma {
     twitterId: string | null
     avatar: string | null
     role: string
+    refreshToken: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     createdAt: Date
@@ -1824,6 +1831,7 @@ export namespace Prisma {
     twitterId?: boolean
     avatar?: boolean
     role?: boolean
+    refreshToken?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     createdAt?: boolean
@@ -1845,6 +1853,7 @@ export namespace Prisma {
     twitterId?: boolean
     avatar?: boolean
     role?: boolean
+    refreshToken?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     createdAt?: boolean
@@ -1861,6 +1870,7 @@ export namespace Prisma {
     twitterId?: boolean
     avatar?: boolean
     role?: boolean
+    refreshToken?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     createdAt?: boolean
@@ -1894,6 +1904,7 @@ export namespace Prisma {
       twitterId: string | null
       avatar: string | null
       role: string
+      refreshToken: string | null
       resetToken: string | null
       resetTokenExpiry: Date | null
       createdAt: Date
@@ -2304,6 +2315,7 @@ export namespace Prisma {
     readonly twitterId: FieldRef<"User", 'String'>
     readonly avatar: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'String'>
+    readonly refreshToken: FieldRef<"User", 'String'>
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiry: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
@@ -10571,6 +10583,7 @@ export namespace Prisma {
     twitterId: 'twitterId',
     avatar: 'avatar',
     role: 'role',
+    refreshToken: 'refreshToken',
     resetToken: 'resetToken',
     resetTokenExpiry: 'resetTokenExpiry',
     createdAt: 'createdAt',
@@ -10801,6 +10814,7 @@ export namespace Prisma {
     twitterId?: StringNullableFilter<"User"> | string | null
     avatar?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
+    refreshToken?: StringNullableFilter<"User"> | string | null
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -10821,6 +10835,7 @@ export namespace Prisma {
     twitterId?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     role?: SortOrder
+    refreshToken?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10844,6 +10859,7 @@ export namespace Prisma {
     name?: StringNullableFilter<"User"> | string | null
     avatar?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
+    refreshToken?: StringNullableFilter<"User"> | string | null
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -10864,6 +10880,7 @@ export namespace Prisma {
     twitterId?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     role?: SortOrder
+    refreshToken?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10886,6 +10903,7 @@ export namespace Prisma {
     twitterId?: StringNullableWithAggregatesFilter<"User"> | string | null
     avatar?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: StringWithAggregatesFilter<"User"> | string
+    refreshToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -11694,6 +11712,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -11714,6 +11733,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -11734,6 +11754,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11754,6 +11775,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11774,6 +11796,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -11790,6 +11813,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11806,6 +11830,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12830,6 +12855,7 @@ export namespace Prisma {
     twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
+    refreshToken?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     createdAt?: SortOrder
@@ -12846,6 +12872,7 @@ export namespace Prisma {
     twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
+    refreshToken?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     createdAt?: SortOrder
@@ -12862,6 +12889,7 @@ export namespace Prisma {
     twitterId?: SortOrder
     avatar?: SortOrder
     role?: SortOrder
+    refreshToken?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     createdAt?: SortOrder
@@ -14835,6 +14863,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -14854,6 +14883,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -14889,6 +14919,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14908,6 +14939,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14927,6 +14959,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -14946,6 +14979,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -15188,6 +15222,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15207,6 +15242,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15703,6 +15739,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -15722,6 +15759,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -15885,6 +15923,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15904,6 +15943,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16150,6 +16190,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -16169,6 +16210,7 @@ export namespace Prisma {
     twitterId?: string | null
     avatar?: string | null
     role?: string
+    refreshToken?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     createdAt?: Date | string
@@ -16340,6 +16382,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16359,6 +16402,7 @@ export namespace Prisma {
     twitterId?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -8,6 +8,7 @@ export interface RegisterData {
   country: string;
   role: UserRole;
   passwordHash?: string;
+  walletAddress?: string;
 }
 
 export interface RegisterResponse {

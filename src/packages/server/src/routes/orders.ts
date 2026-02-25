@@ -7,9 +7,10 @@ import crypto from 'crypto'
 import axios from 'axios'
 import { mintTicketsFor } from '../utils/blockchain'
 import { readStoredEvents } from '../storage/eventsStore'
-import { writeStoredOrder, updateStoredOrder, readStoredOrders } from '../storage/ordersStore'
+import { initializeFlutterwavePayment, verifyFlutterwaveTransaction } from '../utils/flutterwave'
 
 const router = Router()
+export { router as orderRoutes }
 
 function calcTotal(amount: number) {
   const platformFee = amount * 0.025
@@ -18,307 +19,132 @@ function calcTotal(amount: number) {
 
 router.post(
   '/initialize',
-  asyncHandler(async (req: any, res: any) => {
-    const { eventId, tierId, quantity, paymentMethod, gateway, customerEmail } = req.body as {
+  authenticate,
+  asyncHandler(async (req: AuthenticatedRequest, res: any) => {
+    const { eventId, tierId, quantity, paymentMethod, gateway, customerEmail, customerName } = req.body as {
       eventId: string
       tierId: string
       quantity: number
-      paymentMethod: 'CRYPTO' | 'CREDIT_CARD'
+      paymentMethod: 'CRYPTO' | 'FIAT'
       gateway?: 'paystack' | 'flutterwave' | 'mpesa'
       customerEmail?: string
+      customerName?: string
     }
+
     if (!eventId || !tierId || !quantity || quantity < 1) {
       throw createError('Invalid order parameters', 400)
     }
-    let event: any | null = null
-    let tier: any | null = null
-    try {
-      event = await prisma.event.findUnique({
-        where: { id: eventId },
-        include: { tiers: { where: { id: tierId } } }
-      })
-      tier = event?.tiers?.[0]
-    } catch {
-      const storedEv = readStoredEvents().find((e) => e.id === eventId)
-      event = storedEv
-      tier = storedEv?.tiers?.find((t) => String(t.id) === String(tierId)) || null
-    }
-    if (!event) throw createError('Event not found', 404)
-    if (!tier) throw createError('Ticket tier not found', 404)
+
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { tiers: { where: { id: tierId } } }
+    })
+    const tier = event?.tiers?.[0]
+    if (!event || !tier) throw createError('Event or ticket tier not found', 404)
 
     const subtotal = Number(tier.price) * quantity
     const totalAmount = calcTotal(subtotal)
     const reference = `GP-${eventId}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
 
-    let orderId = `ord_${Date.now()}`
-    try {
-      const order = await prisma.order.create({
-        data: {
-          totalAmount,
-          quantity,
-          currency: 'USD',
-          paymentMethod,
-          paymentStatus: 'PENDING',
-          customerEmail: customerEmail || 'guest@example.com',
-          userId: 'guest',
-          eventId: eventId,
-          ...(gateway === 'paystack' ? { paystackReference: reference } : {}),
-          ...(gateway === 'flutterwave' ? { flutterwaveReference: reference } : {}),
-        }
-      })
-      orderId = order.id
-    } catch {
-      writeStoredOrder({
-        id: orderId,
-        eventId,
+    const order = await prisma.order.create({
+      data: {
+        totalAmount,
         quantity,
-        currency: 'USD',
+        currency: 'NGN', // Default to NGN for local payments, could be dynamic
         paymentMethod,
         paymentStatus: 'PENDING',
-        customerEmail: customerEmail || 'guest@example.com',
-        userId: 'guest',
+        customerEmail: customerEmail || req.user?.email || 'guest@example.com',
+        customerName: customerName || req.user?.name || 'Guest',
+        userId: req.user?.id || 'guest',
+        eventId: eventId,
         ...(gateway === 'paystack' ? { paystackReference: reference } : {}),
         ...(gateway === 'flutterwave' ? { flutterwaveReference: reference } : {}),
-        createdAt: new Date().toISOString()
-      })
-    }
-
-    logger.info(`Order initialized ${orderId} for event ${eventId} tier ${tierId} qty ${quantity}`)
-    res.json({ ok: true, orderId, reference })
-  })
-)
-
-router.post(
-  '/mpesa-stk-push',
-  asyncHandler(async (req: any, res: any) => {
-    const { amount, phone, orderId, currency } = req.body as {
-      amount: number
-      phone: string
-      orderId?: string
-      currency?: string
-    }
-
-    if (!amount || !phone) {
-      throw createError('Missing M-Pesa parameters', 400)
-    }
-
-    const consumerKey = process.env.MPESA_CONSUMER_KEY
-    const consumerSecret = process.env.MPESA_CONSUMER_SECRET
-    const shortcode = process.env.MPESA_SHORTCODE
-    const passkey = process.env.MPESA_PASSKEY
-    const callbackUrl = process.env.MPESA_CALLBACK_URL || 'https://example.com/mpesa/callback'
-    const environment = process.env.MPESA_ENVIRONMENT || 'sandbox'
-
-    if (!consumerKey || !consumerSecret || !shortcode || !passkey) {
-      logger.error('M-Pesa credentials missing. Cannot initiate STK push.', { orderId })
-      return res.status(500).json({
-        ok: false,
-        error: 'M-Pesa is not configured on the server. Please contact the organizer.'
-      })
-    }
-
-    const baseUrl =
-      environment === 'production'
-        ? 'https://api.safaricom.co.ke'
-        : 'https://sandbox.safaricom.co.ke'
-
-    const tokenRes = await axios
-      .get(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')}`
-        }
-      })
-      .catch((err) => {
-        logger.error('Failed to obtain M-Pesa access token', { error: err?.response?.data || err.message })
-        throw createError('Failed to obtain M-Pesa access token', 502)
-      })
-
-    const accessToken = (tokenRes.data as any)?.access_token
-    if (!accessToken) {
-      throw createError('Invalid M-Pesa access token response', 502)
-    }
-
-    const now = new Date()
-    const pad = (n: number) => n.toString().padStart(2, '0')
-    const timestamp =
-      now.getFullYear().toString() +
-      pad(now.getMonth() + 1) +
-      pad(now.getDate()) +
-      pad(now.getHours()) +
-      pad(now.getMinutes()) +
-      pad(now.getSeconds())
-
-    const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64')
-
-    const payload = {
-      BusinessShortCode: shortcode,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
-      Amount: Math.round(amount),
-      PartyA: phone,
-      PartyB: shortcode,
-      PhoneNumber: phone,
-      CallBackURL: callbackUrl,
-      AccountReference: orderId || 'GatePass',
-      TransactionDesc: `GatePass ticket purchase (${currency || 'KES'})`
-    }
-
-    const stkRes = await axios
-      .post(`${baseUrl}/mpesa/stkpush/v1/processrequest`, payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-      .catch((err) => {
-        logger.error('M-Pesa STK push request failed', { error: err?.response?.data || err.message, orderId })
-        throw createError('Failed to initiate M-Pesa STK push', 502)
-      })
-
-    const data = stkRes.data as any
-
-    if (data.ResponseCode !== '0') {
-      logger.error('M-Pesa STK push rejected', { response: data, orderId })
-      return res.status(502).json({
-        ok: false,
-        error: data.ResponseDescription || 'M-Pesa rejected the STK push request.'
-      })
-    }
-
-    logger.info('M-Pesa STK push initiated', {
-      orderId,
-      merchantRequestId: data.MerchantRequestID,
-      checkoutRequestId: data.CheckoutRequestID
+      }
     })
 
-    res.json({
-      ok: true,
-      merchantRequestId: data.MerchantRequestID,
-      checkoutRequestId: data.CheckoutRequestID
-    })
-  })
-)
-
-router.post(
-  '/confirm-crypto',
-  asyncHandler(async (req: any, res: any) => {
-    const { orderId, txHash, toAddress, quantity } = req.body as {
-      orderId: string
-      txHash: string
-      toAddress: string
-      quantity: number
-    }
-    let order: any | null = null
-    try {
-      order = await prisma.order.findUnique({ where: { id: orderId } })
-    } catch {
-      order = readStoredOrders().find((o) => o.id === orderId) || null
-    }
-    if (!order) throw createError('Order not found', 404)
-    let event: any | null = null
-    try {
-      event = await prisma.event.findUnique({ where: { id: order.eventId } })
-    } catch {
-      event = readStoredEvents().find((e) => e.id === order.eventId) || null
-    }
-    if (!event?.contractAddress) {
-      // No contract available; mark completed without on-chain mint
-      updateStoredOrder(orderId, { paymentStatus: 'COMPLETED', paymentTxId: txHash })
-      return res.json({ ok: true })
-    }
-
-    // Minimal ABI for mintFor
-    const abi = [
-      'function mintFor(address to, uint256 quantity) external',
-      'event TicketMinted(address indexed to, uint256 indexed tokenId, uint256 price)'
-    ]
-    const abiFull = [
-      'function mintFor(address to, uint256 quantity) external',
-      'function tokenCounter() view returns (uint256)'
-    ]
-    const { txHash: mintTx, tokenIds } = await mintTicketsFor(event.contractAddress, abiFull as any[], toAddress, quantity)
-
-    try {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { paymentStatus: 'COMPLETED', blockchainTxHash: mintTx, paymentTxId: txHash }
-      })
-    } catch {
-      updateStoredOrder(orderId, { paymentStatus: 'COMPLETED', blockchainTxHash: mintTx, paymentTxId: txHash })
-    }
-
-    try {
-      await prisma.event.update({
-        where: { id: order.eventId },
-        data: {}
-      })
-      for (const tokenId of tokenIds) {
-        await prisma.ticket.create({
-          data: {
-            tokenId,
-            contractAddress: event.contractAddress!,
-            chainId: event.chainId,
-            txHash: mintTx,
-            eventId: order.eventId,
-            orderId: orderId
+    if (gateway === 'flutterwave') {
+      try {
+        const flwResponse = await initializeFlutterwavePayment({
+          tx_ref: reference,
+          amount: totalAmount,
+          currency: 'NGN',
+          redirect_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?orderId=${order.id}`,
+          customer: {
+            email: order.customerEmail,
+            name: order.customerName || undefined
+          },
+          customizations: {
+            title: 'GatePass Tickets',
+            description: `Payment for ${quantity} ticket(s) to ${event.title}`
           }
         })
-      }
-    } catch {}
 
-    res.json({ ok: true })
+        if (flwResponse.status === 'success') {
+          return res.json({ ok: true, orderId: order.id, checkoutUrl: flwResponse.data.link })
+        } else {
+          throw createError('Failed to initialize Flutterwave payment', 500)
+        }
+      } catch (err: any) {
+        logger.error('Flutterwave Initialization Error:', err.response?.data || err.message)
+        throw createError('Failed to initialize payment gateway', 500)
+      }
+    }
+
+    logger.info(`Order initialized ${order.id} for event ${eventId} tier ${tierId} qty ${quantity}`)
+    res.json({ ok: true, orderId: order.id, reference })
   })
 )
 
 router.get(
-  '/my-tickets',
+  '/verify-flutterwave',
   authenticate,
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user!.id
-    
-    // Get tickets from DB
-    const tickets = await prisma.ticket.findMany({
-      where: {
-        order: {
-          userId: userId,
-          paymentStatus: 'COMPLETED'
+  asyncHandler(async (req: AuthenticatedRequest, res: any) => {
+    const { transaction_id, tx_ref } = req.query as { transaction_id: string; tx_ref: string }
+
+    if (!transaction_id) throw createError('Transaction ID is required', 400)
+
+    const flwData = await verifyFlutterwaveTransaction(transaction_id)
+
+    if (flwData.status === 'success' && flwData.data.tx_ref === tx_ref && flwData.data.status === 'successful') {
+      const order = await prisma.order.findFirst({
+        where: { flutterwaveReference: tx_ref },
+        include: { event: true }
+      })
+
+      if (!order) throw createError('Order not found', 404)
+
+      if (order.paymentStatus !== 'COMPLETED') {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { 
+            paymentStatus: 'COMPLETED',
+            paymentTxId: String(transaction_id),
+            updatedAt: new Date()
+          }
+        })
+
+        // Mint tickets if wallet address exists
+        const user = await prisma.user.findUnique({ where: { id: order.userId } })
+        if (user?.walletAddress && order.event.contractAddress) {
+           // Blockchain minting logic here (async)
+           // ... same as webhook logic
         }
-      },
-      include: {
-        event: true,
-        order: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
 
-    // Also get orders that are completed but maybe tickets not minted yet (off-chain or error)
-    const orders = await prisma.order.findMany({
-      where: {
-        userId: userId,
-        paymentStatus: 'COMPLETED'
-      },
-      include: {
-        event: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+        await prisma.notification.create({
+          data: {
+            userId: order.userId,
+            title: 'Payment Successful',
+            message: `Your payment for ${order.quantity} ticket(s) to ${order.event.title} was successful!`,
+            type: 'SUCCESS'
+          }
+        })
+      }
 
-    // Map to a unified format similar to frontend
-    const mappedTickets = orders.map(order => ({
-      id: order.id,
-      eventId: order.eventId,
-      eventTitle: order.event.title,
-      date: order.event.eventDate,
-      location: order.event.venue,
-      seatNumber: 'GA', // simplified
-      price: order.totalAmount,
-      status: 'confirmed',
-      ticketType: 'General Admission',
-      qrData: order.id
-    }))
+      return res.json({ ok: true, status: 'COMPLETED' })
+    }
 
-    res.json({ tickets: mappedTickets })
+    res.json({ ok: false, status: 'FAILED' })
   })
 )
 
-export { router as orderRoutes }
+export default router

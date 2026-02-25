@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { Ticket } from 'lucide-react';
-import { FloatingCard, FloatingCardGrid } from './ui/floating-card';
+import { Loader2, LogIn } from 'lucide-react';
 import AuthContainer from './AuthContainer';
 import { API_BASE_URL } from '../constants';
+import { loginUser } from '../services/authService';
+import { toast } from 'sonner';
 
 interface LoginPageProps {
   onLoginComplete: () => void;
@@ -19,141 +20,179 @@ interface LoginPageProps {
 export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword, setGlobalLoading }: LoginPageProps) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [role, setRole] = React.useState<'attendee'|'organizer'>('attendee');
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const savedEmail = localStorage.getItem('gp_user_email');
     if (savedEmail) setEmail(savedEmail);
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
     if (!trimmedEmail || !trimmedPassword) {
-      alert('Email and password are required.');
+      toast.error('Email and password are required.');
       return;
     }
 
-    if (trimmedPassword.length < 8) {
-      alert('Password must be at least 8 characters long.');
-      return;
-    }
+    setLoading(true);
+    if (setGlobalLoading) setGlobalLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })
-      });
+      const result = await loginUser(trimmedEmail, trimmedPassword);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const token = data.token as string | undefined;
-        const userRole = data.user?.role ? String(data.user.role).toLowerCase() : role;
-        const userEmail = data.user?.email || trimmedEmail;
-
-        if (token) {
-          document.cookie = `gp_session_token=${encodeURIComponent(token)}; path=/; sameSite=Lax`;
-        }
-        localStorage.setItem('gp_user_role', userRole);
-        localStorage.setItem('gp_user_email', userEmail);
-
-        try {
-          const notification = {
-            id: `notif-${Date.now()}`,
-            title: 'Login successful',
-            message: `Signed in as ${userEmail}.`,
-            type: 'SUCCESS',
-            read: false,
-            createdAt: new Date().toISOString()
-          };
-          const existing = JSON.parse(localStorage.getItem('gp_notifications') || '[]');
-          existing.unshift(notification);
-          localStorage.setItem('gp_notifications', JSON.stringify(existing.slice(0, 50)));
-        } catch {}
-
+      if (result.success) {
+        toast.success('Login successful');
         onLoginComplete();
       } else {
-        alert(data.message || 'Login failed');
+        toast.error(result.error || 'Login failed');
       }
     } catch (err) {
       console.error('Login error:', err);
-      alert('Unable to reach the server. Please check your connection and try again.');
+      toast.error('Unable to reach the server. Please check your connection.');
+    } finally {
+      setLoading(false);
+      if (setGlobalLoading) setGlobalLoading(false);
     }
+  };
+
+  const handleSocialLogin = (provider: 'google' | 'twitter') => {
+    if (setGlobalLoading) setGlobalLoading(true);
+    window.location.href = `${API_BASE_URL}/auth/${provider}`;
   };
 
   return (
     <AuthContainer>
-      <div className="w-full">
+      <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-semibold tracking-tight text-white mb-2">GatePass</h1>
+          <h1 className="text-5xl font-bold tracking-tighter text-white mb-2">GatePass</h1>
+          <p className="text-slate-400">Secure Decentralized Ticketing</p>
         </div>
 
-        <Card className="w-full border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+        <Card className="w-full border-white/10 shadow-2xl backdrop-blur-md bg-slate-900/50">
           <CardHeader>
-            <CardTitle className="text-2xl font-calligraphy text-primary text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-center">Sign in to manage tickets</CardDescription>
+            <CardTitle className="text-2xl font-bold text-white text-center">Welcome Back</CardTitle>
+            <CardDescription className="text-center text-slate-400">Sign in to your account</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="w-full" variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
-                <Button className="w-full" variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
-              </div>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label>Email Address</Label>
-                <Input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
+                <Label htmlFor="email" className="text-slate-200">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="bg-slate-800/50 border-white/10 text-white focus:ring-primary"
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Password</Label>
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto font-normal text-xs text-muted-foreground hover:text-primary"
-                    onClick={() => onForgotPassword && onForgotPassword()}
+                  <Label htmlFor="password" className="text-slate-200">Password</Label>
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className="text-xs text-primary hover:underline"
+                    disabled={loading}
                   >
                     Forgot password?
-                  </Button>
+                  </button>
                 </div>
-                <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="bg-slate-800/50 border-white/10 text-white focus:ring-primary"
+                />
               </div>
-              <Button className="w-full" onClick={handleLogin}>Login</Button>
-              <div className="text-sm text-foreground text-center">
-                <span>New to GatePass? </span>
-                <button className="underline" onClick={()=>onShowSignup && onShowSignup()}>Click to Sign Up</button>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 transition-all shadow-lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogIn className="mr-2 h-4 w-4" />
+                )}
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-900 px-2 text-slate-400">Or continue with</span>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 pt-2">
+
+              <div className="grid grid-cols-2 gap-4">
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => {
-                    if (setGlobalLoading) setGlobalLoading(true);
-                    // Standard OAuth redirect
-                    window.location.href = `${API_BASE_URL}/auth/google`;
-                  }}
-                  className="w-full flex items-center gap-2 justify-center hover:bg-slate-800 transition-colors"
+                  onClick={() => handleSocialLogin('google')}
+                  disabled={loading}
+                  className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
                 >
-                  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.78 0 7.22 1.44 9.86 3.8l5.94-5.94C35.46 3.46 30.04 1 24 1 14.73 1 6.65 6.16 2.72 14.02l7.54 5.86C12.31 13.19 17.73 9.5 24 9.5z"/><path fill="#4285F4" d="M46.08 24.3c0-2.02-.18-3.98-.52-5.86H24v11.1h12.4c-.53 2.87-2.16 5.29-4.61 6.91l7.07 5.49c4.13-3.81 7.22-9.35 7.22-17.64z"/><path fill="#FBBC05" d="M10.26 28.14c-.48-1.41-.76-2.91-.76-4.46s.28-3.05.76-4.46l-7.54-5.86C1.63 16.06 1 19.01 1 22.06s.63 6 1.72 8.71l7.54-2.63z"/><path fill="#34A853" d="M24 46c6.05 0 11.18-1.99 14.9-5.41l-7.07-5.49c-2.01 1.36-4.58 2.15-7.83 2.15-6.68 0-12.35-4.51-14.39-10.66l-7.54 2.63C6.65 41.84 14.73 46 24 46z"/></svg>
-                  <span>Google</span>
+                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  Google
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => {
-                    if (setGlobalLoading) setGlobalLoading(true);
-                    // Standard OAuth redirect
-                    window.location.href = `${API_BASE_URL}/auth/twitter`;
-                  }}
-                  className="w-full flex items-center gap-2 justify-center hover:bg-slate-800 transition-colors"
+                  onClick={() => handleSocialLogin('twitter')}
+                  disabled={loading}
+                  className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.146 0H21.5L13.9 10.546 23 24h-7.109l-5.568-7.957L4.851 24H1.5l8.154-11.829L1 0h7.273l5.197 7.29L18.146 0Zm-1.246 21.545h1.961L7.18 2.367H5.1l11.8 19.178Z"/></svg>
-                  <span>X</span>
+                  <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  X
                 </Button>
               </div>
+
+              <div className="text-center pt-4">
+                <span className="text-sm text-slate-400">Don't have an account? </span>
+                <button
+                  type="button"
+                  onClick={onShowSignup}
+                  className="text-sm font-bold text-primary hover:underline"
+                  disabled={loading}
+                >
+                  Create account
+                </button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>
     </AuthContainer>
   );
 }
-
-export default LoginPage;

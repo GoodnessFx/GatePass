@@ -4,12 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { countries } from '../constants';
-import { Loader2, Mail } from 'lucide-react';
+import { countries, API_BASE_URL } from '../constants';
+import { Loader2, Mail, UserPlus, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { hashPassword, sanitizeInput } from '../utils/security';
 import { registerUser } from '../services/authService';
-import { API_BASE_URL } from '../constants';
+import AuthContainer from './AuthContainer';
 
 interface SignupPageProps {
   onSignupComplete: () => void;
@@ -24,254 +23,233 @@ export function SignupPage({ onSignupComplete, onShowLogin, setGlobalLoading }: 
   const [country, setCountry] = React.useState('NG');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'attendee' | 'organizer'>('attendee');
-  const [error, setError] = React.useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = React.useState(false);
-  const [isSending, setIsSending] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    if (isSuccess) {
-      const runConfetti = async () => {
-        try {
-          const confettiModule = await import('canvas-confetti');
-          const confetti = confettiModule.default || confettiModule;
-
-          const count = 200;
-          const defaults = {
-            origin: { y: 0.7 }
-          };
-
-          const fire = (particleRatio: number, opts: any) => {
-            confetti({
-              ...defaults,
-              ...opts,
-              particleCount: Math.floor(count * particleRatio)
-            });
-          };
-
-          fire(0.25, { spread: 26, startVelocity: 55 });
-          fire(0.2, { spread: 60 });
-          fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-          fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-          fire(0.1, { spread: 120, startVelocity: 45 });
-        } catch (e) {
-          console.error("Confetti error:", e);
-        }
-      };
-      runConfetti();
-    }
-  }, [isSuccess]);
-
-  const handleSignup = async () => {
-    setError(null);
-
-    const trimmedEmail = sanitizeInput(email.trim());
-    const trimmedFirst = sanitizeInput(firstName.trim());
-    const trimmedLast = sanitizeInput(lastName.trim());
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const trimmedEmail = email.trim();
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
     const trimmedPassword = password.trim();
 
     if (!trimmedEmail || !trimmedFirst || !trimmedLast || !trimmedPassword) {
-      setError('All fields are required.');
+      toast.error('All fields are required.');
       return;
     }
 
     if (trimmedPassword.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      toast.error('Password must be at least 8 characters long.');
       return;
     }
 
-    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
-    if (!passwordPattern.test(trimmedPassword)) {
-      setError('Password must include upper, lower case letters and a number.');
-      return;
-    }
+    setLoading(true);
+    if (setGlobalLoading) setGlobalLoading(true);
 
     try {
-      const storedUsers = localStorage.getItem('gp_users');
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-      const exists = users.find((u: any) => u.email === trimmedEmail);
-      
-      if (exists) {
-        setError('A user with this email address already exists. Please log in.');
-        toast.error('User already exists', { description: 'Please log in instead.' });
-        return;
-      }
-
-      setIsSending(true);
-
-      // Save user preferences locally for seamless experience
-      localStorage.setItem('gp_user_country', country);
-      localStorage.setItem('gp_user_email', trimmedEmail);
-      
-      // Infer and save default currency
-      let currency = 'NGN';
-      if (country === 'GH') currency = 'GHS';
-      if (country === 'KE') currency = 'KES';
-      if (country === 'ZA') currency = 'ZAR';
-      localStorage.setItem('gp_user_currency', currency);
-
-      const hashedPassword = await hashPassword(trimmedPassword);
-
-      const { success, error: regError } = await registerUser({
-        email: trimmedEmail,
+      const result = await registerUser({
         firstName: trimmedFirst,
         lastName: trimmedLast,
+        email: trimmedEmail,
+        password: trimmedPassword,
         country,
-        role,
-        password: trimmedPassword, 
-        passwordHash: hashedPassword
+        role
       });
 
-      setIsSending(false);
-
-      if (!success) {
-        setError(regError || 'Registration failed. Please try again.');
-        toast.error('Registration failed', { description: regError });
-        return;
+      if (result.success) {
+        toast.success('Account created successfully!');
+        onSignupComplete();
+      } else {
+        toast.error(result.error || 'Registration failed');
       }
-
-      setIsSuccess(true);
-      toast.success('Registration successful!', { 
-        description: 'Verification email sent.'
-      });
-
-    } catch (e) {
-      console.error(e);
-      setError('An error occurred during signup. Please try again.');
-      toast.error('Registration failed', { description: 'Please try again later.' });
-      setIsSending(false);
+    } catch (err) {
+      console.error('Signup error:', err);
+      toast.error('Unable to reach the server. Please check your connection.');
+    } finally {
+      setLoading(false);
+      if (setGlobalLoading) setGlobalLoading(false);
     }
   };
 
-  const handleVerify = () => {
-    onSignupComplete();
+  const handleSocialSignup = (provider: 'google' | 'twitter') => {
+    if (setGlobalLoading) setGlobalLoading(true);
+    window.location.href = `${API_BASE_URL}/auth/${provider}`;
   };
 
   return (
     <AuthContainer>
-      <div className="w-full">
+      <div className="w-full max-w-lg mx-auto py-8">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-semibold tracking-tight text-white mb-2">GatePass</h1>
-          <p className="text-muted-foreground">Join the Revolution</p>
+          <h1 className="text-5xl font-bold tracking-tighter text-white mb-2">GatePass</h1>
+          <p className="text-slate-400">Join the future of event ticketing</p>
         </div>
 
-        {isSuccess ? (
-          <Card className="w-full border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
-            <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
-            <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <Mail className="w-6 h-6 text-green-600" />
+        <Card className="w-full border-white/10 shadow-2xl backdrop-blur-md bg-slate-900/50">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-white text-center">Create Account</CardTitle>
+            <CardDescription className="text-center text-slate-400">Enter your details to get started</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-slate-200">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={loading}
+                    required
+                    className="bg-slate-800/50 border-white/10 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-slate-200">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={loading}
+                    required
+                    className="bg-slate-800/50 border-white/10 text-white"
+                  />
+                </div>
               </div>
-              <CardTitle className="text-2xl font-calligraphy text-primary">Check your email</CardTitle>
-              <CardDescription>
-                We've sent a verification link to <span className="font-medium text-foreground">{email}</span>
-              </CardDescription>
-            </CardHeader>
-                <CardContent className="space-y-6 pt-4">
-                  <div className="text-center text-sm text-muted-foreground">
-                    <p>Click the link in the email to verify your account and start using GatePass.</p>
-                  </div>
-                  
-                  <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                    <Button onClick={handleVerify} className="w-full" variant="default">
-                      Verify Email
-                    </Button>
-                  </div>
 
-                  <div className="text-center">
-                    <Button variant="link" onClick={onShowLogin} className="text-sm text-muted-foreground">
-                      Back to Login
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="w-full border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
-                <CardHeader>
-                  <CardTitle className="text-3xl font-calligraphy text-primary">Create Account</CardTitle>
-                  <CardDescription>Enter your details to get started</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                {error && <div className="text-sm text-destructive font-medium">{error}</div>}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-2">
-                    <Label>First name</Label>
-                    <Input placeholder="Goodness" value={firstName} onChange={(e)=>setFirstName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Last name</Label>
-                    <Input placeholder="Iyamah" value={lastName} onChange={(e)=>setLastName(e.target.value)} />
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-200">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="bg-slate-800/50 border-white/10 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Email address</Label>
-                  <Input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Country</Label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Country" />
+                  <Label className="text-slate-200">Country</Label>
+                  <Select value={country} onValueChange={setCountry} disabled={loading}>
+                    <SelectTrigger className="bg-slate-800/50 border-white/10 text-white">
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((c)=> (
+                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                      {countries.map((c) => (
                         <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button className="w-full" variant={role==='attendee'?'default':'outline'} onClick={()=>setRole('attendee')}>Attendee</Button>
-                  <Button className="w-full" variant={role==='organizer'?'default':'outline'} onClick={()=>setRole('organizer')}>Organizer</Button>
-                </div>
                 <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="At least 8 characters" value={password} onChange={(e)=>setPassword(e.target.value)} />
+                  <Label className="text-slate-200">I am a...</Label>
+                  <Select value={role} onValueChange={(v: any) => setRole(v)} disabled={loading}>
+                    <SelectTrigger className="bg-slate-800/50 border-white/10 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                      <SelectItem value="attendee">Attendee</SelectItem>
+                      <SelectItem value="organizer">Organizer</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                <Button className="w-full" onClick={handleSignup} disabled={isSending}>
-                  {isSending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Continue'
-                  )}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-200">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="bg-slate-800/50 border-white/10 text-white"
+                />
+                <p className="text-[10px] text-slate-500">
+                  Must be 8+ chars with uppercase, lowercase and a number.
+                </p>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 mt-4 shadow-lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="mr-2 h-4 w-4" />
+                )}
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-900 px-2 text-slate-400">Or sign up with</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSocialSignup('google')}
+                  disabled={loading}
+                  className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                >
+                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Google
                 </Button>
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (setGlobalLoading) setGlobalLoading(true);
-                      window.location.href = `${API_BASE_URL}/auth/google`;
-                    }}
-                    className="w-full flex items-center gap-2 justify-center hover:bg-slate-800 transition-colors"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.78 0 7.22 1.44 9.86 3.8l5.94-5.94C35.46 3.46 30.04 1 24 1 14.73 1 6.65 6.16 2.72 14.02l7.54 5.86C12.31 13.19 17.73 9.5 24 9.5z"/><path fill="#4285F4" d="M46.08 24.3c0-2.02-.18-3.98-.52-5.86H24v11.1h12.4c-.53 2.87-2.16 5.29-4.61 6.91l7.07 5.49c4.13-3.81 7.22-9.35 7.22-17.64z"/><path fill="#FBBC05" d="M10.26 28.14c-.48-1.41-.76-2.91-.76-4.46s.28-3.05.76-4.46l-7.54-5.86C1.63 16.06 1 19.01 1 22.06s.63 6 1.72 8.71l7.54-2.63z"/><path fill="#34A853" d="M24 46c6.05 0 11.18-1.99 14.9-5.41l-7.07-5.49c-2.01 1.36-4.58 2.15-7.83 2.15-6.68 0-12.35-4.51-14.39-10.66l-7.54 2.63C6.65 41.84 14.73 46 24 46z"/></svg>
-                    <span>Google</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (setGlobalLoading) setGlobalLoading(true);
-                      window.location.href = `${API_BASE_URL}/auth/twitter`;
-                    }}
-                    className="w-full flex items-center gap-2 justify-center hover:bg-slate-800 transition-colors"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.146 0H21.5L13.9 10.546 23 24h-7.109l-5.568-7.957L4.851 24H1.5l8.154-11.829L1 0h7.273l5.197 7.29L18.146 0Zm-1.246 21.545h1.961L7.18 2.367H5.1l11.8 19.178Z"/></svg>
-                    <span>X</span>
-                  </Button>
-                </div>
-                <div className="text-sm text-foreground text-center pt-1">
-                  <span>Already registered? </span>
-                  <button className="underline hover:text-primary transition-colors" onClick={onShowLogin}>Sign In</button>
-                </div>
-                </CardContent>
-              </Card>
-            )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSocialSignup('twitter')}
+                  disabled={loading}
+                  className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                >
+                  <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  X
+                </Button>
+              </div>
+
+              <div className="text-center pt-6 border-t border-white/5">
+                <span className="text-sm text-slate-400">Already have an account? </span>
+                <button
+                  type="button"
+                  onClick={onShowLogin}
+                  className="text-sm font-bold text-primary hover:underline"
+                  disabled={loading}
+                >
+                  Sign In
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Button
+          variant="ghost"
+          onClick={onShowLogin}
+          className="mt-4 text-slate-500 hover:text-white flex items-center gap-2 mx-auto"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Login
+        </Button>
       </div>
     </AuthContainer>
   );
 }
-
-export default SignupPage;

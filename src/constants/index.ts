@@ -2,7 +2,7 @@
 export { countries } from '../utils/countries';
 
 const getApiBaseUrl = (): string => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
   if (envUrl && envUrl.trim().length > 0) {
     return envUrl;
   }
