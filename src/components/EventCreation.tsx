@@ -127,7 +127,51 @@ export function EventCreation({ onBack }: EventCreationProps) {
     ));
   };
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateStep = (step: number) => {
+    const newErrors: Record<string, string> = {};
+    
+    if (step === 1) {
+      if (!eventData.title.trim()) newErrors.title = 'Event title is required';
+      if (!eventData.category) newErrors.category = 'Category is required';
+      if (!eventData.venue.trim()) newErrors.venue = 'Venue name is required';
+      if (!eventData.address.trim()) newErrors.address = 'Address is required';
+    } else if (step === 2) {
+      if (!eventData.startDate) newErrors.startDate = 'Start date is required';
+      if (!eventData.startTime) newErrors.startTime = 'Start time is required';
+      if (eventData.endDate && eventData.startDate && eventData.endDate < eventData.startDate) {
+        newErrors.endDate = 'End date must be after start date';
+      }
+    } else if (step === 3) {
+      if (ticketTiers.length === 0) {
+        newErrors.tiers = 'At least one ticket tier is required';
+      } else {
+        ticketTiers.forEach((tier, index) => {
+          if (!tier.name.trim()) newErrors[`tier_${index}_name`] = 'Tier name is required';
+          if (tier.price < 0) newErrors[`tier_${index}_price`] = 'Price cannot be negative';
+          if (tier.quantity <= 0) newErrors[`tier_${index}_quantity`] = 'Quantity must be greater than 0';
+        });
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(Math.min(totalSteps, currentStep + 1));
+    } else {
+      toast.error('Please fix the errors before proceeding.');
+    }
+  };
+
   const handleDeploy = async () => {
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+      toast.error('Please complete all required fields correctly.');
+      return;
+    }
     try {
       setIsDeploying(true);
       const payload = {
@@ -206,19 +250,21 @@ export function EventCreation({ onBack }: EventCreationProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div className="space-y-1.5">
-                  <Label htmlFor="title">Event Title</Label>
+                  <Label htmlFor="title" className={errors.title ? "text-destructive" : ""}>Event Title*</Label>
                   <Input
                     id="title"
                     placeholder="Tech Conference 2024"
                     value={eventData.title}
                     onChange={(e) => setEventData({...eventData, title: e.target.value})}
+                    className={errors.title ? "border-destructive" : ""}
                   />
+                  {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category" className={errors.category ? "text-destructive" : ""}>Category*</Label>
                   <Select onValueChange={(value: string) => setEventData({...eventData, category: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className={errors.category ? "border-destructive" : ""}>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -230,6 +276,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.category && <p className="text-xs text-destructive">{errors.category}</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -256,23 +303,27 @@ export function EventCreation({ onBack }: EventCreationProps) {
 
               <div className="space-y-6">
                 <div className="space-y-1.5">
-                  <Label htmlFor="venue">Venue Name</Label>
+                  <Label htmlFor="venue" className={errors.venue ? "text-destructive" : ""}>Venue Name*</Label>
                   <Input
                     id="venue"
                     placeholder="Convention Center"
                     value={eventData.venue}
                     onChange={(e) => setEventData({...eventData, venue: e.target.value})}
+                    className={errors.venue ? "border-destructive" : ""}
                   />
+                  {errors.venue && <p className="text-xs text-destructive">{errors.venue}</p>}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address" className={errors.address ? "text-destructive" : ""}>Address*</Label>
                   <Input
                     id="address"
                     placeholder="123 Main St, San Francisco, CA"
                     value={eventData.address}
                     onChange={(e) => setEventData({...eventData, address: e.target.value})}
+                    className={errors.address ? "border-destructive" : ""}
                   />
+                  {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -340,7 +391,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <Label>Start Date</Label>
+                  <Label className={errors.startDate ? "text-destructive" : ""}>Start Date*</Label>
                   {/* Allow manual typing of date */}
                   <Input
                     type="date"
@@ -349,7 +400,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
                       const v = e.target.value;
                       setEventData({ ...eventData, startDate: v ? new Date(v) : undefined });
                     }}
-                    className="mb-2"
+                    className={cn("mb-2", errors.startDate && "border-destructive")}
                   />
                   <Popover>
                     <PopoverTrigger asChild>
@@ -357,7 +408,8 @@ export function EventCreation({ onBack }: EventCreationProps) {
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !eventData.startDate && "text-muted-foreground"
+                          !eventData.startDate && "text-muted-foreground",
+                          errors.startDate && "border-destructive text-destructive"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -373,16 +425,19 @@ export function EventCreation({ onBack }: EventCreationProps) {
                       />
                     </PopoverContent>
                   </Popover>
+                  {errors.startDate && <p className="text-xs text-destructive mt-1">{errors.startDate}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="startTime">Start Time</Label>
+                  <Label htmlFor="startTime" className={errors.startTime ? "text-destructive" : ""}>Start Time*</Label>
                   <Input
                     id="startTime"
                     type="time"
                     value={eventData.startTime}
                     onChange={(e) => setEventData({...eventData, startTime: e.target.value})}
+                    className={errors.startTime ? "border-destructive" : ""}
                   />
+                  {errors.startTime && <p className="text-xs text-destructive mt-1">{errors.startTime}</p>}
                 </div>
 
                 <div>
@@ -512,15 +567,17 @@ export function EventCreation({ onBack }: EventCreationProps) {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
-                          <Label>Tier Name</Label>
+                          <Label className={errors[`tier_${index}_name`] ? "text-destructive" : ""}>Tier Name*</Label>
                           <Input
                             placeholder="General Admission"
                             value={tier.name}
                             onChange={(e) => updateTicketTier(tier.id, { name: e.target.value })}
+                            className={errors[`tier_${index}_name`] ? "border-destructive" : ""}
                           />
+                          {errors[`tier_${index}_name`] && <p className="text-xs text-destructive mt-1">{errors[`tier_${index}_name`]}</p>}
                         </div>
                         <div>
-                          <Label>Price ({ticketCurrency})</Label>
+                          <Label className={errors[`tier_${index}_price`] ? "text-destructive" : ""}>Price ({ticketCurrency})*</Label>
                           <Input
                             type="number"
                             placeholder="50"
@@ -528,10 +585,12 @@ export function EventCreation({ onBack }: EventCreationProps) {
                             onChange={(e) =>
                               updateTicketTier(tier.id, { price: parseFloat(e.target.value) || 0 })
                             }
+                            className={errors[`tier_${index}_price`] ? "border-destructive" : ""}
                           />
+                          {errors[`tier_${index}_price`] && <p className="text-xs text-destructive mt-1">{errors[`tier_${index}_price`]}</p>}
                         </div>
                         <div>
-                          <Label>Quantity</Label>
+                          <Label className={errors[`tier_${index}_quantity`] ? "text-destructive" : ""}>Quantity*</Label>
                           <Input
                             type="number"
                             placeholder="500"
@@ -539,7 +598,9 @@ export function EventCreation({ onBack }: EventCreationProps) {
                             onChange={(e) =>
                               updateTicketTier(tier.id, { quantity: parseInt(e.target.value) || 0 })
                             }
+                            className={errors[`tier_${index}_quantity`] ? "border-destructive" : ""}
                           />
+                          {errors[`tier_${index}_quantity`] && <p className="text-xs text-destructive mt-1">{errors[`tier_${index}_quantity`]}</p>}
                         </div>
                         <div className="md:col-span-2">
                           <Label>Description</Label>
@@ -880,7 +941,7 @@ export function EventCreation({ onBack }: EventCreationProps) {
           </div>
 
           {currentStep < totalSteps ? (
-            <Button onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}>
+            <Button onClick={handleNext}>
               Next
             </Button>
           ) : (

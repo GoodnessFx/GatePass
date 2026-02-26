@@ -13,7 +13,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
   useEffect(() => {
     // Show the "Continue" button after a short delay so they can play with the ticket first
-    const timer = setTimeout(() => setShowButton(true), 2500);
+    const timer = setTimeout(() => setShowButton(true), 1200);
     return () => clearTimeout(timer);
   }, []);
 

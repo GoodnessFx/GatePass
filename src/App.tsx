@@ -33,6 +33,7 @@ import { API_BASE_URL } from './constants';
 import { clearSession, getSession, setSession } from './utils/session';
 import { logoutUser } from './services/authService';
 import LoadingTransition from './components/ui/LoadingTransition';
+import { cn } from './components/ui/utils';
 
 type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
@@ -179,28 +180,17 @@ function App() {
 
 
   const navigate = (next: AppView) => {
-    setGlobalLoading(true);
-    setTimeout(() => {
-      setViewHistory((h) => [...h, currentView]);
-      setCurrentView(next);
-      setGlobalLoading(false);
-    }, 800);
+    setViewHistory((h) => [...h, currentView]);
+    setCurrentView(next);
   };
 
   const goBack = () => {
-    setGlobalLoading(true);
-    setTimeout(() => {
-      setViewHistory((h) => {
-        if (h.length === 0) {
-          setGlobalLoading(false);
-          return h;
-        }
-        const prev = h[h.length - 1];
-        setCurrentView(prev);
-        setGlobalLoading(false);
-        return h.slice(0, -1);
-      });
-    }, 600);
+    setViewHistory((h) => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setCurrentView(prev);
+      return h.slice(0, -1);
+    });
   };
 
   const handleRoleSelection = (role: 'attendee' | 'organizer') => {
@@ -454,24 +444,25 @@ function App() {
     }
   };
 
+  const isAuthView = currentView === 'login' || currentView === 'signup' || currentView === 'forgot-password' || currentView === 'reset-password';
+  const shouldShowShell = !showSplash && !globalLoading && !isAuthView;
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       {showSplash ? (
-        <div>
-          <SplashScreen onComplete={() => setShowSplash(false)} />
-        </div>
+        <SplashScreen onComplete={() => setShowSplash(false)} />
       ) : (
         <div className="relative z-10 min-h-screen flex flex-col">
           <Toaster position="top-center" />
           {globalLoading && <LoadingTransition />}
           
-          {!globalLoading && (currentView !== 'login' && currentView !== 'signup' && currentView !== 'forgot-password' && currentView !== 'reset-password') && <Header />}
-          <main className={`flex-grow flex flex-col ${globalLoading ? 'hidden' : ''}`}>
+          {shouldShowShell && <Header />}
+          <main className={cn("flex-grow flex flex-col", globalLoading && "hidden")}>
             <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
               {renderCurrentView()}
             </React.Suspense>
           </main>
-          {!globalLoading && (currentView !== 'login' && currentView !== 'signup' && currentView !== 'forgot-password' && currentView !== 'reset-password') && <Footer />}
+          {shouldShowShell && <Footer />}
         </div>
       )}
     </div>
