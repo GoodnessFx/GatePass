@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { RegisterData, RegisterResponse } from '../types/auth';
 import { API_BASE_URL } from '../constants';
+import { setSession, clearSession, getSession } from '../utils/session';
 
 // Configure axios to include credentials (cookies) for refresh token
 axios.defaults.withCredentials = true;
@@ -17,9 +18,11 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
 
     const { token, user } = response.data;
     if (token) {
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('gp_user_role', String(user.role).toLowerCase());
-      localStorage.setItem('gp_user_email', String(user.email));
+      setSession({
+        token,
+        role: String(user.role).toLowerCase(),
+        email: String(user.email)
+      });
       return { success: true, user, token };
     }
     
@@ -32,9 +35,12 @@ export const registerUser = async (data: RegisterData): Promise<RegisterResponse
       name: `${data.firstName} ${data.lastName}`, 
       role: data.role 
     };
-    localStorage.setItem('auth_token', 'dummy-token');
-    localStorage.setItem('gp_user_role', data.role);
-    localStorage.setItem('gp_user_email', data.email);
+    
+    setSession({
+      token: 'dummy-token',
+      role: data.role,
+      email: data.email
+    });
     
     // Simulate email notification in console
     console.log(`[SIMULATED EMAIL] To: ${data.email} | Subject: Welcome to GatePass | Body: Hi ${data.firstName}, you have successfully registered to GatePass!`);
@@ -49,9 +55,11 @@ export const loginUser = async (email: string, password: string): Promise<Regist
     
     const { token, user } = response.data;
     if (token) {
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('gp_user_role', String(user.role).toLowerCase());
-      localStorage.setItem('gp_user_email', String(user.email));
+      setSession({
+        token,
+        role: String(user.role).toLowerCase(),
+        email: String(user.email)
+      });
       return { success: true, user, token };
     }
     
@@ -68,9 +76,11 @@ export const loginUser = async (email: string, password: string): Promise<Regist
       role: 'organizer' // Default to organizer so they can see all features
     };
     
-    localStorage.setItem('auth_token', 'dummy-token');
-    localStorage.setItem('gp_user_role', 'organizer');
-    localStorage.setItem('gp_user_email', email || 'guest@gatepass.xyz');
+    setSession({
+      token: 'dummy-token',
+      role: 'organizer',
+      email: email || 'guest@gatepass.xyz'
+    });
     
     return { success: true, user: dummyUser, token: 'dummy-token' };
   }
@@ -78,19 +88,15 @@ export const loginUser = async (email: string, password: string): Promise<Regist
 
 export const logoutUser = async (): Promise<boolean> => {
   try {
-    const token = localStorage.getItem('auth_token');
+    const session = getSession();
     await axios.post(`${API_BASE_URL}/auth/logout`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${session.token}` }
     });
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('gp_user_role');
-    localStorage.removeItem('gp_user_email');
+    clearSession();
     return true;
   } catch (error) {
     console.error('Logout error:', error);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('gp_user_role');
-    localStorage.removeItem('gp_user_email');
+    clearSession();
     return false;
   }
 };
@@ -98,9 +104,13 @@ export const logoutUser = async (): Promise<boolean> => {
 export const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`);
-    const { token } = response.data;
+    const { token, user } = response.data;
     if (token) {
-      localStorage.setItem('auth_token', token);
+      setSession({
+        token,
+        role: user ? String(user.role).toLowerCase() : getSession().role,
+        email: user ? String(user.email) : getSession().email
+      });
       return token;
     }
     return null;

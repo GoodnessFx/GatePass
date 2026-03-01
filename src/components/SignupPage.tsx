@@ -44,7 +44,6 @@ export function SignupPage({ onSignupComplete, onShowLogin, setGlobalLoading }: 
     }
 
     setLoading(true);
-    if (setGlobalLoading) setGlobalLoading(true);
 
     try {
       const result = await registerUser({

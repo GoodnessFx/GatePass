@@ -55,18 +55,20 @@ function App() {
   function goToDashboardAfterAuth(roleOverride?: UserRole | null) {
     let role: UserRole | null = roleOverride ?? null;
     try {
-      if (!role) {
-        const session = getSession();
-        if (session.role === 'organizer' || session.role === 'attendee') {
-          role = session.role as UserRole;
-        }
+      const session = getSession();
+      if (!role && session.role) {
+        role = session.role as UserRole;
       }
-    } catch {}
+    } catch (e) {
+      console.error('Session error:', e);
+    }
+
     if (role) {
       setUserRole(role);
-      navigate(role === 'organizer' ? '/organizer/dashboard' : '/attendee/dashboard');
+      const target = role === 'organizer' ? '/organizer/dashboard' : '/attendee/dashboard';
+      navigate(target, { replace: true });
     } else {
-      navigate('/');
+      navigate('/', { replace: true });
     }
   }
 
@@ -290,7 +292,7 @@ function App() {
   };
 
   const isAuthView = ['/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname);
-  const shouldShowShell = !showSplash && !globalLoading && !isAuthView;
+  const shouldShowShell = !showSplash && !isAuthView;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
@@ -302,7 +304,7 @@ function App() {
           {globalLoading && <LoadingTransition />}
           
           {shouldShowShell && <Header />}
-          <main className={cn("flex-grow flex flex-col", globalLoading && "hidden")}>
+          <main className="flex-grow flex flex-col">
             <ErrorBoundary>
               <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
                 <Routes>

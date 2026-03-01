@@ -38,7 +38,6 @@ export function LoginPage({ onLoginComplete, onShowSignup, onForgotPassword, set
     }
 
     setLoading(true);
-    if (setGlobalLoading) setGlobalLoading(true);
 
     try {
       const result = await loginUser(trimmedEmail, trimmedPassword);
