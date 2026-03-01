@@ -189,9 +189,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             })
           });
           if (!initRes.ok) {
-            toast.error('Unable to initialize Paystack order. Please try again later.');
-            setIsPurchasing(false);
-            return;
+            const errData = await initRes.json().catch(() => ({}));
+            throw new Error(errData.message || 'Unable to initialize Paystack order.');
           }
           const init = await initRes.json();
           const res = await paystackCheckout({
@@ -209,8 +208,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             },
           });
           if (!res.ok) {
-            toast.error(res.error || 'Unable to start Paystack checkout. Please try again.');
-            setIsPurchasing(false);
+            throw new Error(res.error || 'Unable to start Paystack checkout.');
           }
           return;
         }
@@ -234,9 +232,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           
           if (!initRes.ok) {
             const err = await initRes.json().catch(() => ({}));
-            toast.error(err.message || 'Unable to initialize Flutterwave order.');
-            setIsPurchasing(false);
-            return;
+            throw new Error(err.message || 'Unable to initialize Flutterwave order.');
           }
           
           const init = await initRes.json();
@@ -244,16 +240,13 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
             // Production ready: redirect to secure checkout page
             window.location.href = init.checkoutUrl;
           } else {
-            toast.error('Payment initialization failed: No checkout URL.');
-            setIsPurchasing(false);
+            throw new Error('Payment initialization failed: No checkout URL.');
           }
           return;
         }
         if (paymentGateway === 'mpesa') {
           if (!customerPhone) {
-            toast.error('Please enter your M-Pesa phone number.');
-            setIsPurchasing(false);
-            return;
+            throw new Error('Please enter your M-Pesa phone number.');
           }
 
           const initRes = await fetch(`${API_BASE_URL}/orders/initialize`, {
@@ -270,9 +263,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           });
 
           if (!initRes.ok) {
-            toast.error('Unable to initialize M-Pesa order. Please try again later.');
-            setIsPurchasing(false);
-            return;
+            throw new Error('Unable to initialize M-Pesa order. Please try again later.');
           }
 
           const init = await initRes.json().catch(() => ({}));
@@ -285,9 +276,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           });
 
           if (!res.ok) {
-            toast.error(res.error || 'M-Pesa STK push failed. Please try again.');
-            setIsPurchasing(false);
-            return;
+            throw new Error(res.error || 'M-Pesa STK push failed.');
           }
 
           toast.info('M-Pesa STK push initiated. Approve the prompt on your phone to complete payment.');
@@ -295,13 +284,9 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           return;
         }
         if (paymentGateway === 'stripe') {
-          toast.error('Stripe not configured.');
-          setIsPurchasing(false);
-          return;
+          throw new Error('Stripe not configured.');
         }
-        toast.error('Please select a local payment gateway.');
-        setIsPurchasing(false);
-        return;
+        throw new Error('Please select a local payment gateway.');
       }
 
       const simulatedMethod = paymentMethod === 'crypto' ? 'crypto' : 'fiat';

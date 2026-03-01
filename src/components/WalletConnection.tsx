@@ -36,31 +36,32 @@ export function WalletConnection({ isConnected, walletAddress, onConnect }: Wall
     setIsConnecting(true);
 
     try {
-      // Direct connection without fake delay
-      // For now, we only support injected providers (MetaMask, Brave, etc.)
-      // In a full production app, we would use a library like @web3modal/react or @rainbow-me/rainbowkit
-      // to handle specific wallet protocols (WalletConnect, Coinbase Wallet SDK, etc.)
-      
-      if (walletName === 'WalletConnect' || walletName === 'Coinbase Wallet') {
-         // Fallback: try injected first, if not warn user
-         // Ideally this would invoke specific SDKs
-         if (!(window as any).ethereum) {
-             const getWallet = confirm('Wallet not found. Would you like to install a crypto wallet?');
-             if (getWallet) {
-               window.open('https://metamask.io/download/', '_blank');
-             }
-             throw new Error('Wallet not found. Please install a crypto wallet.');
-         }
+      // Professional stub handling
+      if (walletName === 'WalletConnect' || walletName === 'Coinbase Wallet' || walletName === 'Trust Wallet') {
+         toast.info(`${walletName} support is coming soon!`, {
+           description: 'For now, please use MetaMask or a browser-injected wallet.'
+         });
+         setIsConnecting(false);
+         return;
       }
       
-      await onConnect(); // This calls the parent's handleWalletConnect which uses window.ethereum
+      // Injected provider (MetaMask, etc.)
+      if (!(window as any).ethereum) {
+          const getWallet = confirm('No crypto wallet detected. Would you like to install MetaMask?');
+          if (getWallet) {
+            window.open('https://metamask.io/download/', '_blank');
+          }
+          throw new Error('Wallet not found. Please install a crypto wallet.');
+      }
+      
+      await onConnect();
       
       setIsConnecting(false);
       setShowWalletDialog(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Connection failed:', error);
       setIsConnecting(false);
-      // Parent component handles toast errors usually, but we can double check
+      toast.error('Connection failed', { description: error.message || 'Please try again.' });
     }
   };
 

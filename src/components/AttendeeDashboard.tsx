@@ -275,7 +275,15 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
                         <CardTitle className="text-lg truncate">{ticket.eventTitle}</CardTitle>
                         <CardDescription className="truncate">{ticket.organizer}</CardDescription>
                       </div>
-                      <Badge variant="outline" className="flex-none">{ticket.ticketType}</Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant="outline" className="flex-none">{ticket.ticketType}</Badge>
+                        {!ticket.transferable && (
+                          <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-400 border-slate-700">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Soulbound
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   
@@ -316,12 +324,16 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
                         <Download className="h-3 w-3" />
                         <span>Download</span>
                       </Button>
-                      {ticket.transferable && (
-                        <Button variant="outline" size="sm" className="w-full flex items-center justify-center space-x-1" onClick={()=>handleTransfer(ticket)}>
-                          <Share className="h-3 w-3" />
-                          <span>Transfer</span>
-                        </Button>
-                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className={`w-full flex items-center justify-center space-x-1 ${!ticket.transferable ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                        onClick={()=>handleTransfer(ticket)}
+                        disabled={!ticket.transferable}
+                      >
+                        <Share className="h-3 w-3" />
+                        <span>Transfer</span>
+                      </Button>
                       <Button variant="outline" size="sm" className="w-full flex items-center justify-center space-x-1" onClick={()=>{ setSelectedTicket(ticket); setResalePrice(ticket.price); setIsResaleOpen(true); }}>
                         <TrendingUp className="h-3 w-3" />
                         <span>Resale</span>
