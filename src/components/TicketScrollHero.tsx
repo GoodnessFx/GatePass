@@ -1,94 +1,182 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
+import { ArrowRight, Users } from 'lucide-react';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 /**
  * TicketScrollHero
- * A lightweight scroll-reactive hero animation inspired by automotive showcase sites.
- * The ticket occupies ~80% of the viewport and animates subtly on scroll.
- * Colors respect CSS variables defined in globals.css (primary, secondary, accent).
+ * A sophisticated LockIn-style hero section with Framer Motion animations.
  */
+
+const heroTeam = [
+  { initials: 'CN', src: 'https://images.unsplash.com/photo-1524230572899-a752b3835840?auto=format&fit=crop&w=256&q=80' },
+  { initials: 'TO', src: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=256&q=80' },
+  { initials: 'AK', src: 'https://images.unsplash.com/photo-1521146764736-56c929d59c82?auto=format&fit=crop&w=256&q=80' },
+];
+
+const springConfig = { type: "spring", stiffness: 100, damping: 20 };
+
 export default function TicketScrollHero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState({ rotate: 0, translateY: 0, scale: 1 });
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  const videoY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => {
-      // Compute progress of scroll within viewport height for subtle motion
-      const y = window.scrollY;
-      const vh = window.innerHeight || 1;
-      const progress = Math.min(1, y / vh);
-      // Gentle rotation and parallax
-      const rotate = progress * 6; // degrees
-      const translateY = progress * 60; // px
-      const scale = 1 + progress * 0.03; // slight zoom
-      setTransform({ rotate, translateY, scale });
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    let start = 0;
+    const end = 210;
+    const duration = 2000;
+    const increment = end / (duration / 16);
+    
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCounter(end);
+        clearInterval(timer);
+      } else {
+        setCounter(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
   }, []);
 
+  const headline = "LockIn Your Next Big Event Experience";
+  const words = headline.split(" ");
+
   return (
-    <div
+    <section 
       ref={containerRef}
-      className="relative w-full h-[80vh] overflow-hidden"
-      aria-hidden="true"
+      className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-32"
     >
-      {/* Background gradient wash to match app palette */}
-      <div className="absolute inset-0" style={{
-        background: `radial-gradient(1200px 600px at 70% 20%, var(--secondary) 0%, transparent 60%),
-                     radial-gradient(800px 400px at 15% 80%, var(--accent) 0%, transparent 60%),
-                     linear-gradient(120deg, var(--background), var(--background))`
-      }} />
+      {/* 7. Overall: Grain Texture Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
 
-      {/* Ticket silhouette with glossy strokes */}
-      <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          transform: `translate(-50%, calc(-50% + ${transform.translateY}px)) rotate(${transform.rotate}deg) scale(${transform.scale})`,
-          transition: 'transform 0.12s ease-out',
-          filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.35))'
-        }}
+      {/* 3. Background Video (Simulated with Gradient & Parallax) */}
+      <motion.div 
+        style={{ y: videoY }}
+        initial={{ scale: 1.05 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 8, ease: "easeOut" }}
+        className="absolute inset-0 z-0"
       >
-        <svg width="1200" height="700" viewBox="0 0 1200 700" className="max-w-[90vw]">
-          {/* Ticket body */}
-          <defs>
-            <linearGradient id="ticketBody" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" />
-              <stop offset="60%" stopColor="var(--secondary)" />
-              <stop offset="100%" stopColor="var(--background)" />
-            </linearGradient>
-            <linearGradient id="edgeGlow" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="var(--accent)" />
-              <stop offset="100%" stopColor="var(--primary)" />
-            </linearGradient>
-          </defs>
-          {/* Outer rounded rect with notches */}
-          <path
-            d="M80 80 h960 a40 40 0 0 1 40 40 v160 a60 60 0 0 0 0 120 v160 a40 40 0 0 1 -40 40 h-960 a40 40 0 0 1 -40 -40 v-160 a60 60 0 0 0 0 -120 v-160 a40 40 0 0 1 40 -40 z"
-            fill="url(#ticketBody)"
-            stroke="url(#edgeGlow)"
-            strokeWidth="4"
-          />
-          {/* Perforation line */}
-          <path d="M680 120 v460" stroke="rgba(255,255,255,0.45)" strokeDasharray="10 12" strokeWidth="2" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.1),transparent_50%)]" />
+      </motion.div>
 
-          {/* Subtle highlight lines */}
-          <path d="M120 160 h480" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
-          <path d="M120 520 h480" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
-          <path d="M720 200 h360" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-
-          {/* QR placeholder shape */}
-          <rect x="780" y="260" width="220" height="220" rx="22" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)" />
-          {/* Event title glyphs */}
-          <text x="140" y="300" fill="rgba(255,255,255,0.9)" fontSize="64" fontWeight="700">GatePass</text>
-          <text x="140" y="360" fill="rgba(255,255,255,0.75)" fontSize="28">The Rise of Secure Ticketing</text>
-          <text x="140" y="420" fill="rgba(255,255,255,0.6)" fontSize="22">Instant verification • Fraud-proof • Crypto + Fiat</text>
-        </svg>
+      {/* 6. Gradient Bar with Infinite Shimmer */}
+      <div className="absolute top-0 left-0 w-full h-1 z-20 overflow-hidden">
+        <motion.div 
+          animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          className="w-full h-full bg-[linear-gradient(90deg,transparent,var(--primary),transparent)] bg-[length:200%_100%]"
+        />
       </div>
 
-      {/* Vignette edges for cinematic feel */}
-      <div className="absolute inset-0 pointer-events-none"
-           style={{ boxShadow: 'inset 0 0 200px 80px rgba(0,0,0,0.45)' }} />
-    </div>
+      <div className="container relative z-10 mx-auto px-4 flex flex-col items-center text-center">
+        {/* 4. Social Proof */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="flex flex-col items-center gap-4 mb-8"
+        >
+          <div className="flex -space-x-4">
+            {heroTeam.map((member, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 + (i * 0.1), ...springConfig }}
+              >
+                <Avatar className="size-10 border-2 border-slate-950 shadow-xl">
+                  <AvatarImage src={member.src} />
+                  <AvatarFallback>{member.initials}</AvatarFallback>
+                </Avatar>
+              </motion.div>
+            ))}
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">
+              {counter}k+
+            </span>
+            <span className="text-xs uppercase tracking-widest text-cyan-500/80 font-semibold">
+              Trusted by Organizers Globally
+            </span>
+          </div>
+        </motion.div>
+
+        {/* 1. Hero Text Cascade */}
+        <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight text-white mb-6 max-w-4xl leading-[1.1]">
+          {words.map((word, i) => (
+            <motion.span
+              key={i}
+              className="inline-block mr-[0.25em]"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, ...springConfig }}
+            >
+              {word}
+            </motion.span>
+          ))}
+        </h1>
+
+        <motion.p 
+          initial={{ filter: "blur(12px)", opacity: 0 }}
+          animate={{ filter: "blur(0px)", opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+          className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed"
+        >
+          The next-generation event ticketing platform leveraging blockchain for secure, verifiable, and transferable tickets.
+        </motion.p>
+
+        {/* 2. Button Microinteractions */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="relative group">
+            <motion.div 
+              animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -inset-1 bg-cyan-500 rounded-full blur-md opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
+            />
+            <Button 
+              size="lg" 
+              className="relative px-8 py-6 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-lg"
+              asChild
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Get Started
+                <motion.span
+                  initial={{ x: -20, opacity: 0 }}
+                  whileHover={{ x: 0, opacity: 1 }}
+                  transition={springConfig}
+                  className="ml-2 inline-block"
+                >
+                  <ArrowRight className="size-5" />
+                </motion.span>
+              </motion.button>
+            </Button>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="px-8 py-6 rounded-full border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-white font-semibold text-lg backdrop-blur-sm"
+          >
+            Browse Events
+          </Button>
+        </div>
+      </div>
+
+      {/* Cinematic Vignette */}
+      <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_200px_rgba(0,0,0,0.8)]" />
+    </section>
   );
 }

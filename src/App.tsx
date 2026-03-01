@@ -39,6 +39,35 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 
 type UserRole = 'attendee' | 'organizer' | null;
 
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'motion/react';
+
+// 7. Overall: Cursor Glow
+const CursorGlow = () => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  return (
+    <motion.div
+      className="pointer-events-none fixed inset-0 z-30"
+      style={{
+        background: useTransform(
+          [mouseX, mouseY],
+          ([x, y]) => `radial-gradient(600px circle at ${x}px ${y}px, rgba(6, 182, 212, 0.05), transparent 80%)`
+        ),
+      }}
+    />
+  );
+};
+
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [globalLoading, setGlobalLoading] = useState(false);
@@ -239,24 +268,55 @@ function App() {
 
   // Unified, professional header
   const Header = () => {
+    const { scrollY } = useScroll();
+    const blur = useTransform(scrollY, [0, 100], ["blur(4px)", "blur(24px)"]);
+    const opacity = useTransform(scrollY, [0, 100], [0.8, 0.95]);
+
     const isOrganizer = userRole === 'organizer';
     const goHome = () => navigate(userRole ? (isOrganizer ? '/organizer/dashboard' : '/attendee/dashboard') : '/');
+
     return (
-      <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/70 border-b border-cyan-900/20 shadow-sm">
+      <motion.header 
+        style={{ backdropFilter: blur, backgroundColor: `rgba(2, 6, 23, ${opacity})` }}
+        className="sticky top-0 z-50 border-b border-cyan-900/20 shadow-sm transition-colors duration-300"
+      >
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left: Brand */}
             <div className="flex items-center gap-3">
-              <h1
+              <motion.h1
+                whileHover={{ rotate: -3 }}
+                transition={{ type: "spring", stiffness: 300, damping: 10 }}
                 className="font-extrabold text-xl cursor-pointer bg-clip-text text-transparent bg-gradient-to-b from-cyan-100 via-cyan-200 to-cyan-500/50"
                 onClick={goHome}
               >
                 GatePass
-              </h1>
+              </motion.h1>
               {userRole && (
                 <Badge variant="secondary">{displayName || (isOrganizer ? 'Organizer' : 'Attendee')}</Badge>
               )}
             </div>
+
+            {/* Middle: Links (With Underline Animation) */}
+            {!userRole && (
+              <nav className="hidden md:flex items-center gap-8">
+                {['Events', 'Pricing', 'Guide'].map((item) => (
+                  <motion.button
+                    key={item}
+                    className="relative text-sm font-medium text-slate-400 hover:text-white transition-colors py-1 group"
+                    onClick={() => item === 'Guide' ? navigate('/guide') : navigate('/')}
+                  >
+                    {item}
+                    <motion.span 
+                      className="absolute bottom-0 left-0 w-full h-[2px] bg-cyan-500 origin-center"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    />
+                  </motion.button>
+                ))}
+              </nav>
+            )}
 
             {/* Right: Actions */}
             <div className="flex items-center gap-5 sm:gap-8 flex-shrink-0">
@@ -281,13 +341,13 @@ function App() {
               ) : (
                 <div className="flex items-center gap-4">
                   <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Login</Button>
-                  <Button size="sm" onClick={() => navigate('/signup')}>Get Started</Button>
+                  <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500 text-white" onClick={() => navigate('/signup')}>Get Started</Button>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
     );
   };
 
@@ -296,6 +356,7 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+      <CursorGlow />
       {showSplash ? (
         <SplashScreen onComplete={() => setShowSplash(false)} />
       ) : (
@@ -321,34 +382,26 @@ function App() {
                     />
                   } />
                   <Route path="/login" element={
-                    <LoginPage
-                      setGlobalLoading={setGlobalLoading}
-                      onLoginComplete={() => {
-                        try {
-                          const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                          goToDashboardAfterAuth(role);
-                        } catch {
-                          goToDashboardAfterAuth(null);
-                        }
-                      }}
-                      onShowSignup={() => navigate('/signup')}
-                      onForgotPassword={() => navigate('/forgot-password')}
-                    />
-                  } />
-                  <Route path="/signup" element={
-                    <SignupPage
-                      setGlobalLoading={setGlobalLoading}
-                      onSignupComplete={() => {
-                        try {
-                          const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                          goToDashboardAfterAuth(role);
-                        } catch {
-                          goToDashboardAfterAuth(null);
-                        }
-                      }}
-                      onShowLogin={() => navigate('/login')}
-                    />
-                  } />
+                  <LoginPage
+                    setGlobalLoading={setGlobalLoading}
+                    onLoginComplete={() => {
+                      const session = getSession();
+                      goToDashboardAfterAuth(session.role as UserRole);
+                    }}
+                    onShowSignup={() => navigate('/signup')}
+                    onForgotPassword={() => navigate('/forgot-password')}
+                  />
+                } />
+                <Route path="/signup" element={
+                  <SignupPage
+                    setGlobalLoading={setGlobalLoading}
+                    onSignupComplete={() => {
+                      const session = getSession();
+                      goToDashboardAfterAuth(session.role as UserRole);
+                    }}
+                    onShowLogin={() => navigate('/login')}
+                  />
+                } />
                   <Route path="/forgot-password" element={<ForgotPasswordPage onBack={() => navigate('/login')} />} />
                   <Route path="/reset-password" element={<ResetPasswordPage token={resetToken || ''} onSuccess={() => navigate('/login')} />} />
                   <Route path="/guide" element={<BeginnerGuidePage onBack={() => navigate('/')} />} />
