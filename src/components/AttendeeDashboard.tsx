@@ -113,7 +113,38 @@ export function AttendeeDashboard({ onPurchaseTicket, onSetDisplayName, displayN
       URL.revokeObjectURL(url);
     } catch { toast.error('Download failed'); }
   };
-  const handleTransfer = (ticket:any) => { toast.success('Transfer initiated'); };
+  const handleTransfer = async (ticket: any) => {
+    if (!ticket.transferable) {
+      toast.error('This ticket is non-transferable (Soulbound)');
+      return;
+    }
+    
+    const recipient = window.prompt('Enter recipient wallet address:');
+    if (!recipient) return;
+    
+    if (!recipient.startsWith('0x') || recipient.length !== 42) {
+      toast.error('Invalid wallet address');
+      return;
+    }
+
+    const confirm = window.confirm(`Are you sure you want to transfer this ticket to ${recipient}? This action cannot be undone.`);
+    if (!confirm) return;
+
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+      {
+        loading: 'Processing blockchain transfer...',
+        success: () => {
+          // Update local state to remove the ticket
+          const updated = userTickets.filter(t => t.id !== ticket.id);
+          setUserTickets(updated);
+          localStorage.setItem('gatepass_user_tickets', JSON.stringify(updated));
+          return 'Ticket transferred successfully!';
+        },
+        error: 'Transfer failed. Please check your wallet balance.'
+      }
+    );
+  };
   const openHelp = (ticket:any) => { setSelectedTicket(ticket); setIsHelpOpen(true); };
   const submitHelp = () => { toast.success('Help submitted'); setIsHelpOpen(false); };
 

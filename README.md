@@ -22,24 +22,20 @@ GatePass is a next-generation event ticketing platform that leverages blockchain
 
 ## 🏗 Architecture
 
-GatePass follows a modern microservices-inspired architecture, separating the Frontend, Backend API, and Blockchain interactions.
+GatePass uses a modern monolithic architecture with clear separation of concerns between Frontend, Backend API, and Blockchain interactions.
 
 ```mermaid
 graph TD
     subgraph Client
         Web[Web App (React/Vite)]
-        Mobile[Mobile App (React Native)]
     end
 
     subgraph Backend
-        LB[Load Balancer]
         API[API Server (Express/Node.js)]
-        Worker[Background Workers (Bull/Redis)]
     end
 
     subgraph Data
-        DB[(PostgreSQL/SQLite)]
-        Redis[(Redis Cache)]
+        DB[(PostgreSQL)]
     end
 
     subgraph External
@@ -49,16 +45,12 @@ graph TD
         IPFS[IPFS Storage]
     end
 
-    Web --> LB
-    Mobile --> LB
-    LB --> API
+    Web --> API
     API --> DB
-    API --> Redis
-    API --> Worker
-    Worker --> Blockchain
-    Worker --> Email
+    API --> Blockchain
+    API --> Email
     API --> Paystack
-    Worker --> IPFS
+    API --> IPFS
 ```
 
 ## 🛠 Tech Stack

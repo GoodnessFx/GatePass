@@ -41,25 +41,7 @@ interface TicketPurchaseProps {
   onPurchaseComplete: () => void;
 }
 
-type AggregatedEvent = {
-  id: string;
-  title: string;
-  description?: string;
-  eventDate: string;
-  venue?: string;
-  city?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
-  price?: number;
-  source: 'gatepass' | 'ticketmaster' | string;
-  category?: string;
-  status?: string;
-  externalUrl?: string;
-  verified?: boolean;
-  date?: string;
-  tiers?: Array<{ id: string; name: string; price: number; available: number; description?: string }>;
-};
+import { getLocalEvents, AggregatedEvent } from '../utils/ticketing/events';
 
 export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPurchaseProps) {
   const [events, setEvents] = useState<AggregatedEvent[]>([]);
@@ -114,49 +96,11 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         const r = await fetch(`${API_BASE_URL}/events?${params.toString()}`, { signal: controller.signal });
         const json = await r.json().catch(() => ({}));
         const apiEvents: AggregatedEvent[] = Array.isArray(json?.events) ? json.events : [];
-        let localEvents: AggregatedEvent[] = [];
-        try {
-          const saved = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
-          localEvents = (Array.isArray(saved) ? saved : []).map((ev: any) => ({
-            id: ev.id,
-            title: ev.title,
-            description: ev.description,
-            eventDate: ev.date || new Date().toISOString(),
-            venue: ev.venue,
-            city: undefined,
-            country: undefined,
-            latitude: undefined,
-            longitude: undefined,
-            price: Array.isArray(ev.ticketTiers) && ev.ticketTiers.length ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0)) : undefined,
-            source: 'gatepass-local',
-            category: ev.category || 'Technology',
-            status: ev.status || 'PUBLISHED',
-            tiers: Array.isArray(ev.ticketTiers) ? ev.ticketTiers.map((t: any) => ({ id: t.id, name: t.name, price: Number(t.price) || 0, available: Number(t.quantity) || 0, description: t.description })) : []
-          }));
-        } catch {}
+        const localEvents = getLocalEvents();
         setEvents([...localEvents, ...apiEvents]);
       } catch {
         // Fallback to only local events
-        try {
-          const saved = JSON.parse(localStorage.getItem('gatepass_events') || '[]');
-          const localEvents = (Array.isArray(saved) ? saved : []).map((ev: any) => ({
-            id: ev.id,
-            title: ev.title,
-            description: ev.description,
-            eventDate: ev.date || new Date().toISOString(),
-            venue: ev.venue,
-            city: undefined,
-            country: undefined,
-            latitude: undefined,
-            longitude: undefined,
-            price: Array.isArray(ev.ticketTiers) && ev.ticketTiers.length ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0)) : undefined,
-            source: 'gatepass-local',
-            category: ev.category || 'Technology',
-            status: ev.status || 'PUBLISHED',
-            tiers: Array.isArray(ev.ticketTiers) ? ev.ticketTiers.map((t: any) => ({ id: t.id, name: t.name, price: Number(t.price) || 0, available: Number(t.quantity) || 0, description: t.description })) : []
-          }));
-          setEvents(localEvents);
-        } catch {}
+        setEvents(getLocalEvents());
       }
     })();
     return () => controller.abort();

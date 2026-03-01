@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 const LandingPage = React.lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = React.lazy(() => import('./components/SignupPage').then(m => ({ default: m.SignupPage })));
@@ -34,21 +35,22 @@ import { clearSession, getSession, setSession } from './utils/session';
 import { logoutUser } from './services/authService';
 import LoadingTransition from './components/ui/LoadingTransition';
 import { cn } from './components/ui/utils';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
-type AppView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'landing' | 'create-event' | 'organizer-dashboard' | 'attendee-dashboard' | 'ticket-purchase' | 'scanner' | 'analytics' | 'beginner-guide';
 type UserRole = 'attendee' | 'organizer' | null;
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [globalLoading, setGlobalLoading] = useState(false);
-  const [currentView, setCurrentView] = useState<AppView>('landing');
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
-  const [viewHistory, setViewHistory] = useState<AppView[]>([]);
   const [resetToken, setResetToken] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   function goToDashboardAfterAuth(roleOverride?: UserRole | null) {
     let role: UserRole | null = roleOverride ?? null;
@@ -62,9 +64,9 @@ function App() {
     } catch {}
     if (role) {
       setUserRole(role);
-      setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+      navigate(role === 'organizer' ? '/organizer/dashboard' : '/attendee/dashboard');
     } else {
-      setCurrentView('landing');
+      navigate('/');
     }
   }
 
@@ -72,7 +74,7 @@ function App() {
     // Check for reset token in URL
     const params = new URLSearchParams(window.location.search);
     const resetTokenParam = params.get('token');
-      const authTokenParam = params.get('auth_token') || params.get('token');
+    const authTokenParam = params.get('auth_token') || params.get('token');
     const pathname = window.location.pathname;
 
     if (pathname === '/auth/callback' && authTokenParam) {
@@ -113,7 +115,7 @@ function App() {
     } else if (resetTokenParam && !pathname.includes('/auth/callback')) {
       // Handle Password Reset
       setResetToken(resetTokenParam);
-      setCurrentView('reset-password');
+      navigate('/reset-password');
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -124,15 +126,13 @@ function App() {
     const savedName = localStorage.getItem('displayName');
     if (savedName) setDisplayName(savedName);
   }, []);
+  
   useEffect(() => {
     try {
       const saved = localStorage.getItem('displayName') || localStorage.getItem('gp_display_name') || '';
       if (saved && saved !== displayName) setDisplayName(saved);
     } catch {}
-  }, [currentView]);
-
-  // Splash screen logic handled by the component callback
-
+  }, [location.pathname]);
 
   useEffect(() => {
     if (showSplash) return;
@@ -141,16 +141,19 @@ function App() {
       const role = session.role as UserRole | null;
       if (session.token && role) {
         setUserRole(role);
-        setCurrentView(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
-      } else if (!session.token && currentView !== 'landing' && currentView !== 'signup') {
-        setCurrentView('login');
+        // If on root or auth pages, redirect to dashboard
+        if (['/', '/login', '/signup'].includes(location.pathname)) {
+          navigate(role === 'organizer' ? '/organizer/dashboard' : '/attendee/dashboard');
+        }
+      } else if (!session.token && !['/', '/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname)) {
+        navigate('/login');
       }
     } catch {
-      if (currentView !== 'landing' && currentView !== 'signup') {
-        setCurrentView('login');
+      if (!['/', '/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname)) {
+        navigate('/login');
       }
     }
-  }, [showSplash]);
+  }, [showSplash, location.pathname]);
 
   // Accept an optional name; if not provided open a prompt fallback
   const handleSetDisplayName = (inputName?: string) => {
@@ -177,26 +180,10 @@ function App() {
     toast.success('Display name saved');
   };
 
-
-
-  const navigate = (next: AppView) => {
-    setViewHistory((h) => [...h, currentView]);
-    setCurrentView(next);
-  };
-
-  const goBack = () => {
-    setViewHistory((h) => {
-      if (h.length === 0) return h;
-      const prev = h[h.length - 1];
-      setCurrentView(prev);
-      return h.slice(0, -1);
-    });
-  };
-
   const handleRoleSelection = (role: 'attendee' | 'organizer') => {
     setUserRole(role);
     localStorage.setItem('gp_user_role', role);
-    navigate(role === 'organizer' ? 'organizer-dashboard' : 'attendee-dashboard');
+    navigate(role === 'organizer' ? '/organizer/dashboard' : '/attendee/dashboard');
   };
 
   const handleWalletConnect = async () => {
@@ -231,7 +218,7 @@ function App() {
       await logoutUser();
       clearSession();
       setUserRole(null);
-      setCurrentView('landing');
+      navigate('/');
       setSelectedEvent(null);
       setIsWalletConnected(false);
       setWalletAddress(null);
@@ -245,13 +232,13 @@ function App() {
 
   const handleEventPurchase = (eventId: string) => {
     setSelectedEvent(eventId);
-    navigate('ticket-purchase');
+    navigate('/purchase');
   };
 
   // Unified, professional header
   const Header = () => {
     const isOrganizer = userRole === 'organizer';
-    const goHome = () => setCurrentView(userRole ? (isOrganizer ? 'organizer-dashboard' : 'attendee-dashboard') : 'landing');
+    const goHome = () => navigate(userRole ? (isOrganizer ? '/organizer/dashboard' : '/attendee/dashboard') : '/');
     return (
       <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/70 border-b border-cyan-900/20 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6">
@@ -272,7 +259,7 @@ function App() {
             {/* Right: Actions */}
             <div className="flex items-center gap-5 sm:gap-8 flex-shrink-0">
               {userRole && <NotificationCenter />}
-              {currentView !== 'landing' && (
+              {location.pathname !== '/' && (
                 <WalletConnection
                   isConnected={isWalletConnected}
                   walletAddress={walletAddress}
@@ -291,8 +278,8 @@ function App() {
                 </Button>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('login')}>Login</Button>
-                  <Button size="sm" onClick={() => navigate('signup')}>Get Started</Button>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Login</Button>
+                  <Button size="sm" onClick={() => navigate('/signup')}>Get Started</Button>
                 </div>
               )}
             </div>
@@ -302,149 +289,7 @@ function App() {
     );
   };
 
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'landing':
-        return (
-          <LandingPage
-            onRoleSelect={handleRoleSelection}
-            onConnect={handleWalletConnect}
-            isConnected={isWalletConnected}
-            onBrowseEvents={() => {
-              setSelectedEvent('browse');
-              navigate('ticket-purchase');
-            }}
-            onOpenBeginnerGuide={() => navigate('beginner-guide')}
-          />
-        );
-
-      case 'login':
-        return (
-          <LoginPage
-            setGlobalLoading={setGlobalLoading}
-            onLoginComplete={() => {
-              try {
-                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                goToDashboardAfterAuth(role);
-              } catch {
-                goToDashboardAfterAuth(null);
-              }
-            }}
-            onShowSignup={() => navigate('signup')}
-            onForgotPassword={() => navigate('forgot-password')}
-          />
-        );
-
-      case 'forgot-password':
-        return (
-          <ForgotPasswordPage
-            onBack={() => navigate('login')}
-          />
-        );
-
-      case 'reset-password':
-        return (
-          <ResetPasswordPage
-            token={resetToken || ''}
-            onSuccess={() => navigate('login')}
-          />
-        );
-
-      case 'signup':
-        return (
-          <SignupPage
-            setGlobalLoading={setGlobalLoading}
-            onSignupComplete={() => {
-              try {
-                const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
-                goToDashboardAfterAuth(role);
-              } catch {
-                goToDashboardAfterAuth(null);
-              }
-            }}
-            onShowLogin={() => navigate('login')}
-          />
-        );
-
-      case 'create-event':
-        return (
-          <EventCreation
-            onBack={() => goBack()}
-          />
-        );
-
-      case 'organizer-dashboard':
-        return (
-          <OrganizerDashboard
-            onCreateEvent={() => navigate('create-event')}
-            onViewAnalytics={() => navigate('analytics')}
-            onOpenScanner={() => navigate('scanner')}
-          />
-        );
-
-      case 'attendee-dashboard':
-        return (
-          <AttendeeDashboard
-            onPurchaseTicket={handleEventPurchase}
-            onSetDisplayName={handleSetDisplayName}
-            displayName={displayName}
-            onBack={() => goBack()}
-          />
-        );
-
-      case 'ticket-purchase':
-        return (
-          <TicketPurchase
-            eventId={selectedEvent!}
-            onBack={() => goBack()}
-            onPurchaseComplete={() => navigate('attendee-dashboard')}
-          />
-        );
-
-      case 'scanner':
-        return (
-          <MobileScanner
-            onBack={() => goBack()}
-          />
-        );
-
-      case 'analytics':
-        return (
-          <Analytics
-            onBack={() => goBack()}
-          />
-        );
-
-      case 'beginner-guide':
-        return (
-          <BeginnerGuidePage
-            onBack={() => navigate('landing')}
-          />
-        );
-
-      default:
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <Card>
-              <CardHeader>
-                <CardTitle>Page Not Found</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>The requested page could not be found.</p>
-                <Button
-                  className="mt-4"
-                  onClick={() => navigate('landing')}
-                >
-                  Go Home
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
-    }
-  };
-
-  const isAuthView = currentView === 'login' || currentView === 'signup' || currentView === 'forgot-password' || currentView === 'reset-password';
+  const isAuthView = ['/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname);
   const shouldShowShell = !showSplash && !globalLoading && !isAuthView;
 
   return (
@@ -458,9 +303,79 @@ function App() {
           
           {shouldShowShell && <Header />}
           <main className={cn("flex-grow flex flex-col", globalLoading && "hidden")}>
-            <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-              {renderCurrentView()}
-            </React.Suspense>
+            <ErrorBoundary>
+              <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+                <Routes>
+                  <Route path="/" element={
+                    <LandingPage
+                      onRoleSelect={handleRoleSelection}
+                      onConnect={handleWalletConnect}
+                      isConnected={isWalletConnected}
+                      onBrowseEvents={() => {
+                        setSelectedEvent('browse');
+                        navigate('/purchase');
+                      }}
+                      onOpenBeginnerGuide={() => navigate('/guide')}
+                    />
+                  } />
+                  <Route path="/login" element={
+                    <LoginPage
+                      setGlobalLoading={setGlobalLoading}
+                      onLoginComplete={() => {
+                        try {
+                          const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+                          goToDashboardAfterAuth(role);
+                        } catch {
+                          goToDashboardAfterAuth(null);
+                        }
+                      }}
+                      onShowSignup={() => navigate('/signup')}
+                      onForgotPassword={() => navigate('/forgot-password')}
+                    />
+                  } />
+                  <Route path="/signup" element={
+                    <SignupPage
+                      setGlobalLoading={setGlobalLoading}
+                      onSignupComplete={() => {
+                        try {
+                          const role = (localStorage.getItem('gp_user_role') as UserRole) || null;
+                          goToDashboardAfterAuth(role);
+                        } catch {
+                          goToDashboardAfterAuth(null);
+                        }
+                      }}
+                      onShowLogin={() => navigate('/login')}
+                    />
+                  } />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage onBack={() => navigate('/login')} />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage token={resetToken || ''} onSuccess={() => navigate('/login')} />} />
+                  <Route path="/guide" element={<BeginnerGuidePage onBack={() => navigate('/')} />} />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/organizer/dashboard" element={<OrganizerDashboard onCreateEvent={() => navigate('/organizer/create')} onViewAnalytics={() => navigate('/organizer/analytics')} onOpenScanner={() => navigate('/organizer/scanner')} />} />
+                  <Route path="/organizer/create" element={<EventCreation onBack={() => navigate(-1)} />} />
+                  <Route path="/organizer/analytics" element={<Analytics onBack={() => navigate(-1)} />} />
+                  <Route path="/organizer/scanner" element={<MobileScanner onBack={() => navigate(-1)} />} />
+                  
+                  <Route path="/attendee/dashboard" element={<AttendeeDashboard onPurchaseTicket={handleEventPurchase} onSetDisplayName={handleSetDisplayName} displayName={displayName} onBack={() => navigate(-1)} />} />
+                  <Route path="/purchase" element={<TicketPurchase eventId={selectedEvent!} onBack={() => navigate(-1)} onPurchaseComplete={() => navigate('/attendee/dashboard')} />} />
+                  
+                  <Route path="*" element={
+                    <div className="min-h-screen flex items-center justify-center">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Page Not Found</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p>The requested page could not be found.</p>
+                          <Button className="mt-4" onClick={() => navigate('/')}>Go Home</Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  } />
+                </Routes>
+              </React.Suspense>
+            </ErrorBoundary>
           </main>
           {shouldShowShell && <Footer />}
         </div>
