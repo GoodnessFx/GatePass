@@ -15,7 +15,7 @@ const heroTeam = [
   { initials: 'AK', src: 'https://images.unsplash.com/photo-1521146764736-56c929d59c82?auto=format&fit=crop&w=256&q=80' },
 ];
 
-const springConfig = { type: "spring", stiffness: 100, damping: 20 };
+const springConfig = { type: "spring", stiffness: 100, damping: 20 } as const;
 
 export default function TicketScrollHero() {
   const containerRef = useRef<HTMLDivElement>(null);

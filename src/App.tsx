@@ -39,7 +39,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 
 type UserRole = 'attendee' | 'organizer' | null;
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from 'motion/react';
 
 // 7. Overall: Cursor Glow
 const CursorGlow = () => {
@@ -357,84 +357,99 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       <CursorGlow />
-      {showSplash ? (
-        <SplashScreen onComplete={() => setShowSplash(false)} />
-      ) : (
-        <div className="relative z-10 min-h-screen flex flex-col">
-          <Toaster position="top-center" />
-          {globalLoading && <LoadingTransition />}
-          
-          {shouldShowShell && <Header />}
-          <main className="flex-grow flex flex-col">
-            <ErrorBoundary>
-              <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-                <Routes>
-                  <Route path="/" element={
-                    <LandingPage
-                      onRoleSelect={handleRoleSelection}
-                      onConnect={handleWalletConnect}
-                      isConnected={isWalletConnected}
-                      onBrowseEvents={() => {
-                        setSelectedEvent('browse');
-                        navigate('/purchase');
+      <AnimatePresence mode="wait">
+        {showSplash ? (
+          <motion.div 
+            key="splash"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-[10000]"
+          >
+            <SplashScreen onComplete={() => setShowSplash(false)} />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-10 min-h-screen flex flex-col"
+          >
+            <Toaster position="top-center" />
+            {globalLoading && <LoadingTransition />}
+            
+            {shouldShowShell && <Header />}
+            <main className="flex-grow flex flex-col">
+              <ErrorBoundary>
+                <React.Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+                  <Routes>
+                    <Route path="/" element={
+                      <LandingPage
+                        onRoleSelect={handleRoleSelection}
+                        onConnect={handleWalletConnect}
+                        isConnected={isWalletConnected}
+                        onBrowseEvents={() => {
+                          setSelectedEvent('browse');
+                          navigate('/purchase');
+                        }}
+                        onOpenBeginnerGuide={() => navigate('/guide')}
+                      />
+                    } />
+                    <Route path="/login" element={
+                    <LoginPage
+                      setGlobalLoading={setGlobalLoading}
+                      onLoginComplete={() => {
+                        const session = getSession();
+                        goToDashboardAfterAuth(session.role as UserRole);
                       }}
-                      onOpenBeginnerGuide={() => navigate('/guide')}
+                      onShowSignup={() => navigate('/signup')}
+                      onForgotPassword={() => navigate('/forgot-password')}
                     />
                   } />
-                  <Route path="/login" element={
-                  <LoginPage
-                    setGlobalLoading={setGlobalLoading}
-                    onLoginComplete={() => {
-                      const session = getSession();
-                      goToDashboardAfterAuth(session.role as UserRole);
-                    }}
-                    onShowSignup={() => navigate('/signup')}
-                    onForgotPassword={() => navigate('/forgot-password')}
-                  />
-                } />
-                <Route path="/signup" element={
-                  <SignupPage
-                    setGlobalLoading={setGlobalLoading}
-                    onSignupComplete={() => {
-                      const session = getSession();
-                      goToDashboardAfterAuth(session.role as UserRole);
-                    }}
-                    onShowLogin={() => navigate('/login')}
-                  />
-                } />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage onBack={() => navigate('/login')} />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage token={resetToken || ''} onSuccess={() => navigate('/login')} />} />
-                  <Route path="/guide" element={<BeginnerGuidePage onBack={() => navigate('/')} />} />
-                  
-                  {/* Protected Routes */}
-                  <Route path="/organizer/dashboard" element={<OrganizerDashboard onCreateEvent={() => navigate('/organizer/create')} onViewAnalytics={() => navigate('/organizer/analytics')} onOpenScanner={() => navigate('/organizer/scanner')} />} />
-                  <Route path="/organizer/create" element={<EventCreation onBack={() => navigate(-1)} />} />
-                  <Route path="/organizer/analytics" element={<Analytics onBack={() => navigate(-1)} />} />
-                  <Route path="/organizer/scanner" element={<MobileScanner onBack={() => navigate(-1)} />} />
-                  
-                  <Route path="/attendee/dashboard" element={<AttendeeDashboard onPurchaseTicket={handleEventPurchase} onSetDisplayName={handleSetDisplayName} displayName={displayName} onBack={() => navigate(-1)} />} />
-                  <Route path="/purchase" element={<TicketPurchase eventId={selectedEvent!} onBack={() => navigate(-1)} onPurchaseComplete={() => navigate('/attendee/dashboard')} />} />
-                  
-                  <Route path="*" element={
-                    <div className="min-h-screen flex items-center justify-center">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Page Not Found</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p>The requested page could not be found.</p>
-                          <Button className="mt-4" onClick={() => navigate('/')}>Go Home</Button>
-                        </CardContent>
-                      </Card>
-                    </div>
+                  <Route path="/signup" element={
+                    <SignupPage
+                      setGlobalLoading={setGlobalLoading}
+                      onSignupComplete={() => {
+                        const session = getSession();
+                        goToDashboardAfterAuth(session.role as UserRole);
+                      }}
+                      onShowLogin={() => navigate('/login')}
+                    />
                   } />
-                </Routes>
-              </React.Suspense>
-            </ErrorBoundary>
-          </main>
-          {shouldShowShell && <Footer />}
-        </div>
-      )}
+                    <Route path="/forgot-password" element={<ForgotPasswordPage onBack={() => navigate('/login')} />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage token={resetToken || ''} onSuccess={() => navigate('/login')} />} />
+                    <Route path="/guide" element={<BeginnerGuidePage onBack={() => navigate('/')} />} />
+                    
+                    {/* Protected Routes */}
+                    <Route path="/organizer/dashboard" element={<OrganizerDashboard onCreateEvent={() => navigate('/organizer/create')} onViewAnalytics={() => navigate('/organizer/analytics')} onOpenScanner={() => navigate('/organizer/scanner')} />} />
+                    <Route path="/organizer/create" element={<EventCreation onBack={() => navigate(-1)} />} />
+                    <Route path="/organizer/analytics" element={<Analytics onBack={() => navigate(-1)} />} />
+                    <Route path="/organizer/scanner" element={<MobileScanner onBack={() => navigate(-1)} />} />
+                    
+                    <Route path="/attendee/dashboard" element={<AttendeeDashboard onPurchaseTicket={handleEventPurchase} onSetDisplayName={handleSetDisplayName} displayName={displayName} onBack={() => navigate(-1)} />} />
+                    <Route path="/purchase" element={<TicketPurchase eventId={selectedEvent!} onBack={() => navigate(-1)} onPurchaseComplete={() => navigate('/attendee/dashboard')} />} />
+                    
+                    <Route path="*" element={
+                      <div className="min-h-screen flex items-center justify-center">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Page Not Found</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p>The requested page could not be found.</p>
+                            <Button className="mt-4" onClick={() => navigate('/')}>Go Home</Button>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    } />
+                  </Routes>
+                </React.Suspense>
+              </ErrorBoundary>
+            </main>
+            {shouldShowShell && <Footer />}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

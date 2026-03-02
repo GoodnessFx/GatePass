@@ -12,6 +12,8 @@ export interface AggregatedEvent {
   source: string;
   category: string;
   status: string;
+  verified?: boolean;
+  externalUrl?: string;
   tiers?: any[];
 }
 
@@ -22,16 +24,18 @@ export function mapLocalEventToAggregated(ev: any): AggregatedEvent {
     description: ev.description,
     eventDate: ev.date || new Date().toISOString(),
     venue: ev.venue,
-    city: undefined,
-    country: undefined,
-    latitude: undefined,
-    longitude: undefined,
+    city: ev.city,
+    country: ev.country,
+    latitude: ev.latitude,
+    longitude: ev.longitude,
     price: Array.isArray(ev.ticketTiers) && ev.ticketTiers.length 
       ? Math.min(...ev.ticketTiers.map((t: any) => Number(t.price) || 0)) 
       : undefined,
-    source: 'gatepass-local',
+    source: ev.source || 'gatepass-local',
     category: ev.category || 'Technology',
     status: ev.status || 'PUBLISHED',
+    verified: ev.verified ?? false,
+    externalUrl: ev.externalUrl,
     tiers: Array.isArray(ev.ticketTiers) 
       ? ev.ticketTiers.map((t: any) => ({ 
           id: t.id, 
