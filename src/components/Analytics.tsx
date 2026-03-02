@@ -10,14 +10,10 @@ import {
   TrendingDown,
   DollarSign,
   Users,
-  Calendar,
   Download,
   RefreshCw,
-  MapPin,
-  Clock,
   Ticket,
   BarChart3,
-  PieChart,
   Activity
 } from 'lucide-react';
 import {
@@ -484,8 +480,8 @@ export function Analytics({ onBack }: AnalyticsProps) {
                           `${name} ${Math.round((percent || 0) * 100)}%`
                         }
                       >
-                        {salesByTier.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        {salesByTier.map((_entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={_entry.color || '#8884d8'} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -733,7 +729,7 @@ export function Analytics({ onBack }: AnalyticsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {[].map((transaction) => (
+                    {([] as any[]).map((transaction: any) => (
                       <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0">

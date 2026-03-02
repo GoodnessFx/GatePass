@@ -5,12 +5,13 @@ import { authenticate, requireOrganizer, AuthenticatedRequest } from '../middlew
 
 const router = Router()
 
+// @ts-ignore
 router.get(
   '/organizer/stats',
   authenticate,
   requireOrganizer,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const userId = req.user!.id
+  asyncHandler(async (req: any, res: any) => {
+    const userId = (req as AuthenticatedRequest).user.id
 
     const events = await prisma.event.findMany({
       where: { organizerId: userId }

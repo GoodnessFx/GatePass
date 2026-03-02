@@ -5,10 +5,7 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Switch } from './ui/switch';
-import { Slider } from './ui/slider';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -17,23 +14,19 @@ import {
   Clock, 
   Users, 
   DollarSign,
-  Wallet,
-  CreditCard,
   Search,
   Filter,
   Star,
   Ticket,
   Shield,
   ExternalLink,
-  Plus,
-  Minus,
-  Info
 } from 'lucide-react';
 import { generateSecureTicketPDF } from '../utils/ticketing/pdfGenerator';
 import { DEFAULT_QR_SECRET_SALT } from '../utils/ticketing/security';
 import { paystackCheckout, flutterwaveCheckout, mpesaStkPush } from '../utils/payments/gateways';
 import { getActivePromotion, getSuggestedPromoCode, calculateDiscount } from '../utils/promotions/seasonal';
 import { API_BASE_URL } from '../constants';
+import { getLocalEvents, AggregatedEvent } from '../utils/ticketing/events';
 
 interface TicketPurchaseProps {
   eventId: string;
@@ -41,9 +34,7 @@ interface TicketPurchaseProps {
   onPurchaseComplete: () => void;
 }
 
-import { getLocalEvents, AggregatedEvent } from '../utils/ticketing/events';
-
-export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPurchaseProps) {
+export function TicketPurchase({ onBack, onPurchaseComplete }: TicketPurchaseProps) {
   const [events, setEvents] = useState<AggregatedEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<AggregatedEvent | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>('');
@@ -67,11 +58,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     else setPaymentGateway('paystack');
   }, [fiatCurrency]);
 
-  const [installmentsEnabled, setInstallmentsEnabled] = useState(false);
-  const [donationAmount, setDonationAmount] = useState<number>(0);
-  const [tipAmount, setTipAmount] = useState<number>(0);
   const activePromo = getActivePromotion();
-  const [promoCode, setPromoCode] = useState<string>(getSuggestedPromoCode() || '');
+  const [promoCode] = useState<string>(getSuggestedPromoCode() || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [nicheFilter, setNicheFilter] = useState('all');
@@ -84,7 +72,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     const controller = new AbortController();
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
-    if (cityFilter) params.set('q', cityFilter); // Use q for city as well since backend supports it
+    if (cityFilter) params.set('q', cityFilter);
     if (categoryFilter !== 'all') params.set('category', categoryFilter);
     if (userLocation && radiusKm > 0) {
       params.set('lat', String(userLocation.lat));
@@ -99,7 +87,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
         const localEvents = getLocalEvents();
         setEvents([...localEvents, ...apiEvents]);
       } catch {
-        // Fallback to only local events
         setEvents(getLocalEvents());
       }
     })();
@@ -110,7 +97,7 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
 
   function toRad(value: number) { return (value * Math.PI) / 180; }
   function distanceKm(a: {lat: number; lng: number}, b: {lat: number; lng: number}) {
-    const R = 6371; // Earth radius in km
+    const R = 6371; 
     const dLat = toRad(b.lat - a.lat);
     const dLng = toRad(b.lng - a.lng);
     const lat1 = toRad(a.lat);
@@ -143,6 +130,14 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     return matchesSearch && matchesCity && matchesCategory && matchesNiche && matchesDistance;
   });
 
+  const selectedTierData = selectedEvent?.tiers?.find(tier => tier.id.toString() === selectedTier);
+  const totalPrice = selectedTierData ? selectedTierData.price * quantity : 0;
+  const subtotal = totalPrice;
+  const fee = subtotal * 0.025;
+  const discount = calculateDiscount(subtotal, activePromo, promoCode);
+  const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
+  const amountWithFees = Math.max(0, subtotal + fee - discount - groupDiscount);
+
   const handlePurchase = async () => {
     if (!selectedEvent || !selectedTier) {
       toast.error('Please select an event and ticket type.');
@@ -150,25 +145,14 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     }
     setIsPurchasing(true);
 
-    const selectedTierData = selectedEvent.tiers?.find(
-      (tier) => String(tier.id) === selectedTier,
-    );
-    if (!selectedTierData) {
-      toast.error('Please select a valid ticket tier.');
+    if (paymentMethod === 'fiat' && !customerEmail.trim()) {
+      toast.error('Please enter your email so we can send your ticket.');
       setIsPurchasing(false);
       return;
     }
-    const subtotal = totalPrice;
-    const fee = subtotal * 0.025;
-    const discount = calculateDiscount(subtotal, activePromo, promoCode);
-    const groupDiscount = quantity >= 10 ? selectedTierData.price * 2 : 0;
-    const amountWithFees = Math.max(
-      0,
-      subtotal + fee - discount - groupDiscount + donationAmount + tipAmount,
-    );
 
-    if (paymentMethod === 'fiat' && !customerEmail.trim()) {
-      toast.error('Please enter your email so we can send your ticket.');
+    if (!selectedTierData) {
+      toast.error('Please select a valid ticket tier.');
       setIsPurchasing(false);
       return;
     }
@@ -237,7 +221,6 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
           
           const init = await initRes.json();
           if (init.checkoutUrl) {
-            // Production ready: redirect to secure checkout page
             window.location.href = init.checkoutUrl;
           } else {
             throw new Error('Payment initialization failed: No checkout URL.');
@@ -445,14 +428,8 @@ export function TicketPurchase({ eventId, onBack, onPurchaseComplete }: TicketPu
     onPurchaseComplete();
   }
 
-  const selectedTierData = selectedEvent?.tiers?.find(tier => tier.id.toString() === selectedTier);
-  const totalPrice = selectedTierData ? selectedTierData.price * quantity : 0;
-  const subtotal = totalPrice;
-  const fee = subtotal * 0.025;
-  const discount = calculateDiscount(subtotal, activePromo, promoCode);
-  const groupDiscount = selectedTierData && quantity >= 10 ? selectedTierData.price * 2 : 0;
   const grandTotalBase = Math.max(0, subtotal + fee - discount - groupDiscount);
-  const grandTotal = Math.max(0, grandTotalBase + donationAmount + tipAmount);
+  const grandTotal = Math.max(0, grandTotalBase);
 
   return (
     <div className="min-h-[100svh] bg-background p-4 sm:p-6 relative">

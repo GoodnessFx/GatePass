@@ -2,6 +2,7 @@ export interface AggregatedEvent {
   id: string;
   title: string;
   description?: string;
+  image?: string;
   eventDate: string;
   venue: string;
   city?: string;
@@ -22,6 +23,7 @@ export function mapLocalEventToAggregated(ev: any): AggregatedEvent {
     id: ev.id,
     title: ev.title,
     description: ev.description,
+    image: ev.image || ev.coverImage || ev.imageUrl,
     eventDate: ev.date || new Date().toISOString(),
     venue: ev.venue,
     city: ev.city,

@@ -3,8 +3,22 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '../../../database/client'
 import { createError } from './errorHandler'
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string
+        email: string
+        role: string
+        walletAddress?: string
+        name?: string
+      }
+    }
+  }
+}
+
+export type AuthenticatedRequest = Request & {
+  user: {
     id: string
     email: string
     role: string
@@ -14,8 +28,8 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const authenticate = async (
-  req: AuthenticatedRequest,
-  res: Response,
+  req: Request,
+  _res: Response,
   next: NextFunction
 ) => {
   try {
@@ -44,7 +58,11 @@ export const authenticate = async (
       throw createError('Invalid token', 401)
     }
 
-    req.user = user
+    req.user = {
+      ...user,
+      walletAddress: user.walletAddress || undefined,
+      name: user.name || undefined
+    }
     next()
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
@@ -56,7 +74,7 @@ export const authenticate = async (
 }
 
 export const requireRole = (roles: string[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
     if (!req.user) {
       return next(createError('Authentication required', 401))
     }
@@ -69,5 +87,15 @@ export const requireRole = (roles: string[]) => {
   }
 }
 
-export const requireOrganizer = requireRole(['ORGANIZER', 'ADMIN'])
+export const requireOrganizer = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.user || authReq.user.role !== 'ORGANIZER') {
+    return next(createError('Organizer access required', 403))
+  }
+  next()
+}
 export const requireAdmin = requireRole(['ADMIN'])

@@ -1,14 +1,12 @@
 import React from 'react';
 import TicketScrollHero from './TicketScrollHero';
-import { getActivePromotion, getSuggestedPromoCode, formatMoney } from '../utils/promotions/seasonal';
+import { getActivePromotion, getSuggestedPromoCode } from '../utils/promotions/seasonal';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
-  Ticket,
   Shield,
   Zap,
   Users,
@@ -17,7 +15,6 @@ import {
   Wallet,
   Globe,
   ArrowRight,
-  CheckCircle,
   Briefcase
 } from 'lucide-react';
 import { StaggerTestimonials } from './ui/stagger-testimonials';
@@ -110,12 +107,7 @@ function HeroStatsMarquee() {
   );
 }
 
-export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnected, onOpenBeginnerGuide }: LandingPageProps) {
-  const promo = getActivePromotion();
-  const suggestedCode = getSuggestedPromoCode();
-  const [email, setEmail] = React.useState('');
-  const [name, setName] = React.useState('');
-  const [avatar, setAvatar] = React.useState<string | undefined>(undefined);
+export function LandingPage({ onRoleSelect, onBrowseEvents, onOpenBeginnerGuide }: LandingPageProps) {
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
   const savedName = React.useMemo(() => { try { return localStorage.getItem('gp_display_name') || ''; } catch { return ''; } }, []);
   const [isNameDialogOpen, setIsNameDialogOpen] = React.useState(false);
@@ -164,15 +156,6 @@ export function LandingPage({ onRoleSelect, onConnect, onBrowseEvents, isConnect
       if (pendingRole === 'organizer') onRoleSelect('organizer');
       else onRoleSelect('attendee');
     }, 1200);
-  };
-  const handleSignup = () => {
-    if (!email.trim()) return;
-    try {
-      localStorage.setItem('gp_user_email', email.trim());
-      if (name.trim()) localStorage.setItem('gp_display_name', name.trim());
-      if (avatar) localStorage.setItem('gp_avatar', avatar);
-    } catch { }
-    onRoleSelect('attendee');
   };
   return (
     <div className="min-h-[100svh]">
