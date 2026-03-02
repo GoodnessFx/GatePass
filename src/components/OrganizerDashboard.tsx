@@ -181,9 +181,9 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{currencySymbol}{stats?.totalRevenue.toLocaleString() ?? '0'}</div>
+              <div className="text-2xl font-bold">{currencySymbol}{(stats?.totalRevenue ?? 0).toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {stats?.revenueGrowth && stats.revenueGrowth > 0 ? '+' : ''}{stats?.revenueGrowth.toFixed(1)}% from last month
+                {stats?.revenueGrowth && stats.revenueGrowth > 0 ? '+' : ''}{(stats?.revenueGrowth ?? 0).toFixed(1)}% from last month
               </p>
             </CardContent>
           </Card>
@@ -194,9 +194,9 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               <Ticket className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.ticketsSold.toLocaleString() ?? '0'}</div>
+              <div className="text-2xl font-bold">{(stats?.ticketsSold ?? 0).toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                 {stats?.ticketsGrowth && stats.ticketsGrowth > 0 ? '+' : ''}{stats?.ticketsGrowth.toFixed(1)}% from last month
+                 {stats?.ticketsGrowth && stats.ticketsGrowth > 0 ? '+' : ''}{(stats?.ticketsGrowth ?? 0).toFixed(1)}% from last month
               </p>
             </CardContent>
           </Card>
@@ -220,7 +220,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.revenueGrowth.toFixed(1)}%</div>
+              <div className="text-2xl font-bold">{(stats?.revenueGrowth ?? 0).toFixed(1)}%</div>
               <p className="text-xs text-muted-foreground">
                 Revenue growth
               </p>
@@ -288,7 +288,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Revenue</p>
-                            <p className="font-semibold">{currencySymbol}{event.revenue.toLocaleString()}</p>
+                            <p className="font-semibold">{currencySymbol}{(event.revenue ?? 0).toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Ticket Price</p>
@@ -352,7 +352,7 @@ export function OrganizerDashboard({ onCreateEvent, onViewAnalytics, onOpenScann
                           <p className="text-xs text-muted-foreground">{new Date(sale.timestamp).toLocaleTimeString()} • {sale.eventName}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">{currencySymbol}{sale.amount.toLocaleString()}</p>
+                          <p className="font-medium">{currencySymbol}{(sale.amount ?? 0).toLocaleString()}</p>
                           <p className="text-xs text-muted-foreground">{sale.tickets} tix</p>
                         </div>
                       </div>

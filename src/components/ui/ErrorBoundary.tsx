@@ -1,71 +1,37 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from './button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import * as React from "react"
 
-interface Props {
-  children?: ReactNode;
-  fallback?: ReactNode;
-}
+type Props = { children: React.ReactNode }
 
-interface State {
-  hasError: boolean;
-  error?: Error;
-}
+type State = { hasError: boolean; error?: unknown }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+  static getDerivedStateFromError(error: unknown): State {
+    return { hasError: true, error }
   }
 
-  public render() {
+  componentDidCatch(error: unknown, info: unknown) {
+    console.error("ErrorBoundary caught:", error, info)
+  }
+
+  render() {
     if (this.state.hasError) {
-      if (this.fallback) return this.fallback;
-      
       return (
-        <div className="min-h-[50vh] flex items-center justify-center p-6">
-          <Card className="w-full max-w-md border-destructive/20 shadow-2xl">
-            <CardHeader className="text-center">
-              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="h-6 w-6 text-destructive" />
-              </div>
-              <CardTitle>Something went wrong</CardTitle>
-              <CardDescription>
-                An unexpected error occurred while rendering this component.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {this.state.error && (
-                <div className="p-3 bg-muted rounded-md text-xs font-mono overflow-auto max-h-32">
-                  {this.state.error.message}
-                </div>
-              )}
-              <Button 
-                className="w-full" 
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Reload Page
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="flex-1 flex items-center justify-center min-h-[40vh] p-6">
+          <div className="max-w-md text-center space-y-3">
+            <h2 className="text-xl font-semibold">We couldn’t load this section</h2>
+            <p className="text-sm text-muted-foreground">
+              Please refresh the page or try again later.
+            </p>
+          </div>
         </div>
-      );
+      )
     }
 
-    return this.children;
+    return this.props.children
   }
-
-  private get children() { return this.props.children; }
-  private get fallback() { return this.props.fallback; }
 }
-
-export default ErrorBoundary;
